@@ -19,13 +19,13 @@ public class SignUpService {
         .isPresent();
   }
 
-  public boolean isNickNameExist(String nickName){
-    return memberRepository.findByNickName(nickName.toLowerCase(Locale.ROOT))
+  public boolean isNicknameExist(String nickname){
+    return memberRepository.findByNickname(nickname.toLowerCase(Locale.ROOT))
         .isPresent();
   }
 
   public Member signUp(SignUpForm form){
-    if(isNickNameExist(form.getNickName())){
+    if(isNicknameExist(form.getNickname())){
       throw new CustomException(ErrorCode.ALREADY_REGISTER_NICKNAME);
     }
     if(isEmailExist(form.getEmail())){

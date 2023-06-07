@@ -26,9 +26,9 @@ public class SignUpController {
   }
 
   @GetMapping("/member/nickname")
-  public ResponseEntity<Boolean> existNickName (
-      @RequestParam(required = true) String nickName){
-    return ResponseEntity.ok(signUpService.isNickNameExist(nickName));
+  public ResponseEntity<Boolean> existNickname (
+      @RequestParam(required = true) String nickname){
+    return ResponseEntity.ok(signUpService.isNicknameExist(nickname));
   }
 
   @PostMapping("/member")

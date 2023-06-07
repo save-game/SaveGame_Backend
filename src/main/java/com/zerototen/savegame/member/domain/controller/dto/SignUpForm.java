@@ -13,9 +13,9 @@ import lombok.NoArgsConstructor;
 public class SignUpForm {
   private String email;
   private String password;
-  private String nickName;
+  private String nickname;
 
   public SignUpForm toServiceDto(){
-    return new SignUpForm(email, password, nickName);
+    return new SignUpForm(email, password, nickname);
   }
 }
