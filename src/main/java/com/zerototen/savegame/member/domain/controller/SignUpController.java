@@ -19,13 +19,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class SignUpController {
   private final SignUpService signUpService;
 
-  @GetMapping("/member/email")
+  @GetMapping("/member")
   public ResponseEntity<Boolean> existEmail(
       @RequestParam(required = true) String email){
         return ResponseEntity.ok(signUpService.isEmailExist(email));
   }
 
-  @GetMapping("/member/nickname")
+  @GetMapping("/member")
   public ResponseEntity<Boolean> existNickname (
       @RequestParam(required = true) String nickname){
     return ResponseEntity.ok(signUpService.isNicknameExist(nickname));
