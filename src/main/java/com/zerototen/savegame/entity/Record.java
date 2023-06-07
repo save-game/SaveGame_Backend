@@ -5,6 +5,8 @@ import com.zerototen.savegame.type.PayType;
 import java.time.LocalDate;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -31,6 +33,7 @@ public class Record {
 
     private int amount;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Category category;
 
@@ -40,6 +43,7 @@ public class Record {
     @Column(nullable = false)
     private LocalDate useDate;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PayType payType;
 
