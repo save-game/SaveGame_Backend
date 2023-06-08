@@ -7,6 +7,7 @@ import com.zerototen.savegame.service.RecordService;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -44,5 +45,16 @@ public class RecordController {
         recordService.update(form.toServiceDto(recordId, memberId));
         return ResponseEntity.status(ResponseCode.UPDATE_SUCCESS.getStatus())
             .body(ResponseCode.UPDATE_SUCCESS.getMessage());
+    }
+
+    @DeleteMapping("/{recordId}")
+    public ResponseEntity<?> deleteRecord(
+//        @RequestHeader(name = "X-AUTH-TOKEN") String accessToken,
+        @PathVariable Long recordId,
+        @RequestParam Long memberId) { // 로그인 기능 구현 완료 시 위의 코드로 수정)
+//        Long memberId = provider.getUserVo(accessToken).getId();
+        recordService.delete(recordId, memberId);
+        return ResponseEntity.status(ResponseCode.DELETE_SUCCESS.getStatus())
+            .body(ResponseCode.DELETE_SUCCESS.getMessage());
     }
 }

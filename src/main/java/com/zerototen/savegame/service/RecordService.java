@@ -36,4 +36,16 @@ public class RecordService {
         record.setPayType(serviceDto.getPayType());
         record.setMemo(serviceDto.getMemo());
     }
+
+    @Transactional
+    public void delete(Long id, Long memberId) {
+        Record record = recordRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException()); // Login과 연동 시 CustomException으로 수정 예정
+
+        if (!record.getMemberId().equals(memberId)) {
+            throw new RuntimeException(); // Login과 연동 시 CustomException으로 수정 예정
+        }
+
+        recordRepository.delete(record);
+    }
 }
