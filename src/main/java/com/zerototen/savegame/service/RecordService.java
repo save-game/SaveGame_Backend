@@ -22,8 +22,12 @@ public class RecordService {
 
     @Transactional
     public void update(UpdateRecordServiceDto serviceDto) {
-        Record record = recordRepository.findById(serviceDto.getMemberId())
+        Record record = recordRepository.findById(serviceDto.getId())
             .orElseThrow(() -> new RuntimeException()); // Login과 연동 시 CustomException으로 수정 예정
+
+        if (!record.getMemberId().equals(serviceDto.getMemberId())) {
+            throw new RuntimeException(); // Login과 연동 시 CustomException으로 수정 예정
+        }
 
         record.setAmount(serviceDto.getAmount());
         record.setCategory(serviceDto.getCategory());

@@ -35,8 +35,9 @@ public class UpdateRecordForm {
 
     private String memo;
 
-    public UpdateRecordServiceDto toServiceDto(Long memberId) {
+    public UpdateRecordServiceDto toServiceDto(Long id, Long memberId) {
         return UpdateRecordServiceDto.builder()
+            .id(id)
             .memberId(memberId)
             .amount(this.getAmount())
             .category(Category.valueOf(this.getCategory()))

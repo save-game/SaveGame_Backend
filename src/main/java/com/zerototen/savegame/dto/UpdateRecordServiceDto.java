@@ -14,6 +14,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UpdateRecordServiceDto {
 
+    private Long id;
+
     private Long memberId;
 
     private int amount;

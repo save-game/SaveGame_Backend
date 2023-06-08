@@ -7,6 +7,7 @@ import com.zerototen.savegame.service.RecordService;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,13 +34,14 @@ public class RecordController {
             .body(ResponseCode.CREATE_SUCCESS.getMessage());
     }
 
-    @PutMapping
+    @PutMapping("/{recordId}")
     public ResponseEntity<?> updateRecord(
 //        @RequestHeader(name = "X-AUTH-TOKEN") String accessToken,
-        @RequestParam Long id, // 로그인 기능 구현 완료 시 위의 코드로 수정
+        @PathVariable Long recordId,
+        @RequestParam Long memberId, // 로그인 기능 구현 완료 시 위의 코드로 수정
         @RequestBody @Valid UpdateRecordForm form) {
-//        Long id = provider.getUserVo(accessToken).getId();
-        recordService.update(form.toServiceDto(id));
+//        Long memberId = provider.getUserVo(accessToken).getId();
+        recordService.update(form.toServiceDto(recordId, memberId));
         return ResponseEntity.status(ResponseCode.UPDATE_SUCCESS.getStatus())
             .body(ResponseCode.UPDATE_SUCCESS.getMessage());
     }
