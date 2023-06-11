@@ -57,4 +57,5 @@ public class RecordController {
         return ResponseEntity.status(ResponseCode.DELETE_SUCCESS.getStatus())
             .body(ResponseCode.DELETE_SUCCESS.getMessage());
     }
+
 }

@@ -1,6 +1,5 @@
 package com.zerototen.savegame.member.domain.controller.dto;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,11 +10,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SignUpForm {
-  private String email;
-  private String password;
-  private String nickname;
 
-  public SignUpForm toServiceDto(){
-    return new SignUpForm(email, password, nickname);
-  }
+    private String email;
+    private String password;
+    private String nickname;
+
+    public SignUpForm toServiceDto() {
+        return new SignUpForm(email, password, nickname);
+    }
+
 }

@@ -13,11 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/sign-in")
 @RequiredArgsConstructor
 public class SignInController {
-  private final SignInApplication signInApplication;
 
-  @PostMapping("/member")
-  public ResponseEntity<String> signInUser(@RequestBody SignInForm form){
-    return ResponseEntity.ok(signInApplication.userloginToken(form
-        .toServiceDto()));
-  }
+    private final SignInApplication signInApplication;
+
+    @PostMapping("/member")
+    public ResponseEntity<String> signInUser(@RequestBody SignInForm form) {
+        return ResponseEntity.ok(signInApplication.userloginToken(form
+            .toServiceDto()));
+    }
 }

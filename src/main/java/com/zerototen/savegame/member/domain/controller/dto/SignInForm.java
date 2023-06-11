@@ -8,10 +8,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SignInForm {
-  private String email;
-  private String password;
 
-  public SignInForm toServiceDto(){
-    return new SignInForm(email, password);
-  }
+    private String email;
+    private String password;
+
+    public SignInForm toServiceDto() {
+        return new SignInForm(email, password);
+    }
 }

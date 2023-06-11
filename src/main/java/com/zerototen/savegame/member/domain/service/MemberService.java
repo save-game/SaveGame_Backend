@@ -9,12 +9,13 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class MemberService {
-  private final MemberRepository memberRepository;
+
+    private final MemberRepository memberRepository;
 
 
-  public Optional<Member> findValidUser(String email, String password){
-    return memberRepository.findByEmail(email).stream().filter(
-            user -> user.getPassword().equals(password))
-        .findFirst();
-  }
+    public Optional<Member> findValidUser(String email, String password) {
+        return memberRepository.findByEmail(email).stream().filter(
+                user -> user.getPassword().equals(password))
+            .findFirst();
+    }
 }

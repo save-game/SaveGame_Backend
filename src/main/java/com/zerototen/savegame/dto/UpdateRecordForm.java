@@ -47,4 +47,5 @@ public class UpdateRecordForm {
             .memo(this.getMemo())
             .build();
     }
+
 }

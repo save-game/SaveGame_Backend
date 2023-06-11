@@ -12,26 +12,27 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class SignUpService {
-  private final MemberRepository memberRepository;
 
-  public boolean isEmailExist(String email){
-    return memberRepository.findByEmail(email.toLowerCase(Locale.ROOT))
-        .isPresent();
-  }
+    private final MemberRepository memberRepository;
 
-  public boolean isNicknameExist(String nickname){
-    return memberRepository.findByNickname(nickname.toLowerCase(Locale.ROOT))
-        .isPresent();
-  }
-
-  public Member signUp(SignUpForm form){
-    if(isNicknameExist(form.getNickname())){
-      throw new CustomException(ErrorCode.ALREADY_REGISTER_NICKNAME);
+    public boolean isEmailExist(String email) {
+        return memberRepository.findByEmail(email.toLowerCase(Locale.ROOT))
+            .isPresent();
     }
-    if(isEmailExist(form.getEmail())){
-      throw new CustomException(ErrorCode.ALREADY_REGISTER_EMAIL);
+
+    public boolean isNicknameExist(String nickname) {
+        return memberRepository.findByNickname(nickname.toLowerCase(Locale.ROOT))
+            .isPresent();
     }
-    return memberRepository.save(Member.from(form));
-  }
+
+    public Member signUp(SignUpForm form) {
+        if (isNicknameExist(form.getNickname())) {
+            throw new CustomException(ErrorCode.ALREADY_REGISTER_NICKNAME);
+        }
+        if (isEmailExist(form.getEmail())) {
+            throw new CustomException(ErrorCode.ALREADY_REGISTER_EMAIL);
+        }
+        return memberRepository.save(Member.from(form));
+    }
 
 }

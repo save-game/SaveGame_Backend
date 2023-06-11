@@ -46,4 +46,5 @@ public class CreateRecordForm {
             .memo(this.getMemo())
             .build();
     }
+
 }

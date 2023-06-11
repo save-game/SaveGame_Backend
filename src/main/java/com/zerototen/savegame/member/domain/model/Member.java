@@ -13,7 +13,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.envers.AuditOverride;
 
 @Entity
 @Getter
@@ -21,25 +20,26 @@ import org.hibernate.envers.AuditOverride;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@AuditOverride(forClass = BaseEntity.class)
 public class Member extends BaseEntity {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
 
-  @Column(unique = true)
-  private String email;
-  private String password;
-  private String nickname;
-  private String imageUrl;
-  private LocalDateTime deletedAt;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-  public static Member from(SignUpForm form){
-    return Member.builder()
-        .email(form.getEmail().toLowerCase(Locale.ROOT))
-        .password(form.getPassword())
-        .nickname(form.getNickname())
-        .imageUrl("default.png")
-        .build();
-  }
+    @Column(unique = true)
+    private String email;
+    private String password;
+    private String nickname;
+    private String imageUrl;
+    private LocalDateTime deletedAt;
+
+    public static Member from(SignUpForm form) {
+        return Member.builder()
+            .email(form.getEmail().toLowerCase(Locale.ROOT))
+            .password(form.getPassword())
+            .nickname(form.getNickname())
+            .imageUrl("default.png")
+            .build();
+    }
+
 }

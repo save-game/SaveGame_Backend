@@ -29,4 +29,5 @@ public @interface Enum {
     Class<? extends java.lang.Enum<?>> enumClass();
 
     boolean ignoreCase() default false;
+
 }

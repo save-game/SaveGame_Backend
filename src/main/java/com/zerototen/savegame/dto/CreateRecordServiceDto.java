@@ -40,4 +40,5 @@ public class CreateRecordServiceDto {
             .memo(this.getMemo())
             .build();
     }
+
 }
