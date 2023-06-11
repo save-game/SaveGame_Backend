@@ -1,13 +1,16 @@
 package com.zerototen.savegame.member.domain.model;
 
-import com.zerototen.savegame.member.domain.controller.dto.SignUpForm;
 import java.time.LocalDateTime;
-import java.util.Locale;
+import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,6 +19,7 @@ import lombok.Setter;
 import org.hibernate.envers.AuditOverride;
 
 @Entity
+@Table(name = "member")
 @Getter
 @Setter
 @Builder
@@ -34,12 +38,11 @@ public class Member extends BaseEntity {
   private String imageUrl;
   private LocalDateTime deletedAt;
 
-  public static Member from(SignUpForm form){
-    return Member.builder()
-        .email(form.getEmail().toLowerCase(Locale.ROOT))
-        .password(form.getPassword())
-        .nickname(form.getNickname())
-        .imageUrl("default.png")
-        .build();
-  }
+  @ManyToMany
+  @JoinTable(
+      name = "member_authority",
+      joinColumns = {@JoinColumn(name = "id", referencedColumnName = "id")},
+      inverseJoinColumns = {@JoinColumn(name = "authority_name", referencedColumnName = "authority_name")})
+  private Set<Authority> authorities;
+
 }

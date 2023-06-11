@@ -46,7 +46,7 @@ public class SwaggerConfig {
     return new ApiInfoBuilder()
         .title("API")
         .description("[SaveGame] REST API")
-        .contact(new Contact("[SaveGame Swagger]", "https://github.com//", "@gmail.com"))
+        .contact(new Contact("[SaveGame Swagger]", "https://github.com/", "@gmail.com"))
         .version("1.0")
         .build();
   }
