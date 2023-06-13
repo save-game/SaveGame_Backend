@@ -19,6 +19,7 @@ public class RecordResponse {
     private String paidFor;
     private String memo;
     private LocalDate useDate;
+    private String payType;
 
     public static RecordResponse from(Record record) {
         return RecordResponse.builder()
@@ -28,6 +29,7 @@ public class RecordResponse {
             .paidFor(record.getPaidFor())
             .memo(record.getMemo())
             .useDate(record.getUseDate())
+            .payType(record.getPayType().getName())
             .build();
     }
 
