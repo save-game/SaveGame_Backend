@@ -16,28 +16,23 @@ import lombok.NoArgsConstructor;
 public class CreateRecordServiceDto {
 
     private Long memberId;
-
     private int amount;
-
     private Category category;
-
-    private String store;
-
-    private LocalDate useDate;
-
-    private PayType payType;
-
+    private String paidFor;
     private String memo;
+    private LocalDate useDate;
+    private PayType payType;
 
     public Record toEntity() {
         return Record.builder()
             .memberId(this.getMemberId())
             .amount(this.getAmount())
             .category(this.getCategory())
-            .store(this.getStore())
+            .paidFor(this.getPaidFor())
             .useDate(this.getUseDate())
             .payType(this.getPayType())
             .memo(this.getMemo())
             .build();
     }
+
 }

@@ -25,7 +25,9 @@ public class UpdateRecordForm {
     private String category;
 
     @NotBlank
-    private String store;
+    private String paidFor;
+
+    private String memo;
 
     @NotNull
     private LocalDate useDate;
@@ -33,18 +35,17 @@ public class UpdateRecordForm {
     @Enum(enumClass = PayType.class, ignoreCase = true)
     private String payType;
 
-    private String memo;
-
     public UpdateRecordServiceDto toServiceDto(Long id, Long memberId) {
         return UpdateRecordServiceDto.builder()
             .id(id)
             .memberId(memberId)
             .amount(this.getAmount())
             .category(Category.valueOf(this.getCategory()))
-            .store(this.getStore())
+            .paidFor(this.getPaidFor())
             .useDate(this.getUseDate())
             .payType(PayType.valueOf(this.getPayType()))
             .memo(this.getMemo())
             .build();
     }
+
 }

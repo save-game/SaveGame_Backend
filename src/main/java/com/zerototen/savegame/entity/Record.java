@@ -38,7 +38,9 @@ public class Record {
     private Category category;
 
     @Column(nullable = false)
-    private String store;
+    private String paidFor;
+
+    private String memo;
 
     @Column(nullable = false)
     private LocalDate useDate;
@@ -46,7 +48,5 @@ public class Record {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PayType payType;
-
-    private String memo;
 
 }

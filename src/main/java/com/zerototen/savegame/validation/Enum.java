@@ -20,7 +20,7 @@ import javax.validation.Payload;
 @Constraint(validatedBy = {EnumValidator.class})
 public @interface Enum {
 
-    String message() default "Enum에 없는 값입니다.";
+    String message() default "Enum에 없는 값입니다";
 
     Class<?>[] groups() default {};
 
@@ -29,4 +29,5 @@ public @interface Enum {
     Class<? extends java.lang.Enum<?>> enumClass();
 
     boolean ignoreCase() default false;
+
 }

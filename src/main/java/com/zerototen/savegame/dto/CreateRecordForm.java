@@ -25,7 +25,9 @@ public class CreateRecordForm {
     private String category;
 
     @NotBlank
-    private String store;
+    private String paidFor;
+
+    private String memo;
 
     @NotNull
     private LocalDate useDate;
@@ -33,17 +35,16 @@ public class CreateRecordForm {
     @Enum(enumClass = PayType.class, ignoreCase = true)
     private String payType;
 
-    private String memo;
-
     public CreateRecordServiceDto toServiceDto(Long memberId) {
         return CreateRecordServiceDto.builder()
             .memberId(memberId)
             .amount(this.getAmount())
             .category(Category.valueOf(this.getCategory()))
-            .store(this.getStore())
+            .paidFor(this.getPaidFor())
             .useDate(this.getUseDate())
             .payType(PayType.valueOf(this.getPayType()))
             .memo(this.getMemo())
             .build();
     }
+
 }

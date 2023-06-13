@@ -12,10 +12,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ApiExceptionAdvice {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleValidationError(MethodArgumentNotValidException ex) {
+    public ResponseEntity<?> handleValidError(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors()
-            .forEach(c -> errors.put(((FieldError) c).getField(), c.getDefaultMessage()));
+            .forEach(e -> errors.put(((FieldError) e).getField(), e.getDefaultMessage()));
         return ResponseEntity.badRequest().body(errors);
     }
+
 }
