@@ -1,4 +1,4 @@
-package com.zerototen.savegame.converter;
+package com.zerototen.savegame.util;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -23,7 +23,7 @@ public class StringToLocalDateConverter implements Converter<String, LocalDate> 
             return LocalDate.parse(date, formatter);
         } catch (DateTimeParseException e) {
             log.warn("Invalid date format: {}", date);
-            throw new IllegalArgumentException("유효하지 않은 날짜 형식입니다 : " + date);
+            throw new IllegalArgumentException("유효하지 않은 날짜 형식입니다: " + date);
         }
     }
 

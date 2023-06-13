@@ -19,4 +19,11 @@ public class ApiExceptionAdvice {
         return ResponseEntity.badRequest().body(errors);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgumentError(IllegalArgumentException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("message", ex.getMessage());
+        return ResponseEntity.badRequest().body(error);
+    }
+
 }
