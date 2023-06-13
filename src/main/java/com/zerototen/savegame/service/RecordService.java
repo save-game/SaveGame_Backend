@@ -41,8 +41,7 @@ public class RecordService {
     @Transactional
     public void update(UpdateRecordServiceDto serviceDto) {
         Record record = recordRepository.findById(serviceDto.getId())
-            .orElseThrow(() -> new RuntimeException(
-                "Not found record")); // Login과 연동 시 CustomException으로 수정 예정
+            .orElseThrow(() -> new RuntimeException("Not found record")); // Login과 연동 시 CustomException으로 수정 예정
 
         if (!record.getMemberId().equals(serviceDto.getMemberId())) {
             throw new RuntimeException("Not match member"); // Login과 연동 시 CustomException으로 수정 예정
