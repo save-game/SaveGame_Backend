@@ -122,7 +122,7 @@ class RecordServiceTest {
                 then(recordRepository).should()
                     .findByMemberIdAndUseDateDescWithOptional(anyLong(), any(LocalDate.class),
                         any(LocalDate.class), isNull());
-                for (int i = 5; i >= 1; i--) {
+                for (int i = recordResponses.size(); i >= 1; i--) {
                     assertEquals(i, recordResponses.get(5 - i).getRecordId());
                     assertEquals(i * 10000, recordResponses.get(5 - i).getAmount());
                     assertEquals(Category.values()[i % cLength].getName(),
@@ -130,6 +130,7 @@ class RecordServiceTest {
                     assertEquals("가게" + i, recordResponses.get(5 - i).getPaidFor());
                     assertEquals("메모" + i, recordResponses.get(5 - i).getMemo());
                     assertEquals(LocalDate.of(2023, 6, i), recordResponses.get(5 - i).getUseDate());
+                    assertEquals(PayType.values()[i % pLength].getName(), recordResponses.get(5 - i).getPayType());
                 }
             }
 
@@ -168,7 +169,7 @@ class RecordServiceTest {
                 //then
                 then(recordRepository).should().findByMemberIdAndUseDateDescWithOptional(
                     anyLong(), any(LocalDate.class), any(LocalDate.class), anyList());
-                for (int i = 5; i >= 1; i--) {
+                for (int i = recordResponses.size(); i >= 1; i--) {
                     assertEquals(i, recordResponses.get(5 - i).getRecordId());
                     assertEquals(i * 10000, recordResponses.get(5 - i).getAmount());
                     assertEquals(Category.values()[i % cLength].getName(),
@@ -176,6 +177,7 @@ class RecordServiceTest {
                     assertEquals("가게" + i, recordResponses.get(5 - i).getPaidFor());
                     assertEquals("메모" + i, recordResponses.get(5 - i).getMemo());
                     assertEquals(LocalDate.of(2023, 6, i), recordResponses.get(5 - i).getUseDate());
+                    assertEquals(PayType.values()[i % pLength].getName(), recordResponses.get(5 - i).getPayType());
                 }
             }
         }
