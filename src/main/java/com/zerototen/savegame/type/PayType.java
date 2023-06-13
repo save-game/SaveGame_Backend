@@ -6,7 +6,10 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum PayType {
-    CASH("현금"), CARD("카드");
+
+    CASH("현금"),
+    CARD("카드");
 
     private final String name;
+
 }
