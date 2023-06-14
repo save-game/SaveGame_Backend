@@ -13,7 +13,7 @@ public class StringToLocalDateConverter implements Converter<String, LocalDate> 
     private final DateTimeFormatter formatter;
 
     public StringToLocalDateConverter() {
-        this.formatter = DateTimeFormatter.ofPattern("[uuuu.M.d][uuuu.M.dd][uuuu.MM.d][uuuu.MM.dd]")
+        this.formatter = DateTimeFormatter.ofPattern("[M/d/uuuu][M/dd/uuuu][MM/d/uuuu][MM/dd/uuuu]")
             .withResolverStyle(ResolverStyle.STRICT);
     }
 

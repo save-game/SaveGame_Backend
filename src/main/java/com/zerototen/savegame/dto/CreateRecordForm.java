@@ -29,15 +29,13 @@ public class CreateRecordForm {
 
     private String memo;
 
-    @NotBlank
-    @Pattern(regexp = "\\d{4}\\.\\d{1,2}\\.\\d{1,2}", message = "유효하지 않은 날짜 형식입니다")
+    @Pattern(regexp = "\\d{1,2}/\\d{1,2}/\\d{4}", message = "유효하지 않은 날짜 형식입니다")
     private String useDate;
 
     @Enum(enumClass = PayType.class, ignoreCase = true)
     private String payType;
 
     public CreateRecordServiceDto toServiceDto(Long memberId) {
-
         return CreateRecordServiceDto.builder()
             .memberId(memberId)
             .amount(this.getAmount())
