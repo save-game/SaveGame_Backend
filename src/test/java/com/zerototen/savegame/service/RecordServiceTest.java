@@ -47,15 +47,7 @@ class RecordServiceTest {
         @DisplayName("성공")
         void success() {
             //given
-            CreateRecordServiceDto serviceDto = CreateRecordServiceDto.builder()
-                .memberId(1L)
-                .amount(10000)
-                .category(Category.FOOD)
-                .paidFor("가게")
-                .memo("메모")
-                .useDate(LocalDate.of(2023, 1, 1))
-                .payType(PayType.CASH)
-                .build();
+            CreateRecordServiceDto serviceDto = getCreateServiceDto();
 
             // Login과 연동 시 memberId 검증 부분 추가
 
@@ -93,44 +85,32 @@ class RecordServiceTest {
             @DisplayName("필수값만 입력")
             void inputRequiredOnly() {
                 //given
-                List<Record> records = new ArrayList<>();
+                List<Record> records = getRecords(5);
                 int cLength = Category.values().length;
                 int pLength = PayType.values().length;
 
-                for (int i = 5; i >= 1; i--) {
-                    Record record = Record.builder()
-                        .id((long) i)
-                        .memberId(1L)
-                        .amount(i * 10000)
-                        .category(Category.values()[i % cLength])
-                        .paidFor("가게" + i)
-                        .memo("메모" + i)
-                        .useDate(LocalDate.of(2023, 6, i))
-                        .payType(PayType.values()[i % pLength])
-                        .build();
-                    records.add(record);
-                }
-
-                given(recordRepository.findByMemberIdAndUseDateDescWithOptional(anyLong(),
-                    any(LocalDate.class), any(LocalDate.class), isNull())).willReturn(records);
+                given(recordRepository.findByMemberIdAndUseDateDescWithOptional(anyLong(), any(LocalDate.class),
+                    any(LocalDate.class), isNull()))
+                    .willReturn(records);
 
                 //when
-                List<RecordResponse> recordResponses = recordService.getInfos(1L,
+                List<RecordResponse> recordResponses = recordService.getInfos(2L,
                     LocalDate.of(2023, 6, 1), LocalDate.of(2023, 6, 30), null);
 
                 //then
                 then(recordRepository).should()
                     .findByMemberIdAndUseDateDescWithOptional(anyLong(), any(LocalDate.class),
                         any(LocalDate.class), isNull());
-                for (int i = recordResponses.size(); i >= 1; i--) {
-                    assertEquals(i, recordResponses.get(5 - i).getRecordId());
-                    assertEquals(i * 10000, recordResponses.get(5 - i).getAmount());
+                int size = recordResponses.size();
+                for (int i = size; i >= 1; i--) {
+                    assertEquals(i, recordResponses.get(size - i).getRecordId());
+                    assertEquals(i * 10000, recordResponses.get(size - i).getAmount());
                     assertEquals(Category.values()[i % cLength].getName(),
-                        recordResponses.get(5 - i).getCategory());
-                    assertEquals("가게" + i, recordResponses.get(5 - i).getPaidFor());
-                    assertEquals("메모" + i, recordResponses.get(5 - i).getMemo());
-                    assertEquals(LocalDate.of(2023, 6, i), recordResponses.get(5 - i).getUseDate());
-                    assertEquals(PayType.values()[i % pLength].getName(), recordResponses.get(5 - i).getPayType());
+                        recordResponses.get(size - i).getCategory());
+                    assertEquals("가게" + i, recordResponses.get(size - i).getPaidFor());
+                    assertEquals("메모" + i, recordResponses.get(size - i).getMemo());
+                    assertEquals(LocalDate.of(2023, 6, i), recordResponses.get(size - i).getUseDate());
+                    assertEquals(PayType.values()[i % pLength].getName(), recordResponses.get(size - i).getPayType());
                 }
             }
 
@@ -138,46 +118,32 @@ class RecordServiceTest {
             @DisplayName("모든값 입력")
             void inputAll() {
                 //given
-                List<Record> records = new ArrayList<>();
-                List<String> categories = new ArrayList<>();
+                List<Record> records = getRecords(10);
+                List<String> categories = getCategories(10);
                 int cLength = Category.values().length;
                 int pLength = PayType.values().length;
 
-                for (int i = 5; i >= 1; i--) {
-                    Record record = Record.builder()
-                        .id((long) i)
-                        .memberId(1L)
-                        .amount(i * 10000)
-                        .category(Category.values()[i % cLength])
-                        .paidFor("가게" + i)
-                        .memo("메모" + i)
-                        .useDate(LocalDate.of(2023, 6, i))
-                        .payType(PayType.values()[i % pLength])
-                        .build();
-                    records.add(record);
-                    categories.add(Category.values()[i % cLength].getName());
-                }
-
-                given(recordRepository.findByMemberIdAndUseDateDescWithOptional(
-                    anyLong(), any(LocalDate.class), any(LocalDate.class), anyList()))
+                given(recordRepository.findByMemberIdAndUseDateDescWithOptional(anyLong(), any(LocalDate.class),
+                    any(LocalDate.class), anyList()))
                     .willReturn(records);
 
                 //when
-                List<RecordResponse> recordResponses = recordService.getInfos(1L,
+                List<RecordResponse> recordResponses = recordService.getInfos(2L,
                     LocalDate.of(2023, 6, 1), LocalDate.of(2023, 6, 30), categories);
 
                 //then
                 then(recordRepository).should().findByMemberIdAndUseDateDescWithOptional(
                     anyLong(), any(LocalDate.class), any(LocalDate.class), anyList());
+                int size = recordResponses.size();
                 for (int i = recordResponses.size(); i >= 1; i--) {
-                    assertEquals(i, recordResponses.get(5 - i).getRecordId());
-                    assertEquals(i * 10000, recordResponses.get(5 - i).getAmount());
+                    assertEquals(i, recordResponses.get(size - i).getRecordId());
+                    assertEquals(i * 10000, recordResponses.get(size - i).getAmount());
                     assertEquals(Category.values()[i % cLength].getName(),
-                        recordResponses.get(5 - i).getCategory());
-                    assertEquals("가게" + i, recordResponses.get(5 - i).getPaidFor());
-                    assertEquals("메모" + i, recordResponses.get(5 - i).getMemo());
-                    assertEquals(LocalDate.of(2023, 6, i), recordResponses.get(5 - i).getUseDate());
-                    assertEquals(PayType.values()[i % pLength].getName(), recordResponses.get(5 - i).getPayType());
+                        recordResponses.get(size - i).getCategory());
+                    assertEquals("가게" + i, recordResponses.get(size - i).getPaidFor());
+                    assertEquals("메모" + i, recordResponses.get(size - i).getMemo());
+                    assertEquals(LocalDate.of(2023, 6, i), recordResponses.get(size - i).getUseDate());
+                    assertEquals(PayType.values()[i % pLength].getName(), recordResponses.get(size - i).getPayType());
                 }
             }
         }
@@ -195,7 +161,7 @@ class RecordServiceTest {
 
                 //when
                 RuntimeException exception = assertThrows(RuntimeException.class,
-                    () -> recordService.getInfos(1L, startDate, endDate, null));
+                    () -> recordService.getInfos(2L, startDate, endDate, null));
 
                 //then
                 assertEquals("조회시작일이 조회종료일 이후입니다", exception.getMessage());
@@ -211,29 +177,12 @@ class RecordServiceTest {
         @DisplayName("성공")
         void success() {
             //given
-            UpdateRecordServiceDto serviceDto = UpdateRecordServiceDto.builder()
-                .id(1L)
-                .memberId(2L)
-                .amount(10000)
-                .category(Category.FOOD)
-                .paidFor("가게")
-                .memo("메모")
-                .useDate(LocalDate.of(2023, 1, 1))
-                .payType(PayType.CASH)
-                .build();
+            UpdateRecordServiceDto serviceDto = getUpdateServiceDto();
 
-            Record record = Record.builder()
-                .id(1L)
-                .memberId(2L)
-                .amount(5000)
-                .category(Category.CULTURE)
-                .paidFor("병원")
-                .memo("메모메모")
-                .useDate(LocalDate.of(2023, 6, 6))
-                .payType(PayType.CARD)
-                .build();
+            Record record = getRecord();
 
-            given(recordRepository.findById(anyLong())).willReturn(Optional.of(record));
+            given(recordRepository.findById(anyLong()))
+                .willReturn(Optional.of(record));
 
             //when
             recordService.update(serviceDto);
@@ -242,11 +191,11 @@ class RecordServiceTest {
             then(recordRepository).should().findById(anyLong());
             assertEquals(1L, record.getId());
             assertEquals(2L, record.getMemberId());
-            assertEquals(10000, record.getAmount());
-            assertEquals(Category.FOOD, record.getCategory());
-            assertEquals("가게", record.getPaidFor());
-            assertEquals("메모", record.getMemo());
-            assertEquals(LocalDate.of(2023, 1, 1), record.getUseDate());
+            assertEquals(20000, record.getAmount());
+            assertEquals(Category.BEAUTY, record.getCategory());
+            assertEquals("미용실", record.getPaidFor());
+            assertEquals("커트", record.getMemo());
+            assertEquals(LocalDate.of(2023, 5, 5), record.getUseDate());
             assertEquals(PayType.CASH, record.getPayType());
 
         }
@@ -259,18 +208,10 @@ class RecordServiceTest {
             @DisplayName("찾을 수 없는 지출내역")
             void notFoundRecord() {
                 //given
-                UpdateRecordServiceDto serviceDto = UpdateRecordServiceDto.builder()
-                    .id(1L)
-                    .memberId(2L)
-                    .amount(10000)
-                    .category(Category.FOOD)
-                    .paidFor("가게")
-                    .memo("메모")
-                    .useDate(LocalDate.of(2023, 1, 1))
-                    .payType(PayType.CASH)
-                    .build();
+                UpdateRecordServiceDto serviceDto = getUpdateServiceDto();
 
-                given(recordRepository.findById(anyLong())).willReturn(Optional.empty());
+                given(recordRepository.findById(anyLong()))
+                    .willReturn(Optional.empty());
 
                 //when
                 // Custom Exception 연동 시 수정 예정
@@ -287,28 +228,13 @@ class RecordServiceTest {
             @DisplayName("일치하지 않는 사용자")
             void notMatchMember() {
                 //given
-                UpdateRecordServiceDto serviceDto = UpdateRecordServiceDto.builder()
-                    .id(1L)
-                    .memberId(2L)
-                    .amount(10000)
-                    .category(Category.FOOD)
-                    .paidFor("가게")
-                    .memo("메모")
-                    .useDate(LocalDate.of(2023, 1, 1))
-                    .payType(PayType.CASH)
-                    .build();
+                UpdateRecordServiceDto serviceDto = getUpdateServiceDto();
 
-                given(recordRepository.findById(anyLong())).willReturn(
-                    Optional.of(Record.builder()
-                        .id(1L)
-                        .memberId(1L)
-                        .amount(5000)
-                        .category(Category.CULTURE)
-                        .paidFor("병원")
-                        .memo("메모메모")
-                        .useDate(LocalDate.of(2023, 6, 6))
-                        .payType(PayType.CARD)
-                        .build()));
+                Record record = getRecord();
+                record.setMemberId(3L);
+
+                given(recordRepository.findById(anyLong()))
+                    .willReturn(Optional.of(record));
 
                 //when
                 // Custom Exception 연동 시 수정 예정
@@ -330,16 +256,10 @@ class RecordServiceTest {
         @DisplayName("성공")
         void success() {
             //given
-            given(recordRepository.findById(anyLong())).willReturn(Optional.of(Record.builder()
-                .id(1L)
-                .memberId(2L)
-                .amount(10000)
-                .category(Category.FOOD)
-                .paidFor("가게")
-                .memo("메모")
-                .useDate(LocalDate.of(2023, 1, 1))
-                .payType(PayType.CASH)
-                .build()));
+            Record record = getRecord();
+
+            given(recordRepository.findById(anyLong()))
+                .willReturn(Optional.of(record));
 
             ArgumentCaptor<Record> argumentCaptor = ArgumentCaptor.forClass(Record.class);
 
@@ -359,12 +279,13 @@ class RecordServiceTest {
             @DisplayName("찾을 수 없는 지출내역")
             void notFoundRecord() {
                 //given
-                given(recordRepository.findById(anyLong())).willReturn(Optional.empty());
+                given(recordRepository.findById(anyLong()))
+                    .willReturn(Optional.empty());
 
                 //when
                 // Custom Exception 연동 시 수정 예정
                 RuntimeException exception = assertThrows(RuntimeException.class,
-                    () -> recordService.delete(1L, 2L));
+                    () -> recordService.delete(2L, 2L));
 
                 //then
                 then(recordRepository).should().findById(anyLong());
@@ -377,22 +298,16 @@ class RecordServiceTest {
             @DisplayName("일치하지 않는 사용자")
             void notMatchMember() {
                 //given
-                given(recordRepository.findById(anyLong())).willReturn(
-                    Optional.of(Record.builder()
-                        .id(1L)
-                        .memberId(2L)
-                        .amount(10000)
-                        .category(Category.FOOD)
-                        .paidFor("가게")
-                        .memo("메모")
-                        .useDate(LocalDate.of(2023, 1, 1))
-                        .payType(PayType.CASH)
-                        .build()));
+
+                Record record = getRecord();
+
+                given(recordRepository.findById(anyLong()))
+                    .willReturn(Optional.of(record));
 
                 //when
                 // Custom Exception 연동 시 수정 예정
                 RuntimeException exception = assertThrows(RuntimeException.class,
-                    () -> recordService.delete(1L, 1L));
+                    () -> recordService.delete(1L, 3L));
 
                 //then
                 then(recordRepository).should().findById(anyLong());
@@ -400,6 +315,78 @@ class RecordServiceTest {
                 assertEquals("Not match member", exception.getMessage());
             }
         }
+    }
+
+    private CreateRecordServiceDto getCreateServiceDto() {
+        return CreateRecordServiceDto.builder()
+            .memberId(2L)
+            .amount(10000)
+            .category(Category.FOOD)
+            .paidFor("식당")
+            .memo("국밥")
+            .useDate(LocalDate.of(2023, 1, 1))
+            .payType(PayType.CASH)
+            .build();
+    }
+
+    private UpdateRecordServiceDto getUpdateServiceDto() {
+        return UpdateRecordServiceDto.builder()
+            .id(1L)
+            .memberId(2L)
+            .amount(20000)
+            .category(Category.BEAUTY)
+            .paidFor("미용실")
+            .memo("커트")
+            .useDate(LocalDate.of(2023, 5, 5))
+            .payType(PayType.CASH)
+            .build();
+    }
+
+    private Record getRecord() {
+        return Record.builder()
+            .id(1L)
+            .memberId(2L)
+            .amount(10000)
+            .category(Category.MEDICAL)
+            .paidFor("병원")
+            .memo("감기")
+            .useDate(LocalDate.of(2023, 6, 6))
+            .payType(PayType.CARD)
+            .build();
+    }
+
+    private List<Record> getRecords(int size) {
+        List<Record> records = new ArrayList<>();
+        int cLength = Category.values().length;
+        int pLength = PayType.values().length;
+
+        for (int i = size; i >= 1; i--) {
+            Record record = Record.builder()
+                .id((long) i)
+                .memberId(2L)
+                .amount(10000 * i)
+                .category(Category.values()[i % cLength])
+                .paidFor("가게" + i)
+                .memo("메모" + i)
+                .useDate(LocalDate.of(2023, 6, i))
+                .payType(PayType.values()[i % pLength])
+                .build();
+            records.add(record);
+        }
+
+        return records;
+    }
+
+    private List<String> getCategories(int size) {
+        List<String> categories = new ArrayList<>();
+        int cLength = Category.values().length;
+        size = Math.min(size, cLength);
+
+        for (int i = size; i >= 1; i--) {
+            categories.add(Category.values()[i % cLength].getName());
+        }
+
+        return categories;
     }
 
 }
