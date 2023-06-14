@@ -23,8 +23,8 @@ public class RecordService {
     @Transactional
     public void create(CreateRecordServiceDto serviceDto) {
         // Login과 연동 시 memberId 검증 부분 추가
-        log.debug("Create record -> memberId: {}", serviceDto.getMemberId());
         recordRepository.save(serviceDto.toEntity());
+        log.debug("Create record -> memberId: {}", serviceDto.getMemberId());
     }
 
     public List<RecordResponse> getInfos(Long memberId, LocalDate startDate, LocalDate endDate,
@@ -47,12 +47,7 @@ public class RecordService {
             throw new RuntimeException("Not match member"); // Login과 연동 시 CustomException으로 수정 예정
         }
 
-        record.setAmount(serviceDto.getAmount());
-        record.setCategory(serviceDto.getCategory());
-        record.setPaidFor(serviceDto.getPaidFor());
-        record.setUseDate(serviceDto.getUseDate());
-        record.setPayType(serviceDto.getPayType());
-        record.setMemo(serviceDto.getMemo());
+        record.update(serviceDto);
         log.debug("Update record -> id: {}", serviceDto.getId());
     }
 
@@ -65,8 +60,9 @@ public class RecordService {
         if (!record.getMemberId().equals(memberId)) {
             throw new RuntimeException("Not match member"); // Login과 연동 시 CustomException으로 수정 예정
         }
-        log.debug("Delete record -> id: {}", id);
+
         recordRepository.delete(record);
+        log.debug("Delete record -> id: {}", id);
     }
 
 }
