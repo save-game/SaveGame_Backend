@@ -1,4 +1,4 @@
-package com.zerototen.savegame.member.domain.model;
+package com.zerototen.savegame.entity;
 
 import java.time.LocalDateTime;
 import javax.persistence.EntityListeners;
@@ -12,8 +12,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @MappedSuperclass
 @EntityListeners(value = {AuditingEntityListener.class})
 public class BaseEntity {
-  @CreatedDate
-  private LocalDateTime createdAt;
-  @LastModifiedDate
-  private LocalDateTime modifiedAt;
+
+    @CreatedDate
+    private LocalDateTime createdAt;
+    @LastModifiedDate
+    private LocalDateTime modifiedAt;
 }
