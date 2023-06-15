@@ -16,4 +16,5 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
         AccessDeniedException accessDeniedException) throws IOException {
         response.sendError(HttpServletResponse.SC_FORBIDDEN);
     }
+
 }

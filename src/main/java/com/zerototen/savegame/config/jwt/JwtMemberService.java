@@ -32,7 +32,6 @@ public class JwtMemberService implements UserDetailsService {
     }
 
     private org.springframework.security.core.userdetails.User createMember(Member member) {
-
         List<GrantedAuthority> grantedAuthorities = member.getAuthorities().stream()
             .map(authority -> new SimpleGrantedAuthority(authority.getAuthorityName()))
             .collect(Collectors.toList());
@@ -41,4 +40,5 @@ public class JwtMemberService implements UserDetailsService {
             grantedAuthorities
         );
     }
+
 }

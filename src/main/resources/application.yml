@@ -19,3 +19,14 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
+  redis:
+    host: 127.0.0.1
+    port: 6379
+
+# HS512알고리즘, 64byte 이상 secret key 사용
+# zerobase-backend-frontend-everyone-success-savegame-challenge-application-find-goodjob-we-can-do-it-good-life
+jwt:
+  header: Authorization
+  secret: emVyb2Jhc2UtYmFja2VuZC1mcm9udGVuZC1ldmVyeW9uZS1zdWNjZXNzLXNhdmVnYW1lLWNoYWxsZW5nZS1hcHBsaWNhdGlvbi1maW5kLWdvb2Rqb2Itd2UtY2FuLWRvLWl0LWdvb2QtbGlmZQ==
+  token-validity-in-seconds: 86400
+  refresh-token-validity-in-seconds: 604800

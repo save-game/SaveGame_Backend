@@ -1,6 +1,6 @@
 package com.zerototen.savegame.config.jwt;
 
-import com.zerototen.savegame.config.RedisDao;
+import com.zerototen.savegame.repository.RedisDao;
 import org.springframework.security.config.annotation.SecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.DefaultSecurityFilterChain;
@@ -23,4 +23,5 @@ public class JwtSecurityConfig extends
         JwtFilter customFilter = new JwtFilter(tokenProvider, redisDao);
         http.addFilterBefore(customFilter, UsernamePasswordAuthenticationFilter.class);
     }
+
 }

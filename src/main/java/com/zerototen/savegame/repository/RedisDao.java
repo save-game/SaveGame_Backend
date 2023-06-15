@@ -1,4 +1,4 @@
-package com.zerototen.savegame.config;
+package com.zerototen.savegame.repository;
 
 import java.time.Duration;
 import org.springframework.data.redis.core.RedisTemplate;

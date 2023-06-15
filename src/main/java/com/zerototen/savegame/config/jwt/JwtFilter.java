@@ -1,6 +1,6 @@
 package com.zerototen.savegame.config.jwt;
 
-import com.zerototen.savegame.config.RedisDao;
+import com.zerototen.savegame.repository.RedisDao;
 import java.io.IOException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;

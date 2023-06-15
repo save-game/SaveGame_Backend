@@ -1,6 +1,6 @@
 package com.zerototen.savegame.config.jwt;
 
-import com.zerototen.savegame.config.RedisDao;
+import com.zerototen.savegame.repository.RedisDao;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -35,7 +35,6 @@ public class TokenProvider implements InitializingBean {
     private final long tokenValidityInMilliseconds;
     private final long refreshTokenValidityInMilliseconds;
     private final RedisDao redisDao;
-
     private Key key;
 
     public TokenProvider(
@@ -83,7 +82,6 @@ public class TokenProvider implements InitializingBean {
         return refreshToken;
     }
 
-
     public Authentication getAuthentication(String token) {
         Claims claims = Jwts
             .parserBuilder()
@@ -117,4 +115,5 @@ public class TokenProvider implements InitializingBean {
         }
         return false;
     }
+
 }

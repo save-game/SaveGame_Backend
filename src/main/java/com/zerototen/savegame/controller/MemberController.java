@@ -21,13 +21,11 @@ public class MemberController {
 
     private final MemberService memberService;
 
-    // 로그인
     @PostMapping("auth/login")
     public ResponseEntity<MemberDto.LoginDto> login(@RequestBody MemberDto.LoginDto request) {
         return memberService.login(request);
     }
 
-    // 회원가입
     @PostMapping("sign-up")
     public ResponseEntity<SaveDto> register(@RequestBody MemberDto.SaveDto request) {
         return memberService.register(request);

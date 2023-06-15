@@ -30,4 +30,5 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         String result = objectMapper.writeValueAsString(JWT_TIMEOUT);
         response.getWriter().write(result);
     }
+
 }

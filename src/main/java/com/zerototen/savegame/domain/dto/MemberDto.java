@@ -20,32 +20,7 @@ public class MemberDto implements Serializable {
     public static class DeleteDto {
 
         private String password;
-    }
 
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Builder
-    public static class OfficeSaveDto {
-
-        private Long id;
-        private String email;
-        private String password;
-        private String nickname;
-        private String imageUrl;
-        private String accessToken;
-        private String refreshToken;
-
-        public static OfficeSaveDto response(Member member, String accessToken,
-            String refreshToken) {
-            return OfficeSaveDto.builder()
-                .nickname(member.getNickname())
-                .email(member.getEmail())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
-        }
     }
 
     @AllArgsConstructor
@@ -140,7 +115,6 @@ public class MemberDto implements Serializable {
         private String email;
         private String imageUrl;
 
-
         public static DetailDto response(@NotNull Member member) {
             return DetailDto.builder()
                 .id(member.getId())
@@ -150,4 +124,5 @@ public class MemberDto implements Serializable {
                 .build();
         }
     }
+
 }

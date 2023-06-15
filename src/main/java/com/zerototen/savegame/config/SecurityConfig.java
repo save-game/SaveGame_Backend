@@ -4,6 +4,7 @@ import com.zerototen.savegame.config.jwt.JwtAccessDeniedHandler;
 import com.zerototen.savegame.config.jwt.JwtAuthenticationEntryPoint;
 import com.zerototen.savegame.config.jwt.JwtSecurityConfig;
 import com.zerototen.savegame.config.jwt.TokenProvider;
+import com.zerototen.savegame.repository.RedisDao;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
