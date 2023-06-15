@@ -1,7 +1,7 @@
 package com.zerototen.savegame.config;
 
-import com.zerototen.savegame.member.domain.common.UserType;
-import com.zerototen.savegame.member.domain.common.UserVo;
+import com.zerototen.savegame.domain.type.UserType;
+import com.zerototen.savegame.domain.common.UserVo;
 import com.zerototen.savegame.util.Aes256Util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;

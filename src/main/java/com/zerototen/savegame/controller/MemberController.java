@@ -2,8 +2,8 @@ package com.zerototen.savegame.controller;
 
 
 
-import com.zerototen.savegame.dto.MemberDto;
-import com.zerototen.savegame.dto.MemberDto.SaveDto;
+import com.zerototen.savegame.domain.dto.MemberDto;
+import com.zerototen.savegame.domain.dto.MemberDto.SaveDto;
 import com.zerototen.savegame.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,6 +1,6 @@
 package com.zerototen.savegame.repository;
 
-import com.zerototen.savegame.entity.Member;
+import com.zerototen.savegame.domain.Member;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

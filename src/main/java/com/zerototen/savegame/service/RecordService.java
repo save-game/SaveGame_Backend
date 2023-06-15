@@ -1,9 +1,9 @@
 package com.zerototen.savegame.service;
 
-import com.zerototen.savegame.dto.CreateRecordServiceDto;
-import com.zerototen.savegame.dto.RecordResponse;
-import com.zerototen.savegame.dto.UpdateRecordServiceDto;
-import com.zerototen.savegame.entity.Record;
+import com.zerototen.savegame.domain.dto.CreateRecordServiceDto;
+import com.zerototen.savegame.domain.dto.RecordResponse;
+import com.zerototen.savegame.domain.dto.UpdateRecordServiceDto;
+import com.zerototen.savegame.domain.Record;
 import com.zerototen.savegame.repository.RecordRepository;
 import java.time.LocalDate;
 import java.util.List;
