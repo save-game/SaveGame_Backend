@@ -2,11 +2,11 @@ package com.zerototen.savegame.dto;
 
 import com.zerototen.savegame.type.Category;
 import com.zerototen.savegame.type.PayType;
+import com.zerototen.savegame.util.ConvertUtil;
 import com.zerototen.savegame.validation.Enum;
-import java.time.LocalDate;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,15 +25,15 @@ public class UpdateRecordForm {
     private String category;
 
     @NotBlank
-    private String store;
+    private String paidFor;
 
-    @NotNull
-    private LocalDate useDate;
+    private String memo;
+
+    @Pattern(regexp = "\\d{1,2}/\\d{1,2}/\\d{4}", message = "유효하지 않은 날짜 형식입니다")
+    private String useDate;
 
     @Enum(enumClass = PayType.class, ignoreCase = true)
     private String payType;
-
-    private String memo;
 
     public UpdateRecordServiceDto toServiceDto(Long id, Long memberId) {
         return UpdateRecordServiceDto.builder()
@@ -41,8 +41,8 @@ public class UpdateRecordForm {
             .memberId(memberId)
             .amount(this.getAmount())
             .category(Category.valueOf(this.getCategory()))
-            .store(this.getStore())
-            .useDate(this.getUseDate())
+            .paidFor(this.getPaidFor())
+            .useDate(ConvertUtil.stringToLocalDate(this.getUseDate()))
             .payType(PayType.valueOf(this.getPayType()))
             .memo(this.getMemo())
             .build();

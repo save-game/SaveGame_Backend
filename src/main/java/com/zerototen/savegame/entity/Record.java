@@ -1,5 +1,6 @@
 package com.zerototen.savegame.entity;
 
+import com.zerototen.savegame.dto.UpdateRecordServiceDto;
 import com.zerototen.savegame.type.Category;
 import com.zerototen.savegame.type.PayType;
 import java.time.LocalDate;
@@ -38,7 +39,9 @@ public class Record {
     private Category category;
 
     @Column(nullable = false)
-    private String store;
+    private String paidFor;
+
+    private String memo;
 
     @Column(nullable = false)
     private LocalDate useDate;
@@ -47,6 +50,13 @@ public class Record {
     @Column(nullable = false)
     private PayType payType;
 
-    private String memo;
+    public void update(UpdateRecordServiceDto serviceDto) {
+        this.amount = serviceDto.getAmount();
+        this.category = serviceDto.getCategory();
+        this.paidFor = serviceDto.getPaidFor();
+        this.memo = serviceDto.getMemo();
+        this.useDate = serviceDto.getUseDate();
+        this.payType = serviceDto.getPayType();
+    }
 
 }

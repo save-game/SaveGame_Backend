@@ -6,21 +6,21 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum Category {
+
     FOOD("식비"),
-    TRANSPORTATION("교통비"),
-    CULTURE("문화생활"),
-    NECESSITY("생필품"),
+    TRANSPORTATION("교통"),
+    LIVING("생활"),
+    HOUSE("주거"),
+    CULTURE("문화"),
     CLOTHES("의류"),
-    BEAUTY("미용"),
-    HEALTH("의료/건강"),
+    BEAUTY("뷰티"),
+    MEDICAL("의료"),
+    TELECOM("통신"),
+    FINANCE("금융"),
+    EVENT("경조사"),
     EDUCATION("교육"),
-    COMMUNICATION("통신비"),
-    MEMBERSHIP("회비"),
-    CONDOLENCES("경조사"),
-    SAVING("저축"),
-    ELECTRONICS("가전"),
-    UTILITIES("공과금"),
-    CARD("카드대금");
+    PET("반려동물");
 
     private final String name;
+
 }

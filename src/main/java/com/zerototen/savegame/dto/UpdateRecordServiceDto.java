@@ -15,19 +15,13 @@ import lombok.NoArgsConstructor;
 public class UpdateRecordServiceDto {
 
     private Long id;
-
     private Long memberId;
-
     private int amount;
-
     private Category category;
-
-    private String store;
-
-    private LocalDate useDate;
-
-    private PayType payType;
-
+    private String paidFor;
     private String memo;
-
+    private LocalDate useDate;
+    private PayType payType;
+    private String memo;
+  
 }

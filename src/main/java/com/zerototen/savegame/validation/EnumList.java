@@ -17,8 +17,8 @@ import javax.validation.Payload;
 @Documented
 @Target({METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER, TYPE_USE})
 @Retention(RUNTIME)
-@Constraint(validatedBy = {EnumValidator.class})
-public @interface Enum {
+@Constraint(validatedBy = {EnumListValidator.class})
+public @interface EnumList {
 
     String message() default "Enum에 없는 값입니다";
 
