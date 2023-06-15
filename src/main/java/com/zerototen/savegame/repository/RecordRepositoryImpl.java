@@ -2,9 +2,9 @@ package com.zerototen.savegame.repository;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.zerototen.savegame.entity.QRecord;
-import com.zerototen.savegame.entity.Record;
-import com.zerototen.savegame.type.Category;
+import com.zerototen.savegame.domain.QRecord;
+import com.zerototen.savegame.domain.Record;
+import com.zerototen.savegame.domain.type.Category;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;

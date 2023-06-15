@@ -1,9 +1,9 @@
 package com.zerototen.savegame.service;
 
-import com.zerototen.savegame.dto.MemberDto;
-import com.zerototen.savegame.dto.MemberDto.LoginDto;
-import com.zerototen.savegame.dto.MemberDto.SaveDto;
-import com.zerototen.savegame.entity.Member;
+import com.zerototen.savegame.domain.dto.MemberDto;
+import com.zerototen.savegame.domain.dto.MemberDto.LoginDto;
+import com.zerototen.savegame.domain.dto.MemberDto.SaveDto;
+import com.zerototen.savegame.domain.Member;
 import com.zerototen.savegame.repository.MemberRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;

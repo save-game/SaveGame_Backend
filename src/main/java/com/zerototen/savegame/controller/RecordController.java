@@ -1,11 +1,11 @@
 package com.zerototen.savegame.controller;
 
-import com.zerototen.savegame.dto.CreateRecordForm;
-import com.zerototen.savegame.dto.RecordResponse;
-import com.zerototen.savegame.dto.UpdateRecordForm;
-import com.zerototen.savegame.response.ResponseCode;
+import com.zerototen.savegame.domain.dto.CreateRecordForm;
+import com.zerototen.savegame.domain.dto.RecordResponse;
+import com.zerototen.savegame.domain.dto.UpdateRecordForm;
+import com.zerototen.savegame.domain.type.ResponseCode;
 import com.zerototen.savegame.service.RecordService;
-import com.zerototen.savegame.type.Category;
+import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.validation.EnumList;
 import java.time.LocalDate;
 import java.util.List;
