@@ -43,5 +43,5 @@ public class ApiExceptionAdvice {
         log.warn("IllegalArgumentException occurs");
         return ResponseEntity.badRequest().body(error);
     }
-
+  
 }

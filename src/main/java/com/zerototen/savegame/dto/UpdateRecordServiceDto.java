@@ -22,5 +22,6 @@ public class UpdateRecordServiceDto {
     private String memo;
     private LocalDate useDate;
     private PayType payType;
-
+    private String memo;
+  
 }
