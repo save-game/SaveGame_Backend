@@ -10,13 +10,19 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 
+import com.zerototen.savegame.domain.Member;
+import com.zerototen.savegame.domain.Record;
 import com.zerototen.savegame.domain.dto.CreateRecordServiceDto;
+import com.zerototen.savegame.domain.dto.RecordAnalysisResponse;
+import com.zerototen.savegame.domain.dto.RecordAnalysisServiceDto;
 import com.zerototen.savegame.domain.dto.RecordResponse;
 import com.zerototen.savegame.domain.dto.UpdateRecordServiceDto;
-import com.zerototen.savegame.domain.Record;
-import com.zerototen.savegame.repository.RecordRepository;
 import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.domain.type.PayType;
+import com.zerototen.savegame.exception.CustomException;
+import com.zerototen.savegame.exception.ErrorCode;
+import com.zerototen.savegame.repository.MemberRepository;
+import com.zerototen.savegame.repository.RecordRepository;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,10 +40,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class RecordServiceTest {
 
     @Mock
+    private MemberRepository memberRepository;
+
+    @Mock
     private RecordRepository recordRepository;
 
     @InjectMocks
     private RecordService recordService;
+
+    private static final int CATEGORY_LENGTH = Category.values().length;
+    private static final int PAYTYPE_LENGTH = PayType.values().length;
 
     @Nested
     @DisplayName("지출 등록")
@@ -48,8 +60,10 @@ class RecordServiceTest {
         void success() {
             //given
             CreateRecordServiceDto serviceDto = getCreateServiceDto();
+            Member member = getMember();
 
-            // Login과 연동 시 memberId 검증 부분 추가
+            given(memberRepository.findById(serviceDto.getMemberId()))
+                .willReturn(Optional.of(member));
 
             ArgumentCaptor<Record> argumentCaptor = ArgumentCaptor.forClass(Record.class);
 
@@ -60,17 +74,23 @@ class RecordServiceTest {
             then(recordRepository).should().save(argumentCaptor.capture());
 
         }
-        /* Login과 연동 시 추가
+
         @Test
-        @DisplayName("지출 등록 실패 - 존재하지 않는 사용자")
+        @DisplayName("실패 - 존재하지 않는 사용자")
         void fail_NotFoundUser() {
             //given
+            CreateRecordServiceDto serviceDto = getCreateServiceDto();
+
+            given(memberRepository.findById(serviceDto.getMemberId()))
+                .willReturn(Optional.empty());
 
             //when
+            CustomException exception = assertThrows(CustomException.class, () -> recordService.create(serviceDto));
 
             //then
+            then(recordRepository).should(never()).save(any());
+            assertEquals(ErrorCode.NOT_FOUND_USER, exception.getErrorCode());
         }
-        */
     }
 
     @Nested
@@ -86,8 +106,6 @@ class RecordServiceTest {
             void inputRequiredOnly() {
                 //given
                 List<Record> records = getRecords(5);
-                int cLength = Category.values().length;
-                int pLength = PayType.values().length;
 
                 given(recordRepository.findByMemberIdAndUseDateDescWithOptional(anyLong(), any(LocalDate.class),
                     any(LocalDate.class), isNull()))
@@ -105,12 +123,13 @@ class RecordServiceTest {
                 for (int i = size; i >= 1; i--) {
                     assertEquals(i, recordResponses.get(size - i).getRecordId());
                     assertEquals(i * 10000, recordResponses.get(size - i).getAmount());
-                    assertEquals(Category.values()[i % cLength].getName(),
+                    assertEquals(Category.values()[(i - 1) % CATEGORY_LENGTH].getName(),
                         recordResponses.get(size - i).getCategory());
                     assertEquals("가게" + i, recordResponses.get(size - i).getPaidFor());
                     assertEquals("메모" + i, recordResponses.get(size - i).getMemo());
                     assertEquals(LocalDate.of(2023, 6, i), recordResponses.get(size - i).getUseDate());
-                    assertEquals(PayType.values()[i % pLength].getName(), recordResponses.get(size - i).getPayType());
+                    assertEquals(PayType.values()[(i - 1) % PAYTYPE_LENGTH].getName(),
+                        recordResponses.get(size - i).getPayType());
                 }
             }
 
@@ -120,8 +139,6 @@ class RecordServiceTest {
                 //given
                 List<Record> records = getRecords(10);
                 List<String> categories = getCategories(10);
-                int cLength = Category.values().length;
-                int pLength = PayType.values().length;
 
                 given(recordRepository.findByMemberIdAndUseDateDescWithOptional(anyLong(), any(LocalDate.class),
                     any(LocalDate.class), anyList()))
@@ -138,13 +155,58 @@ class RecordServiceTest {
                 for (int i = recordResponses.size(); i >= 1; i--) {
                     assertEquals(i, recordResponses.get(size - i).getRecordId());
                     assertEquals(i * 10000, recordResponses.get(size - i).getAmount());
-                    assertEquals(Category.values()[i % cLength].getName(),
+                    assertEquals(Category.values()[(i - 1) % CATEGORY_LENGTH].getName(),
                         recordResponses.get(size - i).getCategory());
                     assertEquals("가게" + i, recordResponses.get(size - i).getPaidFor());
                     assertEquals("메모" + i, recordResponses.get(size - i).getMemo());
                     assertEquals(LocalDate.of(2023, 6, i), recordResponses.get(size - i).getUseDate());
-                    assertEquals(PayType.values()[i % pLength].getName(), recordResponses.get(size - i).getPayType());
+                    assertEquals(PayType.values()[(i - 1) % PAYTYPE_LENGTH].getName(),
+                        recordResponses.get(size - i).getPayType());
                 }
+            }
+        }
+
+        @Test
+        @DisplayName("실패 - 시작일이 종료일보다 이후")
+        void fail_StartDateIsAfterEndDate() {
+            //given
+            LocalDate startDate = LocalDate.of(2023, 6, 1);
+            LocalDate endDate = LocalDate.of(2023, 5, 31);
+
+            //when
+            CustomException exception = assertThrows(CustomException.class,
+                () -> recordService.getInfos(2L, startDate, endDate, null));
+
+            //then
+            assertEquals(ErrorCode.STARTDATE_AFTER_ENDDATE, exception.getErrorCode());
+        }
+    }
+
+    @Nested
+    @DisplayName("지출 조회 (가계부 분석)")
+    class TestGetAnalysisInfos {
+
+        @Test
+        @DisplayName("성공")
+        void success() {
+            //given
+            List<RecordAnalysisServiceDto> serviceDtos = getRecordAnalysisServiceDtos(10);
+
+            given(recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(anyLong(), any(LocalDate.class),
+                any(LocalDate.class)))
+                .willReturn(serviceDtos);
+
+            //when
+            List<RecordAnalysisResponse> responses = recordService.getAnalysisInfo(1L, 2023, 6);
+
+            //then
+            then(recordRepository).should().findByMemberIdAndUseDateAndAmountSumDesc(anyLong(), any(LocalDate.class),
+                any(LocalDate.class));
+            int size = responses.size();
+            for (int i = size; i >= 1; i--) {
+                assertEquals(Category.values()[(i - 1) % CATEGORY_LENGTH].getName(),
+                    responses.get(size - i).getCategory());
+                assertEquals(i * 10000L, responses.get(size - i).getTotal());
             }
         }
 
@@ -153,18 +215,60 @@ class RecordServiceTest {
         class Fail {
 
             @Test
-            @DisplayName("시작일이 종료일보다 이후")
-            void startDateIsAfterEndDate() {
+            @DisplayName("카테고리가 null")
+            void categoryIsNull() {
                 //given
-                LocalDate startDate = LocalDate.of(2023, 6, 1);
-                LocalDate endDate = LocalDate.of(2023, 5, 31);
+                List<RecordAnalysisServiceDto> serviceDtos = getRecordAnalysisServiceDtos(10);
+                serviceDtos.get(0).setCategory(null);
+
+                given(recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(anyLong(), any(LocalDate.class),
+                    any(LocalDate.class)))
+                    .willReturn(serviceDtos);
 
                 //when
-                RuntimeException exception = assertThrows(RuntimeException.class,
-                    () -> recordService.getInfos(2L, startDate, endDate, null));
+                CustomException exception = assertThrows(CustomException.class,
+                    () -> recordService.getAnalysisInfo(1L, 2023, 6));
 
                 //then
-                assertEquals("조회시작일이 조회종료일 이후입니다", exception.getMessage());
+                assertEquals(ErrorCode.CATEGORY_IS_NULL, exception.getErrorCode());
+            }
+
+            @Test
+            @DisplayName("합계가 0 이하")
+            void invalidTotal_ZeroOrBelow() {
+                //given
+                List<RecordAnalysisServiceDto> serviceDtos = getRecordAnalysisServiceDtos(10);
+                serviceDtos.get(0).setTotal(0L);
+
+                given(recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(anyLong(), any(LocalDate.class),
+                    any(LocalDate.class)))
+                    .willReturn(serviceDtos);
+
+                //when
+                CustomException exception = assertThrows(CustomException.class,
+                    () -> recordService.getAnalysisInfo(1L, 2023, 6));
+
+                //then
+                assertEquals(ErrorCode.INVALID_TOTAL, exception.getErrorCode());
+            }
+
+            @Test
+            @DisplayName("합계가 null")
+            void invalidTotal_IsNull() {
+                //given
+                List<RecordAnalysisServiceDto> serviceDtos = getRecordAnalysisServiceDtos(10);
+                serviceDtos.get(0).setTotal(null);
+
+                given(recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(anyLong(), any(LocalDate.class),
+                    any(LocalDate.class)))
+                    .willReturn(serviceDtos);
+
+                //when
+                CustomException exception = assertThrows(CustomException.class,
+                    () -> recordService.getAnalysisInfo(1L, 2023, 6));
+
+                //then
+                assertEquals(ErrorCode.INVALID_TOTAL, exception.getErrorCode());
             }
         }
     }
@@ -215,12 +319,12 @@ class RecordServiceTest {
 
                 //when
                 // Custom Exception 연동 시 수정 예정
-                RuntimeException exception = assertThrows(RuntimeException.class,
+                CustomException exception = assertThrows(CustomException.class,
                     () -> recordService.update(serviceDto));
 
                 //then
                 then(recordRepository).should().findById(anyLong());
-                assertEquals("Not found record", exception.getMessage());
+                assertEquals(ErrorCode.NOT_FOUND_RECORD, exception.getErrorCode());
 
             }
 
@@ -237,13 +341,12 @@ class RecordServiceTest {
                     .willReturn(Optional.of(record));
 
                 //when
-                // Custom Exception 연동 시 수정 예정
-                RuntimeException exception = assertThrows(RuntimeException.class,
+                CustomException exception = assertThrows(CustomException.class,
                     () -> recordService.update(serviceDto));
 
                 //then
                 then(recordRepository).should().findById(anyLong());
-                assertEquals("Not match member", exception.getMessage());
+                assertEquals(ErrorCode.NOT_MATCH_MEMBER, exception.getErrorCode());
             }
         }
     }
@@ -283,14 +386,13 @@ class RecordServiceTest {
                     .willReturn(Optional.empty());
 
                 //when
-                // Custom Exception 연동 시 수정 예정
-                RuntimeException exception = assertThrows(RuntimeException.class,
+                CustomException exception = assertThrows(CustomException.class,
                     () -> recordService.delete(2L, 2L));
 
                 //then
                 then(recordRepository).should().findById(anyLong());
                 then(recordRepository).should(never()).delete(any(Record.class));
-                assertEquals("Not found record", exception.getMessage());
+                assertEquals(ErrorCode.NOT_FOUND_RECORD, exception.getErrorCode());
 
             }
 
@@ -305,16 +407,25 @@ class RecordServiceTest {
                     .willReturn(Optional.of(record));
 
                 //when
-                // Custom Exception 연동 시 수정 예정
-                RuntimeException exception = assertThrows(RuntimeException.class,
+                CustomException exception = assertThrows(CustomException.class,
                     () -> recordService.delete(1L, 3L));
 
                 //then
                 then(recordRepository).should().findById(anyLong());
                 then(recordRepository).should(never()).delete(any(Record.class));
-                assertEquals("Not match member", exception.getMessage());
+                assertEquals(ErrorCode.NOT_MATCH_MEMBER, exception.getErrorCode());
             }
         }
+    }
+
+    private Member getMember() {
+        return Member.builder()
+            .id(2L)
+            .email("abc@gmail.com")
+            .nickname("Nick")
+            .password("1")
+            .imageUrl("default.png")
+            .build();
     }
 
     private CreateRecordServiceDto getCreateServiceDto() {
@@ -342,6 +453,22 @@ class RecordServiceTest {
             .build();
     }
 
+    private List<RecordAnalysisServiceDto> getRecordAnalysisServiceDtos(int size) {
+        List<RecordAnalysisServiceDto> serviceDtos = new ArrayList<>();
+
+        size = size < 1 ? 1 : Math.min(size, CATEGORY_LENGTH);
+
+        for (int i = size; i >= 1; i--) {
+            RecordAnalysisServiceDto serviceDto = RecordAnalysisServiceDto.builder()
+                .total(10000L * i)
+                .category(Category.values()[(i - 1) % CATEGORY_LENGTH])
+                .build();
+            serviceDtos.add(serviceDto);
+        }
+
+        return serviceDtos;
+    }
+
     private Record getRecord() {
         return Record.builder()
             .id(1L)
@@ -357,19 +484,19 @@ class RecordServiceTest {
 
     private List<Record> getRecords(int size) {
         List<Record> records = new ArrayList<>();
-        int cLength = Category.values().length;
-        int pLength = PayType.values().length;
+
+        size = Math.max(size, 1);
 
         for (int i = size; i >= 1; i--) {
             Record record = Record.builder()
                 .id((long) i)
                 .memberId(2L)
                 .amount(10000 * i)
-                .category(Category.values()[i % cLength])
+                .category(Category.values()[(i - 1) % CATEGORY_LENGTH])
                 .paidFor("가게" + i)
                 .memo("메모" + i)
                 .useDate(LocalDate.of(2023, 6, i))
-                .payType(PayType.values()[i % pLength])
+                .payType(PayType.values()[(i - 1) % PAYTYPE_LENGTH])
                 .build();
             records.add(record);
         }
@@ -379,11 +506,11 @@ class RecordServiceTest {
 
     private List<String> getCategories(int size) {
         List<String> categories = new ArrayList<>();
-        int cLength = Category.values().length;
-        size = Math.min(size, cLength);
+
+        size = size < 1 ? 1 : Math.min(size, CATEGORY_LENGTH);
 
         for (int i = size; i >= 1; i--) {
-            categories.add(Category.values()[i % cLength].getName());
+            categories.add(Category.values()[(i - 1) % CATEGORY_LENGTH].getName());
         }
 
         return categories;

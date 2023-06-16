@@ -1,15 +1,18 @@
 package com.zerototen.savegame.controller;
 
 import com.zerototen.savegame.domain.dto.CreateRecordForm;
+import com.zerototen.savegame.domain.dto.RecordAnalysisResponse;
 import com.zerototen.savegame.domain.dto.RecordResponse;
 import com.zerototen.savegame.domain.dto.UpdateRecordForm;
+import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.domain.type.ResponseCode;
 import com.zerototen.savegame.service.RecordService;
-import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.validation.EnumList;
 import java.time.LocalDate;
 import java.util.List;
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -30,14 +33,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class RecordController {
 
     private final RecordService recordService;
-//    private final JwtAuthenticationProvider provider;
 
     @PostMapping
     public ResponseEntity<?> createRecord(
-//        @RequestHeader(name = "X-AUTH-TOKEN") String accessToken,
-        @RequestParam Long memberId, // 로그인 기능 구현 완료 시 위의 코드로 수정
+//        @RequestHeader TODO: 토큰에 따라 ID 추출방식 바뀔 예정, 추가 시 memberId 부분을 이걸로 변경
+        @RequestParam Long memberId,
         @RequestBody @Valid CreateRecordForm form) {
-//        Long memberId = provider.getUserVo(accessToken).getId();
         recordService.create(form.toServiceDto(memberId));
         return ResponseEntity.status(ResponseCode.CREATE_SUCCESS.getStatus())
             .body(ResponseCode.CREATE_SUCCESS.getMessage());
@@ -45,21 +46,27 @@ public class RecordController {
 
     @GetMapping
     public ResponseEntity<List<RecordResponse>> getInfos(
+//        @RequestHeader TODO: 토큰에 따라 ID 추출방식 바뀔 예정, 추가 시 memberId 부분을 이걸로 변경
         @RequestParam LocalDate startDate, @RequestParam LocalDate endDate,
         @RequestParam(required = false) @Validated @EnumList(enumClass = Category.class, ignoreCase = true) List<String> categories,
-//        @RequestHeader(name = "X-AUTH-TOKEN") String accessToken,
-        @RequestParam Long memberId) { // 로그인 기능 구현 완료 시 위의 코드로 수정
-
+        @RequestParam Long memberId) {
         return ResponseEntity.ok(recordService.getInfos(memberId, startDate, endDate, categories));
+    }
+
+    @GetMapping("/analysis")
+    public ResponseEntity<List<RecordAnalysisResponse>> getAnalysisInfo(
+//        @RequestHeader TODO: 토큰에 따라 ID 추출방식 바뀔 예정, 추가 시 memberId 부분을 이걸로 변경
+        @RequestParam int year, @RequestParam @Valid @Min(1) @Max(12) int month,
+        @RequestParam Long memberId) {
+        return ResponseEntity.ok(recordService.getAnalysisInfo(memberId, year, month));
     }
 
     @PutMapping("/{recordId}")
     public ResponseEntity<?> updateRecord(
-//        @RequestHeader(name = "X-AUTH-TOKEN") String accessToken,
+//        @RequestHeader TODO: 토큰에 따라 ID 추출방식 바뀔 예정, 추가 시 memberId 부분을 이걸로 변경
         @PathVariable Long recordId,
-        @RequestParam Long memberId, // 로그인 기능 구현 완료 시 위의 코드로 수정
+        @RequestParam Long memberId,
         @RequestBody @Valid UpdateRecordForm form) {
-//        Long memberId = provider.getUserVo(accessToken).getId();
         recordService.update(form.toServiceDto(recordId, memberId));
         return ResponseEntity.status(ResponseCode.UPDATE_SUCCESS.getStatus())
             .body(ResponseCode.UPDATE_SUCCESS.getMessage());
@@ -67,10 +74,9 @@ public class RecordController {
 
     @DeleteMapping("/{recordId}")
     public ResponseEntity<?> deleteRecord(
-//        @RequestHeader(name = "X-AUTH-TOKEN") String accessToken,
+//        @RequestHeader TODO: 토큰에 따라 ID 추출방식 바뀔 예정, 추가 시 memberId 부분을 이걸로 변경
         @PathVariable Long recordId,
-        @RequestParam Long memberId) { // 로그인 기능 구현 완료 시 위의 코드로 수정)
-//        Long memberId = provider.getUserVo(accessToken).getId();
+        @RequestParam Long memberId) {
         recordService.delete(recordId, memberId);
         return ResponseEntity.status(ResponseCode.DELETE_SUCCESS.getStatus())
             .body(ResponseCode.DELETE_SUCCESS.getMessage());
