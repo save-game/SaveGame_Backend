@@ -1,6 +1,7 @@
 package com.zerototen.savegame.service;
 
 import static org.mockito.Mockito.when;
+
 import com.zerototen.savegame.config.jwt.TokenProvider;
 import com.zerototen.savegame.domain.Member;
 import com.zerototen.savegame.domain.dto.MemberDto;
@@ -9,6 +10,7 @@ import com.zerototen.savegame.domain.dto.MemberDto.LoginDto;
 import com.zerototen.savegame.domain.dto.MemberDto.SaveDto;
 import com.zerototen.savegame.repository.MemberRepository;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Optional;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -28,20 +30,16 @@ class MemberServiceTest {
 
     static MemberRepository memberRepository;
     static MemberService memberService;
-    static Member member;
     static TokenProvider tokenProvider;
     String accessToken = "dummy accessToken";
     String refreshToken = "dummy refreshToken";
 
 
     @BeforeAll
-    static void beforeAll(){
-
-
+    static void beforeAll() {
         memberService = Mockito.mock(MemberService.class);
         memberRepository = Mockito.mock(MemberRepository.class);
         tokenProvider = Mockito.mock(TokenProvider.class);
-
     }
 
 
@@ -51,30 +49,21 @@ class MemberServiceTest {
     void register() {
 
         // given
+        SaveDto newMember = saveMember();
+        Member member = getMember(newMember);
 
-        SaveDto newMember = SaveDto.builder()
-            .nickname("challenger")
-            .password("Password!")
-            .email("Challenger@challenge.com")
-            .build();
+        // when
+        when(memberService.register(newMember)).thenReturn(new
+            ResponseEntity<>(MemberDto.SaveDto.response(member, accessToken, refreshToken),
+            HttpStatus.OK));
+        when(memberRepository.findByNickname(member.getNickname())).thenReturn(
+            Optional.ofNullable(member));
+        when(memberRepository.findByEmail(member.getEmail())).thenReturn(
+            Optional.ofNullable(member));
 
-             member = new Member();
-             member.setId(1L);
-             member.setEmail(newMember.getEmail());
-             member.setNickname(newMember.getNickname());
-             member.setPassword(newMember.getPassword());
-
-
-             when(memberService.register(newMember)).thenReturn(new
-                 ResponseEntity<>(MemberDto.SaveDto.response(member, accessToken, refreshToken),
-                 HttpStatus.OK));
-
-             when(memberRepository.findByNickname(member.getNickname())).thenReturn(Optional.ofNullable(member));
-             when(memberRepository.findByEmail(member.getEmail())).thenReturn(Optional.ofNullable(member));
-
-             // then
-            Assertions.assertThat(member.getNickname()).isEqualTo(newMember.getNickname());
-            Assertions.assertThat(member.getEmail()).isEqualTo(newMember.getEmail());
+        // then
+        Assertions.assertThat(member.getNickname()).isEqualTo(newMember.getNickname());
+        Assertions.assertThat(member.getEmail()).isEqualTo(newMember.getEmail());
 
     }
 
@@ -84,36 +73,24 @@ class MemberServiceTest {
     void login() {
 
         // given
-        SaveDto newMember = SaveDto.builder()
-            .nickname("challenger")
-            .password("Password!")
-            .email("Challenger@challenge.com")
-            .build();
+        SaveDto newMember = saveMember();
+        Member member = getMember(newMember);
+        LoginDto existMember = loginMember(member);
 
-        member = new Member();
-        member.setId(1L);
-        member.setEmail(newMember.getEmail());
-        member.setNickname(newMember.getNickname());
-        member.setPassword(newMember.getPassword());
-
-
+        // when
         when(memberService.register(newMember)).thenReturn(new
             ResponseEntity<>(MemberDto.SaveDto.response(member, accessToken, refreshToken),
             HttpStatus.OK));
-
-        LoginDto existMember = LoginDto.builder()
-            .email(member.getEmail())
-            .password(member.getPassword())
-            .build();
-
         when(memberService.login(existMember)).thenReturn(new
             ResponseEntity<>(MemberDto.LoginDto.response(accessToken, refreshToken),
             HttpStatus.OK));
 
-
-        Assertions.assertThat(MemberDto.LoginDto.response(accessToken, refreshToken).getAccessToken())
+        // then
+        Assertions.assertThat(
+                MemberDto.LoginDto.response(accessToken, refreshToken).getAccessToken())
             .isEqualTo("dummy accessToken");
-        Assertions.assertThat(MemberDto.LoginDto.response(accessToken, refreshToken).getRefreshToken())
+        Assertions.assertThat(
+                MemberDto.LoginDto.response(accessToken, refreshToken).getRefreshToken())
             .isEqualTo("dummy refreshToken");
 
     }
@@ -124,34 +101,25 @@ class MemberServiceTest {
     void delete() {
 
         // given
-        SaveDto newMember = SaveDto.builder()
-            .password("deleteEmail!")
-            .email("delete@email.com")
-            .build();
+        SaveDto newMember = saveMember();
+        Member member = getMember(newMember);
+        DeleteDto deleteMember = deleteMember(newMember);
 
-        member = new Member();
-        member.setId(1L);
-        member.setEmail(newMember.getEmail());
-        member.setPassword(newMember.getPassword());
-
+        // when
         when(memberService.register(newMember)).thenReturn(new
             ResponseEntity<>(MemberDto.SaveDto.response(member, accessToken, refreshToken),
             HttpStatus.OK));
-
-        DeleteDto deleteMember = DeleteDto.builder()
-            .email(newMember.getEmail())
-            .password(newMember.getPassword())
-            .build();
-
         when(memberService.delete(deleteMember)).thenReturn(new
             ResponseEntity<>("삭제가 완료되었습니다.", HttpStatus.OK));
-
         when(memberRepository.findByEmail(deleteMember.getEmail())).thenReturn(
             Optional.ofNullable(member));
-
         member.setDeletedAt(LocalDateTime.now());
 
-        Assertions.assertThat(memberRepository.findByEmail(deleteMember.getEmail()).get().getDeletedAt()).isNotNull();
+        //then
+        Assertions.assertThat(
+            Objects.requireNonNull(
+                    memberRepository.findByEmail(deleteMember.getEmail()).orElse(null))
+                .getDeletedAt()).isNotNull();
 
     }
 
@@ -161,9 +129,8 @@ class MemberServiceTest {
     void isEmailExist() {
 
         // given
-        Member member = Member.builder()
-            .email("test@test.com")
-            .build();
+        SaveDto newMember = saveMember();
+        Member member = getMember(newMember);
 
         // when
         when(memberRepository.save(member)).thenReturn(member);
@@ -196,9 +163,8 @@ class MemberServiceTest {
     void isNicknameExist() {
 
         // given
-        Member member = Member.builder()
-            .nickname("nick")
-            .build();
+        SaveDto newMember = saveMember();
+        Member member = getMember(newMember);
 
         // when
         when(memberRepository.save(member)).thenReturn(member);
@@ -222,6 +188,37 @@ class MemberServiceTest {
 
         // then
         Assertions.assertThat(memberService.isNicknameExist(fakeNickname)).isFalse();
+    }
+
+    private SaveDto saveMember() {
+        return SaveDto.builder()
+            .nickname("challenger")
+            .password("Password!")
+            .email("Challenger@challenge.com")
+            .build();
+    }
+
+    private Member getMember(SaveDto newMember) {
+        return Member.builder()
+            .id(newMember.getId())
+            .email(newMember.getEmail())
+            .nickname(newMember.getNickname())
+            .password(newMember.getPassword())
+            .build();
+    }
+
+    private LoginDto loginMember(Member member) {
+        return LoginDto.builder()
+            .email(member.getEmail())
+            .password(member.getPassword())
+            .build();
+    }
+
+    private DeleteDto deleteMember(SaveDto newMember) {
+        return DeleteDto.builder()
+            .email(newMember.getEmail())
+            .password(newMember.getPassword())
+            .build();
     }
 
 }

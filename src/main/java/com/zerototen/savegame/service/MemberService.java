@@ -36,7 +36,7 @@ public class MemberService {
     // 회원가입
     @Transactional
     public ResponseEntity<MemberDto.SaveDto> register(MemberDto.SaveDto request) {
-        REGISTER_VALIDATION(request);
+        registerValidation(request);
         Member member = memberRepository.save(
             Member.builder()
                 .nickname(request.getNickname())
@@ -56,7 +56,7 @@ public class MemberService {
     //로그인
     @Transactional
     public ResponseEntity<MemberDto.LoginDto> login(MemberDto.LoginDto request) {
-        LOGIN_VALIDATE(request);
+        loginValidate(request);
 
         Member member = memberRepository.findByEmail(request.getEmail())
             .orElseThrow(  () -> new CustomException(LOGIN_CHECK_FAIL));
@@ -86,7 +86,7 @@ public class MemberService {
     }
 
     // 로그인 시 메일 및 비밀번호 검증
-    private void LOGIN_VALIDATE(MemberDto.LoginDto request) {
+    private void loginValidate(MemberDto.LoginDto request) {
         Member member = memberRepository.findByEmail(request.getEmail())
             .orElseThrow(
                 () -> new CustomException(LOGIN_CHECK_FAIL)
@@ -110,7 +110,7 @@ public class MemberService {
     }
 
     // 회원 가입 시 검증
-    private void REGISTER_VALIDATION(MemberDto.SaveDto request) {
+    private void registerValidation(MemberDto.SaveDto request) {
         if (request.getEmail().contains("gmail")) {
             throw new CustomException(WANT_SOCIAL_REGISTER);
         }

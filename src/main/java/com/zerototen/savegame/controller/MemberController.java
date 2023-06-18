@@ -22,17 +22,17 @@ public class MemberController {
 
     private final MemberService memberService;
 
-    @PostMapping("auth/login")
+    @PostMapping("/auth/login")
     public ResponseEntity<MemberDto.LoginDto> login(@RequestBody MemberDto.LoginDto request) {
         return memberService.login(request);
     }
 
-    @PostMapping("sign-up")
+    @PostMapping("/sign-up")
     public ResponseEntity<SaveDto> register(@RequestBody MemberDto.SaveDto request) {
         return memberService.register(request);
     }
 
-    @DeleteMapping("delete")
+    @DeleteMapping("/delete")
     public ResponseEntity<String> delete(@RequestBody MemberDto.DeleteDto request){
         return memberService.delete(request);
     }
