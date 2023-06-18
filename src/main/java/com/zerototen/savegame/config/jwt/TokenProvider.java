@@ -1,71 +1,51 @@
 package com.zerototen.savegame.config.jwt;
 
-import com.zerototen.savegame.repository.RedisDao;
+import com.zerototen.savegame.domain.common.UserVo;
+import com.zerototen.savegame.util.Aes256Util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
-import java.security.Key;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
-import java.util.stream.Collectors;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TokenProvider implements InitializingBean {
+public class TokenProvider {
 
-    private static final String AUTHORITIES_KEY = "auth";
     private final Logger logger = LoggerFactory.getLogger(TokenProvider.class);
     private final String secret;
     private final long tokenValidityInMilliseconds;
     private final long refreshTokenValidityInMilliseconds;
-    private final RedisDao redisDao;
-    private Key key;
 
     public TokenProvider(
         @Value("${jwt.secret}") String secret,
         @Value("${jwt.token-validity-in-seconds}") long tokenValidityInSeconds,
-        @Value("${jwt.refresh-token-validity-in-seconds}") long refreshTokenValidityInSeconds,
-        RedisDao redisDao) {
+        @Value("${jwt.refresh-token-validity-in-seconds}") long refreshTokenValidityInSeconds)
+    {
         this.secret = secret;
         this.tokenValidityInMilliseconds = tokenValidityInSeconds * 1000;
         this.refreshTokenValidityInMilliseconds = refreshTokenValidityInSeconds * 1000;
-        this.redisDao = redisDao;
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        byte[] keyBytes = Decoders.BASE64.decode(secret);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
-    }
-
-    public String createToken(Authentication authentication) {
-        String authorities = authentication.getAuthorities().stream()
-            .map(GrantedAuthority::getAuthority)
-            .collect(Collectors.joining(","));
-
+    public String createToken(String userPk, Long id) {
         long now = (new Date()).getTime();
         Date validity = new Date(now + this.tokenValidityInMilliseconds);
 
+        // 페이로드에 담길 부분, 추후 권한 추가 가능
+        Claims claims = Jwts.claims()
+            .setSubject(Aes256Util.encrypt(userPk))
+            .setId(Aes256Util.encrypt(id.toString()))
+            .setIssuedAt(new Date());
+
         return Jwts.builder()
-            .setSubject(authentication.getName())
-            .claim(AUTHORITIES_KEY, authorities)
-            .signWith(key, SignatureAlgorithm.HS512)
+            .setClaims(claims)
+            .signWith(SignatureAlgorithm.HS512, secret)
             .setExpiration(validity)
             .compact();
     }
@@ -76,33 +56,14 @@ public class TokenProvider implements InitializingBean {
         String refreshToken = Jwts.builder()
             .setSubject(email)
             .setExpiration(validity)
-            .signWith(key, SignatureAlgorithm.HS512)
+            .signWith(SignatureAlgorithm.HS512, secret)
             .compact();
-        redisDao.setValues(email, refreshToken, Duration.ofDays(14));
         return refreshToken;
-    }
-
-    public Authentication getAuthentication(String token) {
-        Claims claims = Jwts
-            .parserBuilder()
-            .setSigningKey(key)
-            .build()
-            .parseClaimsJws(token)
-            .getBody();
-
-        Collection<? extends GrantedAuthority> authorities =
-            Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
-
-        User principal = new User(claims.getSubject(), "", authorities);
-
-        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            Jwts.parserBuilder().setSigningKey(secret).build().parseClaimsJws(token);
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             logger.info("잘못된 JWT 서명입니다.");
@@ -114,6 +75,11 @@ public class TokenProvider implements InitializingBean {
             logger.info("JWT 토큰이 잘못되었습니다.");
         }
         return false;
+    }
+
+    public UserVo getUserVo(String token){
+        Claims c = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+        return new UserVo(Long.valueOf(Objects.requireNonNull(Aes256Util.decrypt(c.getId()))),Aes256Util.decrypt(c.getSubject()));
     }
 
 }

@@ -36,15 +36,4 @@ public class Member extends BaseEntity {
     private String imageUrl;
     private LocalDateTime deletedAt;
 
-    @ManyToMany
-    @JoinTable(
-        name = "member_authority",
-        joinColumns = {
-        @JoinColumn(name = "id", referencedColumnName = "id")},
-        inverseJoinColumns = {
-        @JoinColumn(name = "authority_name",
-            referencedColumnName = "authority_name")}
-        )
-    private Set<Authority> authorities;
-
 }

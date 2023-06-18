@@ -7,24 +7,19 @@ import static com.zerototen.savegame.exception.ErrorCode.NOT_EMAIL_FORM;
 import static com.zerototen.savegame.exception.ErrorCode.NOT_SOCIAL_LOGIN;
 import static com.zerototen.savegame.exception.ErrorCode.PASSWORD_SIZE_ERROR;
 import static com.zerototen.savegame.exception.ErrorCode.WANT_SOCIAL_REGISTER;
-
 import com.zerototen.savegame.config.jwt.TokenProvider;
-import com.zerototen.savegame.domain.Authority;
 import com.zerototen.savegame.domain.Member;
+import com.zerototen.savegame.domain.common.UserVo;
 import com.zerototen.savegame.domain.dto.MemberDto;
 import com.zerototen.savegame.exception.CustomException;
 import com.zerototen.savegame.repository.MemberRepository;
-import java.util.Collections;
+import java.time.LocalDateTime;
 import java.util.Locale;
-import java.util.Set;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,17 +32,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
-    private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
-
-    private static Set<Authority> getAuthorities() {
-        Authority authority = Authority.builder()
-            .authorityName("ROLE_MEMBER")
-            .build();
-        return Collections.singleton(authority);
-    }
-
-    // Service
     // 회원가입
     @Transactional
     public ResponseEntity<MemberDto.SaveDto> register(MemberDto.SaveDto request) {
@@ -58,13 +43,10 @@ public class MemberService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .imageUrl(request.getUserImage())
-                .authorities(getAuthorities())
                 .build()
         );
 
-        Authentication authentication = getAuthentication(request.getEmail(),
-            request.getPassword());
-        String accessToken = tokenProvider.createToken(authentication);
+        String accessToken = tokenProvider.createToken(member.getEmail(), member.getId());
         String refreshToken = tokenProvider.createRefreshToken(request.getEmail());
 
         return new ResponseEntity<>(MemberDto.SaveDto.response(member, accessToken, refreshToken),
@@ -76,46 +58,60 @@ public class MemberService {
     public ResponseEntity<MemberDto.LoginDto> login(MemberDto.LoginDto request) {
         LOGIN_VALIDATE(request);
 
-        Authentication authentication = getAuthentication(request.getEmail(),
-            request.getPassword());
-        String accessToken = tokenProvider.createToken(authentication);
+        Member member = memberRepository.findByEmail(request.getEmail())
+            .orElseThrow(  () -> new CustomException(LOGIN_CHECK_FAIL));
+
+        String accessToken = tokenProvider.createToken(member.getEmail(), member.getId());
         String refreshToken = tokenProvider.createRefreshToken(request.getEmail());
 
         return new ResponseEntity<>(MemberDto.LoginDto.response(accessToken, refreshToken),
             HttpStatus.OK);
     }
 
+    @Transactional
+    public ResponseEntity<String> delete(MemberDto.DeleteDto request){
+        Member deletedMember = memberRepository.findByEmail(request.getEmail())
+            .orElseThrow(() -> new CustomException(LOGIN_CHECK_FAIL));
 
+        if(!passwordEncoder.matches(request.getPassword(), deletedMember.getPassword())){
+            throw new CustomException(LOGIN_CHECK_FAIL);
+        }
+        deletedMember.setDeletedAt(LocalDateTime.now());
+
+            return new ResponseEntity<String>("삭제가 완료되었습니다.", HttpStatus.OK);
+    }
+
+    public UserVo LoginToken(String token){
+        return tokenProvider.getUserVo(token);
+    }
+
+    // 로그인 시 메일 및 비밀번호 검증
     private void LOGIN_VALIDATE(MemberDto.LoginDto request) {
-        memberRepository.findByEmail(request.getEmail())
+        Member member = memberRepository.findByEmail(request.getEmail())
             .orElseThrow(
                 () -> new CustomException(LOGIN_CHECK_FAIL)
             );
+
+        if (member.getDeletedAt() != null){
+            throw new CustomException(LOGIN_CHECK_FAIL);
+        }
 
         if (request.getEmail().contains("gmail")) {
             throw new CustomException(NOT_SOCIAL_LOGIN);
         }
 
-        //카카오 비활성화
-//    if (request.getEmail().contains("daum"))
-//      throw new CustomException(NOT_SOCIAL_LOGIN);
-
-        if (!passwordEncoder.matches(
-            request.getPassword(),
+        if (!passwordEncoder.matches(request.getPassword(),
             memberRepository.findByEmail(request.getEmail())
-                .orElseThrow(
-                    () -> new CustomException(LOGIN_CHECK_FAIL)
+                .orElseThrow(() -> new CustomException(LOGIN_CHECK_FAIL)
                 ).getPassword())
         ) {
             throw new CustomException(LOGIN_CHECK_FAIL);
         }
     }
 
+    // 회원 가입 시 검증
     private void REGISTER_VALIDATION(MemberDto.SaveDto request) {
-/*        if (request.getEmail() == null || request.getPw() == null || request.getName() == null
-                || request.getWeight() == null || request.getHeight() == null)
-            throw new CustomException(REGISTER_INFO_NULL);*/
-        if (request.getEmail().contains("gmail") || request.getEmail().contains("daum")) {
+        if (request.getEmail().contains("gmail")) {
             throw new CustomException(WANT_SOCIAL_REGISTER);
         }
 
@@ -143,15 +139,6 @@ public class MemberService {
         }
     }
 
-    private Authentication getAuthentication(String request, String request1) {
-        UsernamePasswordAuthenticationToken authenticationToken =
-            new UsernamePasswordAuthenticationToken(request, request1);
-        Authentication authentication = authenticationManagerBuilder.getObject()
-            .authenticate(authenticationToken);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        return authentication;
-    }
-
     public boolean isEmailExist(String email) {
         return memberRepository.findByEmail(email.toLowerCase(Locale.ROOT))
             .isPresent();
@@ -162,4 +149,9 @@ public class MemberService {
             .isPresent();
     }
 
+    public Optional<Member> findByIdAndEmail(Long id, String email){
+        return memberRepository.findById(id)
+            .stream().filter(customer->customer.getEmail().equals(email))
+            .findFirst();
+    }
 }

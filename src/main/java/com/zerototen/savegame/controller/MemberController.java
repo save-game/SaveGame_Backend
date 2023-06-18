@@ -7,6 +7,7 @@ import com.zerototen.savegame.domain.dto.MemberDto.SaveDto;
 import com.zerototen.savegame.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("app")
+@RequestMapping("member")
 @RequiredArgsConstructor
 public class MemberController {
 
@@ -29,6 +30,11 @@ public class MemberController {
     @PostMapping("sign-up")
     public ResponseEntity<SaveDto> register(@RequestBody MemberDto.SaveDto request) {
         return memberService.register(request);
+    }
+
+    @DeleteMapping("delete")
+    public ResponseEntity<String> delete(@RequestBody MemberDto.DeleteDto request){
+        return memberService.delete(request);
     }
 
     @GetMapping("/exist-email")

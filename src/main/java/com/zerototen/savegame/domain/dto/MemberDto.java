@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 public class MemberDto implements Serializable {
 
@@ -18,7 +19,7 @@ public class MemberDto implements Serializable {
     @AllArgsConstructor
     @Builder
     public static class DeleteDto {
-
+        private String email;
         private String password;
 
     }
@@ -73,16 +74,10 @@ public class MemberDto implements Serializable {
         }
     }
 
-    @Data
-    @Builder
-    public static class reissue {
 
-        private final String pw;
-        private final String email;
-        private final String rtk;
-    }
-
-    @Data
+    @Getter
+    @Setter
+    @AllArgsConstructor
     @Builder
     public static class socialLoginResponse {
 
@@ -106,7 +101,9 @@ public class MemberDto implements Serializable {
         }
     }
 
-    @Data
+    @Getter
+    @Setter
+    @AllArgsConstructor
     @Builder
     public static class DetailDto {
 
