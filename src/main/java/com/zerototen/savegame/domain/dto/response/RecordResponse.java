@@ -1,6 +1,6 @@
-package com.zerototen.savegame.domain.dto;
+package com.zerototen.savegame.domain.dto.response;
 
-import com.zerototen.savegame.domain.Record;
+import com.zerototen.savegame.domain.entity.Record;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

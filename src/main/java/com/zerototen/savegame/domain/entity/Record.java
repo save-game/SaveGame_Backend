@@ -1,4 +1,4 @@
-package com.zerototen.savegame.domain;
+package com.zerototen.savegame.domain.entity;
 
 import com.zerototen.savegame.domain.dto.UpdateRecordServiceDto;
 import com.zerototen.savegame.domain.type.Category;
