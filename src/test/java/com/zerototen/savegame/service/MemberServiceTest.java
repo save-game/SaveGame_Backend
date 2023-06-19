@@ -1,136 +1,195 @@
 package com.zerototen.savegame.service;
 
-import com.zerototen.savegame.domain.dto.MemberDto;
-import com.zerototen.savegame.domain.dto.MemberDto.LoginDto;
-import com.zerototen.savegame.domain.dto.MemberDto.SaveDto;
-import com.zerototen.savegame.domain.Member;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
+import com.zerototen.savegame.domain.dto.request.DuplicationRequest;
+import com.zerototen.savegame.domain.dto.request.SignupRequest;
+import com.zerototen.savegame.domain.dto.response.ResponseDto;
+import com.zerototen.savegame.domain.entity.Member;
+import com.zerototen.savegame.domain.type.Authority;
+import com.zerototen.savegame.exception.CustomException;
+import com.zerototen.savegame.exception.ErrorCode;
 import com.zerototen.savegame.repository.MemberRepository;
+import java.util.Optional;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class MemberServiceTest {
 
-    @Autowired
+    @InjectMocks
     MemberService memberService;
-
-    @Autowired
+    @Mock
     MemberRepository memberRepository;
 
     @Test
-    @DisplayName("회원가입")
-    void register() {
-
+    @DisplayName("회원가입_성공")
+    void signUp_success() {
         // given
-      MemberDto.SaveDto member = SaveDto.builder()
-          .nickname("challenger")
-          .email("challengers@challengers.com")
-          .password("password!")
-          .build();
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        String originPW = "password11!!";
+        SignupRequest request = getSignupRequest(originPW);
+
+        Member member = Member.builder()
+            .id(1L)
+            .build();
+        given(memberRepository.save(any()))
+            .willReturn(member);
+
+        ArgumentCaptor<Member> captor = ArgumentCaptor.forClass(Member.class);
 
         // when
-        memberService.register(member);
+        memberService.signup(request);
+
+        // then
+        verify(memberRepository, times(1)).save(captor.capture());
+        assertEquals(captor.getValue().getEmail(), request.getEmail());
+        assertEquals(captor.getValue().getNickname(), request.getNickname());
+        assertTrue(encoder.matches(originPW, captor.getValue().getPassword()));
+    }
+
+    private static SignupRequest getSignupRequest(String originPW) {
+        return SignupRequest.builder()
+            .email("test@gmail.com")
+            .password(originPW)
+            .nickname("test")
+            .build();
+    }
+
+    @Test
+    @DisplayName("회원가입_실패_이미 등록된 이메일")
+    void signUp_failure_ALREADY_REGISTERED_MEMBER() {
+        //given
+        Member member = getMember();
+
+        String originPW = "password11!!";
+        SignupRequest request = getSignupRequest(originPW);
+
+        given(memberRepository.findByEmail(anyString()))
+            .willReturn(Optional.of(member));
+
+        //when
+        CustomException exception = assertThrows(CustomException.class,
+            () -> memberService.signup(request));
 
         //then
-        Member findMember = memberRepository.findByNickname("challenger").get();
-        Assertions.assertThat(member.getNickname()).isEqualTo(findMember.getNickname());
+        assertEquals(ErrorCode.ALREADY_REGISTERED_EMAIL, exception.getErrorCode());
+    }
 
+    private static Member getMember() {
+        return Member.builder()
+            .id(1L)
+            .email("test@naver.com")
+            .nickname("testname")
+            .userRole(Authority.ROLE_MEMBER)
+            .build();
     }
 
     @Test
-    @DisplayName("로그인")
-    @Transactional
-    void login() {
-        // given
-        MemberDto.SaveDto member = SaveDto.builder()
-            .nickname("challenger1")
-            .email("challengers1@challengers.com")
-            .password("password!")
-            .build();
-        memberService.register(member);
+    @DisplayName("이메일 중복 검사_실패_이미 등록된 이메일")
+    void checkEmail_fail_alreadyRegistered() {
+        //given
+        DuplicationRequest request = new DuplicationRequest("test@naver.com");
+        Member member = getMember();
 
-        // when
-        MemberDto.LoginDto loginMember = LoginDto.builder()
-            .email("challengers1@challengers.com")
-            .password("password!")
-            .build();
+        given(memberRepository.findByEmail(anyString()))
+            .willReturn(Optional.of(member));
+
+        //when
+        ResponseDto<?> responseDto = memberService.checkEmail(request);
 
         //then
-        Assertions.assertThat(memberService.login(loginMember).getStatusCodeValue()).isEqualTo(200);
+        assertFalse(responseDto.isSuccess());
     }
 
     @Test
-    @DisplayName("이메일 존재 할 때 True 반환")
-    @Transactional
-    void isEmailExist() {
+    @DisplayName("이메일 중복 검사_실패_양식 미준수")
+    void checkEmail_fail_formError() {
+        //given
+        DuplicationRequest request = new DuplicationRequest("testnaver.com");
 
-        // given
-        Member member = Member.builder()
-            .email("test@test.com")
-            .build();
+        //when
+        ResponseDto<?> responseDto = memberService.checkEmail(request);
 
-        // when
-        memberRepository.save(member);
-
-        // then
-        Assertions.assertThat(memberService.isEmailExist(member.getEmail())).isTrue();
-
+        //then
+        assertFalse(responseDto.isSuccess());
     }
 
     @Test
-    @DisplayName("이메일 존재하지 않을 때 False 반환")
-    @Transactional
-    void isEmailNotExist() {
+    @DisplayName("이메일 중복 검사_성공")
+    void checkEmail_success() {
+        //given
+        DuplicationRequest request = new DuplicationRequest("test2@naver.com");
 
-        // given
-        Member member = Member.builder()
-            .email("test@test.com")
-            .build();
+        given(memberRepository.findByEmail(anyString()))
+            .willReturn(Optional.empty());
 
-        // when
-        memberRepository.save(member);
+        //when
+        ResponseDto<?> responseDto = memberService.checkEmail(request);
 
-        // then
-        Assertions.assertThat(memberService.isEmailExist("fake@fake.com")).isFalse();
-
+        //then
+        assertTrue(responseDto.isSuccess());
     }
 
     @Test
-    @DisplayName("닉네임 존재할 때 True 반환")
-    @Transactional
-    void isNicknameExist() {
+    @DisplayName("닉네임 중복 검사_실패_양식 미준수")
+    void checkNickname_fail_formError() {
+        //given
+        DuplicationRequest request = new DuplicationRequest("t");
 
-        // given
-        Member member = Member.builder()
-            .nickname("nick")
-            .build();
+        //when
+        ResponseDto<?> responseDto = memberService.checkNickname(request);
 
-        // when
-        memberRepository.save(member);
-
-        // then
-        Assertions.assertThat(memberService.isNicknameExist(member.getNickname())).isTrue();
+        //then
+        assertFalse(responseDto.isSuccess());
     }
 
     @Test
-    @DisplayName("닉네임 존재하지 않을 때 False 반환")
-    @Transactional
-    void isNicknameNotExist() {
+    @DisplayName("닉네임 중복 검사_실패_이미 등록된 닉네임")
+    void checkNickname_fail_alreadyRegistered() {
+        //given
+        DuplicationRequest request = new DuplicationRequest("test");
+        Member member = getMember();
 
-        // given
-        Member member = Member.builder()
-            .nickname("nick")
-            .build();
+        given(memberRepository.findByNickname(anyString()))
+            .willReturn(Optional.of(member));
 
-        // when
-        memberRepository.save(member);
+        //when
+        ResponseDto<?> responseDto = memberService.checkNickname(request);
 
-        // then
-        Assertions.assertThat(memberService.isNicknameExist("name")).isFalse();
+        //then
+        assertFalse(responseDto.isSuccess());
+    }
+
+    @Test
+    @DisplayName("닉네임 중복 검사_성공")
+    void checkNickname_success() {
+        //given
+        DuplicationRequest request = new DuplicationRequest("test2");
+
+        given(memberRepository.findByNickname(anyString()))
+            .willReturn(Optional.empty());
+
+        //when
+        ResponseDto<?> responseDto = memberService.checkNickname(request);
+
+        //then
+        assertTrue(responseDto.isSuccess());
     }
 
 }

@@ -1,6 +1,6 @@
 package com.zerototen.savegame.repository;
 
-import com.zerototen.savegame.domain.Record;
+import com.zerototen.savegame.domain.entity.Record;
 import com.zerototen.savegame.domain.dto.RecordAnalysisServiceDto;
 import java.time.LocalDate;
 import java.util.List;

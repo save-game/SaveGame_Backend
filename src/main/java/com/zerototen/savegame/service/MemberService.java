@@ -1,31 +1,26 @@
 package com.zerototen.savegame.service;
 
-import static com.zerototen.savegame.exception.ErrorCode.ALREADY_REGISTER_EMAIL;
-import static com.zerototen.savegame.exception.ErrorCode.LOGIN_CHECK_FAIL;
-import static com.zerototen.savegame.exception.ErrorCode.NOT_CONTAINS_EXCLAMATIONMARK;
-import static com.zerototen.savegame.exception.ErrorCode.NOT_EMAIL_FORM;
-import static com.zerototen.savegame.exception.ErrorCode.NOT_SOCIAL_LOGIN;
-import static com.zerototen.savegame.exception.ErrorCode.PASSWORD_SIZE_ERROR;
-import static com.zerototen.savegame.exception.ErrorCode.WANT_SOCIAL_REGISTER;
-
-import com.zerototen.savegame.config.jwt.TokenProvider;
-import com.zerototen.savegame.domain.Authority;
-import com.zerototen.savegame.domain.Member;
-import com.zerototen.savegame.domain.dto.MemberDto;
+import com.zerototen.savegame.domain.dto.request.DuplicationRequest;
+import com.zerototen.savegame.domain.dto.request.LoginRequest;
+import com.zerototen.savegame.domain.dto.response.ResponseDto;
+import com.zerototen.savegame.domain.dto.request.SignupRequest;
+import com.zerototen.savegame.domain.dto.TokenDto;
+import com.zerototen.savegame.domain.entity.Member;
+import com.zerototen.savegame.domain.entity.RefreshToken;
+import com.zerototen.savegame.domain.type.Authority;
 import com.zerototen.savegame.exception.CustomException;
+import com.zerototen.savegame.exception.ErrorCode;
 import com.zerototen.savegame.repository.MemberRepository;
-import java.util.Collections;
-import java.util.Locale;
-import java.util.Set;
+import com.zerototen.savegame.security.TokenProvider;
+import com.zerototen.savegame.util.PasswordUtil;
+import java.util.Optional;
+import java.util.regex.Pattern;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.json.simple.parser.ParseException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,133 +28,131 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @RequiredArgsConstructor
 public class MemberService {
-
     private final MemberRepository memberRepository;
-    private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
-    private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
-
-    private static Set<Authority> getAuthorities() {
-        Authority authority = Authority.builder()
-            .authorityName("ROLE_MEMBER")
-            .build();
-        return Collections.singleton(authority);
-    }
-
-    // Service
     // 회원가입
     @Transactional
-    public ResponseEntity<MemberDto.SaveDto> register(MemberDto.SaveDto request) {
-        REGISTER_VALIDATION(request);
-        Member member = memberRepository.save(
-            Member.builder()
-                .nickname(request.getNickname())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .imageUrl(request.getUserImage())
-                .authorities(getAuthorities())
-                .build()
-        );
+    public ResponseDto<?> signup(SignupRequest request) {
+        Member member = getMemberByEmail(request.getEmail());
+        if (member != null) {
+            throw new CustomException(ErrorCode.ALREADY_REGISTERED_EMAIL);
+        }
 
-        Authentication authentication = getAuthentication(request.getEmail(),
-            request.getPassword());
-        String accessToken = tokenProvider.createToken(authentication);
-        String refreshToken = tokenProvider.createRefreshToken(request.getEmail());
+        member = Member.builder()
+            .email(request.getEmail())
+            .password(new BCryptPasswordEncoder().encode(request.getPassword()))
+            .nickname(request.getNickname())
+            .userRole(Authority.ROLE_MEMBER)
+            .build();
 
-        return new ResponseEntity<>(MemberDto.SaveDto.response(member, accessToken, refreshToken),
-            HttpStatus.OK);
+        return ResponseDto.success(memberRepository.save(member));
     }
 
-    //로그인
+    private Member getMemberByEmail(String email) {
+        Optional<Member> optionalMember = memberRepository.findByEmail(email);
+        return optionalMember.orElse(null);
+    }
+
+    // 로그인
     @Transactional
-    public ResponseEntity<MemberDto.LoginDto> login(MemberDto.LoginDto request) {
-        LOGIN_VALIDATE(request);
+    public ResponseDto<?> login(LoginRequest request, HttpServletResponse response) {
+        Member member = getMemberByEmail(request.getEmail());
+        if (member == null) {
+            throw new CustomException(ErrorCode.NOT_FOUND_MEMBER);
+        }
 
-        Authentication authentication = getAuthentication(request.getEmail(),
-            request.getPassword());
-        String accessToken = tokenProvider.createToken(authentication);
-        String refreshToken = tokenProvider.createRefreshToken(request.getEmail());
+        // 비밀번호 확인
+        if (!PasswordUtil.checkPassword(request.getPassword(), member.getPassword())) {
+            throw new CustomException(ErrorCode.WRONG_PASSWORD);
+        }
 
-        return new ResponseEntity<>(MemberDto.LoginDto.response(accessToken, refreshToken),
-            HttpStatus.OK);
+        TokenDto tokenDto = tokenProvider.generateTokenDto(member);
+        tokenToHeaders(tokenDto, response);
+
+        return ResponseDto.success("Login Success");
     }
 
-
-    private void LOGIN_VALIDATE(MemberDto.LoginDto request) {
-        memberRepository.findByEmail(request.getEmail())
-            .orElseThrow(
-                () -> new CustomException(LOGIN_CHECK_FAIL)
-            );
-
-        if (request.getEmail().contains("gmail")) {
-            throw new CustomException(NOT_SOCIAL_LOGIN);
-        }
-
-        //카카오 비활성화
-//    if (request.getEmail().contains("daum"))
-//      throw new CustomException(NOT_SOCIAL_LOGIN);
-
-        if (!passwordEncoder.matches(
-            request.getPassword(),
-            memberRepository.findByEmail(request.getEmail())
-                .orElseThrow(
-                    () -> new CustomException(LOGIN_CHECK_FAIL)
-                ).getPassword())
-        ) {
-            throw new CustomException(LOGIN_CHECK_FAIL);
-        }
+    // 헤더에 토큰담기
+    private void tokenToHeaders(TokenDto tokenDto, HttpServletResponse response) {
+        response.addHeader("Authorization", "Bearer " + tokenDto.getAccessToken());
+        response.addHeader("RefreshToken", tokenDto.getRefreshToken());
     }
 
-    private void REGISTER_VALIDATION(MemberDto.SaveDto request) {
-/*        if (request.getEmail() == null || request.getPw() == null || request.getName() == null
-                || request.getWeight() == null || request.getHeight() == null)
-            throw new CustomException(REGISTER_INFO_NULL);*/
-        if (request.getEmail().contains("gmail") || request.getEmail().contains("daum")) {
-            throw new CustomException(WANT_SOCIAL_REGISTER);
-        }
+    // 로그아웃
+    @Transactional
+    public ResponseDto<?> logout(HttpServletRequest request) {
+        if (!tokenProvider.validateToken(request.getHeader("RefreshToken")))
+            return ResponseDto.fail("토큰 값이 올바르지 않습니다.");
 
-        if (memberRepository.existsByEmail(request.getEmail())) {
-            throw new CustomException(ALREADY_REGISTER_EMAIL);
-        }
+        // 맴버객체 찾아오기
+        Member member = tokenProvider.getMemberFromAuthentication();
+        if (null == member)
+            return ResponseDto.fail("사용자를 찾을 수 없습니다.");
+        if (tokenProvider.deleteRefreshToken(member))
+            return ResponseDto.fail("존재하지 않는 Token 입니다.");
 
-        if (!request.getEmail().contains("@")) {
-            throw new CustomException(NOT_EMAIL_FORM);
-        }
+        tokenProvider.deleteRefreshToken(member);
 
-        if (!(request.getPassword().length() > 5)) {
-            throw new CustomException(PASSWORD_SIZE_ERROR);
-        }
-
-        if (!(request.getPassword().contains("!") || request.getPassword().contains("@")
-            || request.getPassword().contains("#")
-            || request.getPassword().contains("$") || request.getPassword().contains("%")
-            || request.getPassword().contains("^")
-            || request.getPassword().contains("&") || request.getPassword().contains("*")
-            || request.getPassword().contains("(")
-            || request.getPassword().contains(")"))
-        ) {
-            throw new CustomException(NOT_CONTAINS_EXCLAMATIONMARK);
-        }
+        return ResponseDto.success("로그아웃 성공");
     }
 
-    private Authentication getAuthentication(String request, String request1) {
-        UsernamePasswordAuthenticationToken authenticationToken =
-            new UsernamePasswordAuthenticationToken(request, request1);
-        Authentication authentication = authenticationManagerBuilder.getObject()
-            .authenticate(authenticationToken);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        return authentication;
+    // 이메일 중복 검사
+    @Transactional(readOnly = true)
+    public ResponseDto<?> checkEmail(DuplicationRequest request) {
+        String regExp = "^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$";
+        if (!Pattern.matches(regExp, request.getValue()))
+            return ResponseDto.fail("이메일 양식을 지켜주세요.");
+
+        Optional<Member> optionalMember = memberRepository.findByEmail(request.getValue());
+        if (optionalMember.isPresent())
+            return ResponseDto.fail("사용중인 이메일 입니다.");
+
+        return ResponseDto.success("사용 가능한 이메일 입니다.");
     }
 
-    public boolean isEmailExist(String email) {
-        return memberRepository.findByEmail(email.toLowerCase(Locale.ROOT))
-            .isPresent();
+    // 닉네임 중복 검사
+    @Transactional(readOnly = true)
+    public ResponseDto<?> checkNickname(DuplicationRequest request) {
+        String regExp = "^[가-힣a-zA-Z0-9]{2,10}$";
+        if (!Pattern.matches(regExp, request.getValue()))
+            return ResponseDto.fail("2~10자리 한글,대소문자,숫자만 입력해주세요.");
+
+        Optional<Member> optionalMember = memberRepository.findByNickname(request.getValue());
+        if (optionalMember.isPresent())
+            return ResponseDto.fail("중복된 닉네임 입니다.");
+
+        return ResponseDto.success("사용 가능한 닉네임 입니다.");
     }
 
-    public boolean isNicknameExist(String nickname) {
-        return memberRepository.findByNickname(nickname.toLowerCase(Locale.ROOT))
-            .isPresent();
+    // refresh token 재발급
+    @Transactional
+    public ResponseDto<?> reissue(HttpServletRequest request, HttpServletResponse response) throws ParseException {
+        if (tokenProvider.getMemberIdByToken(request.getHeader("Authorization")) !=null) {
+            return ResponseDto.fail("아직 유효한 access token 입니다.");
+        }
+        if (!tokenProvider.validateToken(request.getHeader("RefreshToken"))) {
+            return ResponseDto.fail("유효하지 않은 refresh token입니다.");
+        }
+        String memberId = tokenProvider.getMemberFromExpiredAccessToken(request);
+        if (null == memberId) {
+            return ResponseDto.fail("access token의 값이 유효하지 않습니다.");
+        }
+        Member member = memberRepository.findById(Long.parseLong(memberId)).orElse(null);
+
+        RefreshToken refreshToken = tokenProvider.isPresentRefreshToken(member);
+
+        if (!refreshToken.getKeyValue().equals(request.getHeader("RefreshToken"))) {
+            log.info("refreshToken : "+refreshToken.getKeyValue());
+            log.info("header rft : "+request.getHeader("RefreshToken"));
+            return ResponseDto.fail("토큰이 일치하지 않습니다.");
+        }
+
+        TokenDto tokenDto = tokenProvider.generateTokenDto(member);
+        refreshToken.updateValue(tokenDto.getRefreshToken());
+        tokenToHeaders(tokenDto, response);
+
+        return ResponseDto.success("재발급 완료");
     }
 
 }

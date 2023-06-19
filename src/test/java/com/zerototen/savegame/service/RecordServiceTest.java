@@ -10,12 +10,12 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 
-import com.zerototen.savegame.domain.Member;
-import com.zerototen.savegame.domain.Record;
+import com.zerototen.savegame.domain.entity.Member;
+import com.zerototen.savegame.domain.entity.Record;
 import com.zerototen.savegame.domain.dto.CreateRecordServiceDto;
 import com.zerototen.savegame.domain.dto.RecordAnalysisResponse;
 import com.zerototen.savegame.domain.dto.RecordAnalysisServiceDto;
-import com.zerototen.savegame.domain.dto.RecordResponse;
+import com.zerototen.savegame.domain.dto.response.RecordResponse;
 import com.zerototen.savegame.domain.dto.UpdateRecordServiceDto;
 import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.domain.type.PayType;
@@ -89,7 +89,7 @@ class RecordServiceTest {
 
             //then
             then(recordRepository).should(never()).save(any());
-            assertEquals(ErrorCode.NOT_FOUND_USER, exception.getErrorCode());
+            assertEquals(ErrorCode.NOT_FOUND_MEMBER, exception.getErrorCode());
         }
     }
 
@@ -424,7 +424,7 @@ class RecordServiceTest {
             .email("abc@gmail.com")
             .nickname("Nick")
             .password("1")
-            .imageUrl("default.png")
+            .profileImageUrl("default.png")
             .build();
     }
 

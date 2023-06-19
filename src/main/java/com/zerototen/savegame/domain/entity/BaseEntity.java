@@ -1,4 +1,4 @@
-package com.zerototen.savegame.domain;
+package com.zerototen.savegame.domain.entity;
 
 import java.time.LocalDateTime;
 import javax.persistence.EntityListeners;

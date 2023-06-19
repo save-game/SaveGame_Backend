@@ -2,7 +2,7 @@ package com.zerototen.savegame.controller;
 
 import com.zerototen.savegame.domain.dto.CreateRecordForm;
 import com.zerototen.savegame.domain.dto.RecordAnalysisResponse;
-import com.zerototen.savegame.domain.dto.RecordResponse;
+import com.zerototen.savegame.domain.dto.response.RecordResponse;
 import com.zerototen.savegame.domain.dto.UpdateRecordForm;
 import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.domain.type.ResponseCode;

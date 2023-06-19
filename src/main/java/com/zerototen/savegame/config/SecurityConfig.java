@@ -1,47 +1,64 @@
 package com.zerototen.savegame.config;
 
-import com.zerototen.savegame.config.jwt.JwtAccessDeniedHandler;
-import com.zerototen.savegame.config.jwt.JwtAuthenticationEntryPoint;
-import com.zerototen.savegame.config.jwt.JwtSecurityConfig;
-import com.zerototen.savegame.config.jwt.TokenProvider;
-import com.zerototen.savegame.repository.RedisDao;
+import com.zerototen.savegame.exception.AccessDeniedHandlerException;
+import com.zerototen.savegame.exception.AuthenticationEntryPointException;
+import com.zerototen.savegame.security.TokenProvider;
+import com.zerototen.savegame.service.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.autoconfigure.security.ConditionalOnDefaultWebSecurity;
+import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.filter.CorsFilter;
+import org.springframework.security.web.SecurityFilterChain;
 
+@Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+@ConditionalOnDefaultWebSecurity
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+public class SecurityConfig {
 
-    private final RedisDao redisDao;
+    @Value("${jwt.secret}")
+    String SECRET_KEY;
     private final TokenProvider tokenProvider;
-    private final CorsFilter corsFilter;
-    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+    private final UserDetailsServiceImpl userDetailsService;
+    private final AuthenticationEntryPointException authenticationEntryPointException;
+    private final AccessDeniedHandlerException accessDeniedHandlerException;
+
+//  @Bean
+//  public WebSecurityCustomizer webSecurityCustomizer() {
+//    // h2-console 사용에 대한 허용 (CSRF, FrameOptions 무시)
+//    return (web) -> web.ignoring()
+//            .antMatchers("/h2-console/**");
+//  }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    @Override
-    protected void configure(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity
-            .csrf().disable()
+    @Bean
+    @Order(SecurityProperties.BASIC_AUTH_ORDER)
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.cors();
 
-            .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
+        http.csrf().disable()
+
+            .headers().frameOptions().sameOrigin()
+
+            .and()
             .exceptionHandling()
-            .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-            .accessDeniedHandler(jwtAccessDeniedHandler)
+            .authenticationEntryPoint(authenticationEntryPointException)
+            .accessDeniedHandler(accessDeniedHandlerException)
 
             .and()
             .sessionManagement()
@@ -49,31 +66,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
             .and()
             .authorizeRequests()
-            .antMatchers(
-                //일반 로그인
-                "/app/sign-up", "/app/auth/login",
-
-                //이메일, 닉네임 검증
-                "/app/exist-nickname", "/app/exist-email",
-
-                // OAth2
-                "/auth/google/**",
-
-                //Swagger
-                "/v2/api-docs",
-                "/swagger-resources",
-                "/swagger-resources/**",
-                "/configuration/ui",
-                "/configuration/security",
-                "/swagger-ui.html",
-                "/webjars/**",
-                "/v3/api-docs/**",
-                "/swagger-ui/**"
-            )
-            .permitAll()
-            .anyRequest().authenticated()
+            .antMatchers(HttpMethod.OPTIONS, "/**/*").permitAll()
+            .antMatchers("/api/member/**").permitAll()
+            .antMatchers("/sub/**").permitAll()
+            .antMatchers("/pub/**").permitAll()
+            .antMatchers("/ws-stomp/**").permitAll()
+            .antMatchers("/h2-console/**").permitAll()
+            .antMatchers("/index").permitAll()
+//            .anyRequest().authenticated()
+            .anyRequest().permitAll()  // TODO: 임시로 모든 접근 허용
 
             .and()
-            .apply(new JwtSecurityConfig(tokenProvider, redisDao));
+            .apply(new JwtSecurityConfig(SECRET_KEY, tokenProvider, userDetailsService));
+
+
+        return http.build();
     }
 }

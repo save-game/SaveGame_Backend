@@ -4,7 +4,7 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.zerototen.savegame.domain.QRecord;
-import com.zerototen.savegame.domain.Record;
+import com.zerototen.savegame.domain.entity.Record;
 import com.zerototen.savegame.domain.dto.RecordAnalysisServiceDto;
 import com.zerototen.savegame.domain.type.Category;
 import java.time.LocalDate;

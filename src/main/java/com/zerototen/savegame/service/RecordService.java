@@ -1,9 +1,9 @@
 package com.zerototen.savegame.service;
 
-import com.zerototen.savegame.domain.Record;
+import com.zerototen.savegame.domain.entity.Record;
 import com.zerototen.savegame.domain.dto.CreateRecordServiceDto;
 import com.zerototen.savegame.domain.dto.RecordAnalysisResponse;
-import com.zerototen.savegame.domain.dto.RecordResponse;
+import com.zerototen.savegame.domain.dto.response.RecordResponse;
 import com.zerototen.savegame.domain.dto.UpdateRecordServiceDto;
 import com.zerototen.savegame.exception.CustomException;
 import com.zerototen.savegame.exception.ErrorCode;
@@ -28,7 +28,7 @@ public class RecordService {
     @Transactional
     public void create(CreateRecordServiceDto serviceDto) {
         memberRepository.findById(serviceDto.getMemberId())
-            .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+            .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_MEMBER));
 
         recordRepository.save(serviceDto.toEntity());
         log.debug("Create record -> memberId: {}", serviceDto.getMemberId());
