@@ -39,6 +39,7 @@ public class MemberService {
             throw new CustomException(ErrorCode.ALREADY_REGISTERED_EMAIL);
         }
 
+        //TODO: 기본 프로필 이미지 등록
         member = Member.builder()
             .email(request.getEmail())
             .password(new BCryptPasswordEncoder().encode(request.getPassword()))
