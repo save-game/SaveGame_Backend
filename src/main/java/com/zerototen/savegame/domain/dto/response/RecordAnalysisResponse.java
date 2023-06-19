@@ -1,4 +1,4 @@
-package com.zerototen.savegame.domain.dto;
+package com.zerototen.savegame.domain.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
