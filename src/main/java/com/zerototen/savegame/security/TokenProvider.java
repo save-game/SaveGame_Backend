@@ -20,7 +20,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -133,8 +132,8 @@ public class TokenProvider {
         return false;
     }
 
-    public Authentication getAuthentication(HttpServletRequest request) {
-        String token = getAccessToken(request);
+    public Authentication getAuthentication(String accessToken) {
+        String token = getAccessToken(accessToken);
         if (token == null) {
             return null;
         } else {
@@ -178,18 +177,16 @@ public class TokenProvider {
         return Long.parseLong(claims.getSubject());
     }
 
-    private String getAccessToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+    private String getAccessToken(String accessToken) {
+        if (StringUtils.hasText(accessToken) && accessToken.startsWith("Bearer ")) {
+            return accessToken.substring(7);
         }
 
         return null;
     }
 
-    public String getMemberFromExpiredAccessToken(HttpServletRequest request) throws ParseException {
-        String jwt = getAccessToken(request);
+    public String getMemberFromExpiredAccessToken(String accessToken) throws ParseException {
+        String jwt = getAccessToken(accessToken);
 
         Base64.Decoder decoder = Base64.getUrlDecoder();
         assert jwt != null;
