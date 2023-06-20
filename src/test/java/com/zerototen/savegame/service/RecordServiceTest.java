@@ -2,6 +2,7 @@ package com.zerototen.savegame.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -10,13 +11,14 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 
+import com.zerototen.savegame.domain.dto.CreateRecordServiceDto;
+import com.zerototen.savegame.domain.dto.RecordAnalysisServiceDto;
+import com.zerototen.savegame.domain.dto.UpdateRecordServiceDto;
+import com.zerototen.savegame.domain.dto.response.RecordAnalysisResponse;
+import com.zerototen.savegame.domain.dto.response.RecordResponse;
+import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.entity.Record;
-import com.zerototen.savegame.domain.dto.CreateRecordServiceDto;
-import com.zerototen.savegame.domain.dto.RecordAnalysisResponse;
-import com.zerototen.savegame.domain.dto.RecordAnalysisServiceDto;
-import com.zerototen.savegame.domain.dto.response.RecordResponse;
-import com.zerototen.savegame.domain.dto.UpdateRecordServiceDto;
 import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.domain.type.PayType;
 import com.zerototen.savegame.exception.CustomException;
@@ -68,11 +70,11 @@ class RecordServiceTest {
             ArgumentCaptor<Record> argumentCaptor = ArgumentCaptor.forClass(Record.class);
 
             //when
-            recordService.create(serviceDto);
+            ResponseDto<?> responseDto = recordService.create(serviceDto);
 
             //then
             then(recordRepository).should().save(argumentCaptor.capture());
-
+            assertTrue(responseDto.isSuccess());
         }
 
         @Test
@@ -112,8 +114,9 @@ class RecordServiceTest {
                     .willReturn(records);
 
                 //when
-                List<RecordResponse> recordResponses = recordService.getInfos(2L,
+                ResponseDto<?> responseDto = recordService.getInfos(2L,
                     LocalDate.of(2023, 6, 1), LocalDate.of(2023, 6, 30), null);
+                List<RecordResponse> recordResponses = (List<RecordResponse>) responseDto.getData();
 
                 //then
                 then(recordRepository).should()
@@ -145,8 +148,9 @@ class RecordServiceTest {
                     .willReturn(records);
 
                 //when
-                List<RecordResponse> recordResponses = recordService.getInfos(2L,
+                ResponseDto<?> responseDto = recordService.getInfos(2L,
                     LocalDate.of(2023, 6, 1), LocalDate.of(2023, 6, 30), categories);
+                List<RecordResponse> recordResponses = (List<RecordResponse>) responseDto.getData();
 
                 //then
                 then(recordRepository).should().findByMemberIdAndUseDateDescWithOptional(
@@ -197,7 +201,8 @@ class RecordServiceTest {
                 .willReturn(serviceDtos);
 
             //when
-            List<RecordAnalysisResponse> responses = recordService.getAnalysisInfo(1L, 2023, 6);
+            ResponseDto<?> responseDto = recordService.getAnalysisInfo(1L, 2023, 6);
+            List<RecordAnalysisResponse> responses = (List<RecordAnalysisResponse>) responseDto.getData();
 
             //then
             then(recordRepository).should().findByMemberIdAndUseDateAndAmountSumDesc(anyLong(), any(LocalDate.class),

@@ -5,12 +5,25 @@ import com.zerototen.savegame.domain.dto.TokenDto;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.entity.RefreshToken;
 import com.zerototen.savegame.repository.RefreshTokenRepository;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import java.security.Key;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.json.simple.parser.JSONParser;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -23,11 +36,6 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-
-import javax.servlet.http.HttpServletRequest;
-import java.security.Key;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -126,11 +134,10 @@ public class TokenProvider {
     }
 
     public Authentication getAuthentication(HttpServletRequest request) {
-        String token=getAccessToken(request);
-        if(token==null) {
+        String token = getAccessToken(request);
+        if (token == null) {
             return null;
-        }
-        else {
+        } else {
             Claims claims = Jwts
                 .parserBuilder()
                 .setSigningKey(key)
@@ -149,7 +156,7 @@ public class TokenProvider {
         }
     }
 
-    public String getMemberIdByToken(String accessToken) {
+    public Long getMemberIdByToken(String accessToken) {
         String token = "";
         if (StringUtils.hasText(accessToken) && accessToken.startsWith("Bearer ")) {
             token = accessToken.substring(7);
@@ -164,12 +171,11 @@ public class TokenProvider {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-        }
-        catch (ExpiredJwtException e) {
+        } catch (ExpiredJwtException e) {
             return null;
         }
 
-        return claims.getSubject();
+        return Long.parseLong(claims.getSubject());
     }
 
     private String getAccessToken(HttpServletRequest request) {

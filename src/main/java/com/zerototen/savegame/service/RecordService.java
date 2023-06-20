@@ -1,10 +1,10 @@
 package com.zerototen.savegame.service;
 
-import com.zerototen.savegame.domain.entity.Record;
 import com.zerototen.savegame.domain.dto.CreateRecordServiceDto;
-import com.zerototen.savegame.domain.dto.RecordAnalysisResponse;
-import com.zerototen.savegame.domain.dto.response.RecordResponse;
 import com.zerototen.savegame.domain.dto.UpdateRecordServiceDto;
+import com.zerototen.savegame.domain.dto.response.RecordResponse;
+import com.zerototen.savegame.domain.dto.response.ResponseDto;
+import com.zerototen.savegame.domain.entity.Record;
 import com.zerototen.savegame.exception.CustomException;
 import com.zerototen.savegame.exception.ErrorCode;
 import com.zerototen.savegame.repository.MemberRepository;
@@ -26,15 +26,15 @@ public class RecordService {
     private final RecordRepository recordRepository;
 
     @Transactional
-    public void create(CreateRecordServiceDto serviceDto) {
+    public ResponseDto<?> create(CreateRecordServiceDto serviceDto) {
         memberRepository.findById(serviceDto.getMemberId())
             .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_MEMBER));
 
-        recordRepository.save(serviceDto.toEntity());
         log.debug("Create record -> memberId: {}", serviceDto.getMemberId());
+        return ResponseDto.success(recordRepository.save(serviceDto.toEntity()));
     }
 
-    public List<RecordResponse> getInfos(Long memberId, LocalDate startDate, LocalDate endDate,
+    public ResponseDto<?> getInfos(Long memberId, LocalDate startDate, LocalDate endDate,
         List<String> categories) {
         if (startDate.isAfter(endDate)) {
             throw new CustomException(ErrorCode.STARTDATE_AFTER_ENDDATE);
@@ -42,27 +42,28 @@ public class RecordService {
         List<Record> records = recordRepository.findByMemberIdAndUseDateDescWithOptional(
             memberId, startDate, endDate, categories);
 
-        return records.stream().map(RecordResponse::from).collect(Collectors.toList());
+        return ResponseDto.success(records.stream().map(RecordResponse::from).collect(Collectors.toList()));
     }
 
-    public List<RecordAnalysisResponse> getAnalysisInfo(Long memberId, int year, int month) {
+    public ResponseDto<?> getAnalysisInfo(Long memberId, int year, int month) {
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
 
-        return recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(memberId, startDate, endDate)
-            .stream().map(i -> {
-                if (i.getCategory() == null) {
-                    throw new CustomException(ErrorCode.CATEGORY_IS_NULL);
-                }
-                if (i.getTotal() == null || i.getTotal() <= 0) {
-                    throw new CustomException(ErrorCode.INVALID_TOTAL);
-                }
-                return i.toResponse();
-            }).collect(Collectors.toList());
+        return ResponseDto.success(
+            recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(memberId, startDate, endDate)
+                .stream().map(i -> {
+                    if (i.getCategory() == null) {
+                        throw new CustomException(ErrorCode.CATEGORY_IS_NULL);
+                    }
+                    if (i.getTotal() == null || i.getTotal() <= 0) {
+                        throw new CustomException(ErrorCode.INVALID_TOTAL);
+                    }
+                    return i.toResponse();
+                }).collect(Collectors.toList()));
     }
 
     @Transactional
-    public void update(UpdateRecordServiceDto serviceDto) {
+    public ResponseDto<?> update(UpdateRecordServiceDto serviceDto) {
         Record record = recordRepository.findById(serviceDto.getId())
             .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_RECORD));
 
@@ -72,10 +73,11 @@ public class RecordService {
 
         record.update(serviceDto);
         log.debug("Update record -> id: {}", serviceDto.getId());
+        return ResponseDto.success("Update Success");
     }
 
     @Transactional
-    public void delete(Long id, Long memberId) {
+    public ResponseDto<?> delete(Long id, Long memberId) {
         Record record = recordRepository.findById(id)
             .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_RECORD));
 
@@ -85,6 +87,7 @@ public class RecordService {
 
         recordRepository.delete(record);
         log.debug("Delete record -> id: {}", id);
+        return ResponseDto.success("Delete Success");
     }
 
 }

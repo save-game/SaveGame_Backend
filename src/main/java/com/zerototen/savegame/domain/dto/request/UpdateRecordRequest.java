@@ -1,9 +1,11 @@
-package com.zerototen.savegame.domain.dto;
+package com.zerototen.savegame.domain.dto.request;
 
+import com.zerototen.savegame.domain.dto.UpdateRecordServiceDto;
 import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.domain.type.PayType;
 import com.zerototen.savegame.util.ConvertUtil;
 import com.zerototen.savegame.validation.Enum;
+import java.util.Locale;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
@@ -16,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateRecordForm {
+public class UpdateRecordRequest {
 
     @Min(1)
     private int amount;
@@ -35,14 +37,15 @@ public class CreateRecordForm {
     @Enum(enumClass = PayType.class, ignoreCase = true)
     private String payType;
 
-    public CreateRecordServiceDto toServiceDto(Long memberId) {
-        return CreateRecordServiceDto.builder()
+    public UpdateRecordServiceDto toServiceDto(Long id, Long memberId) {
+        return UpdateRecordServiceDto.builder()
+            .id(id)
             .memberId(memberId)
             .amount(this.getAmount())
-            .category(Category.valueOf(this.getCategory()))
+            .category(Category.valueOf(this.getCategory().toUpperCase(Locale.ROOT)))
             .paidFor(this.getPaidFor())
             .useDate(ConvertUtil.stringToLocalDate(this.getUseDate()))
-            .payType(PayType.valueOf(this.getPayType()))
+            .payType(PayType.valueOf(this.getPayType().toUpperCase(Locale.ROOT)))
             .memo(this.getMemo())
             .build();
     }

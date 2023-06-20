@@ -1,5 +1,6 @@
 package com.zerototen.savegame.domain.dto;
 
+import com.zerototen.savegame.domain.dto.response.RecordAnalysisResponse;
 import com.zerototen.savegame.domain.type.Category;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
