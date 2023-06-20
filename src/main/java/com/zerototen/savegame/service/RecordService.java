@@ -1,52 +1,93 @@
 package com.zerototen.savegame.service;
 
-import com.zerototen.savegame.dto.CreateRecordServiceDto;
-import com.zerototen.savegame.dto.UpdateRecordServiceDto;
-import com.zerototen.savegame.entity.Record;
+import com.zerototen.savegame.domain.dto.CreateRecordServiceDto;
+import com.zerototen.savegame.domain.dto.UpdateRecordServiceDto;
+import com.zerototen.savegame.domain.dto.response.RecordResponse;
+import com.zerototen.savegame.domain.dto.response.ResponseDto;
+import com.zerototen.savegame.domain.entity.Record;
+import com.zerototen.savegame.exception.CustomException;
+import com.zerototen.savegame.exception.ErrorCode;
+import com.zerototen.savegame.repository.MemberRepository;
 import com.zerototen.savegame.repository.RecordRepository;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RecordService {
 
+    private final MemberRepository memberRepository;
     private final RecordRepository recordRepository;
 
     @Transactional
-    public void create(CreateRecordServiceDto serviceDto) {
-        // id에 해당하는 사용자 존재 여부 확인
-        recordRepository.save(serviceDto.toEntity());
+    public ResponseDto<?> create(CreateRecordServiceDto serviceDto) {
+        memberRepository.findById(serviceDto.getMemberId())
+            .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_MEMBER));
+
+        log.debug("Create record -> memberId: {}", serviceDto.getMemberId());
+        return ResponseDto.success(recordRepository.save(serviceDto.toEntity()));
+    }
+
+    public ResponseDto<?> getInfos(Long memberId, LocalDate startDate, LocalDate endDate,
+        List<String> categories) {
+        if (startDate.isAfter(endDate)) {
+            throw new CustomException(ErrorCode.STARTDATE_AFTER_ENDDATE);
+        }
+        List<Record> records = recordRepository.findByMemberIdAndUseDateDescWithOptional(
+            memberId, startDate, endDate, categories);
+
+        return ResponseDto.success(records.stream().map(RecordResponse::from).collect(Collectors.toList()));
+    }
+
+    public ResponseDto<?> getAnalysisInfo(Long memberId, int year, int month) {
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+        return ResponseDto.success(
+            recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(memberId, startDate, endDate)
+                .stream().map(i -> {
+                    if (i.getCategory() == null) {
+                        throw new CustomException(ErrorCode.CATEGORY_IS_NULL);
+                    }
+                    if (i.getTotal() == null || i.getTotal() <= 0) {
+                        throw new CustomException(ErrorCode.INVALID_TOTAL);
+                    }
+                    return i.toResponse();
+                }).collect(Collectors.toList()));
     }
 
     @Transactional
-    public void update(UpdateRecordServiceDto serviceDto) {
+    public ResponseDto<?> update(UpdateRecordServiceDto serviceDto) {
         Record record = recordRepository.findById(serviceDto.getId())
-            .orElseThrow(() -> new RuntimeException()); // Login과 연동 시 CustomException으로 수정 예정
+            .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_RECORD));
 
         if (!record.getMemberId().equals(serviceDto.getMemberId())) {
-            throw new RuntimeException(); // Login과 연동 시 CustomException으로 수정 예정
+            throw new CustomException(ErrorCode.NOT_MATCH_MEMBER);
         }
 
-        record.setAmount(serviceDto.getAmount());
-        record.setCategory(serviceDto.getCategory());
-        record.setStore(serviceDto.getStore());
-        record.setUseDate(serviceDto.getUseDate());
-        record.setPayType(serviceDto.getPayType());
-        record.setMemo(serviceDto.getMemo());
+        record.update(serviceDto);
+        log.debug("Update record -> id: {}", serviceDto.getId());
+        return ResponseDto.success("Update Success");
     }
 
     @Transactional
-    public void delete(Long id, Long memberId) {
+    public ResponseDto<?> delete(Long id, Long memberId) {
         Record record = recordRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException()); // Login과 연동 시 CustomException으로 수정 예정
+            .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_RECORD));
 
         if (!record.getMemberId().equals(memberId)) {
-            throw new RuntimeException(); // Login과 연동 시 CustomException으로 수정 예정
+            throw new CustomException(ErrorCode.NOT_MATCH_MEMBER);
         }
 
         recordRepository.delete(record);
+        log.debug("Delete record -> id: {}", id);
+        return ResponseDto.success("Delete Success");
     }
 
 }
