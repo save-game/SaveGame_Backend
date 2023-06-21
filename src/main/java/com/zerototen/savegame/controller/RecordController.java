@@ -33,18 +33,18 @@ public class RecordController {
 
     private final RecordService recordService;
     private final TokenProvider tokenProvider;
+    private static final String ACCESS_TOKEN = "Authorization";
 
     @PostMapping
     public ResponseDto<?> createRecord(
-        @RequestHeader(name = "Authorization") String accessToken,
+        @RequestHeader(name = ACCESS_TOKEN) String accessToken,
         @RequestBody @Valid CreateRecordRequest request) {
-
         return recordService.create(request.toServiceDto(tokenProvider.getMemberIdByToken(accessToken)));
     }
 
     @GetMapping
     public ResponseDto<?> getInfos(
-        @RequestHeader(name = "Authorization") String accessToken,
+        @RequestHeader(name = ACCESS_TOKEN) String accessToken,
         @RequestParam LocalDate startDate, @RequestParam LocalDate endDate,
         @RequestParam(required = false) @Validated @EnumList(enumClass = Category.class, ignoreCase = true)
         List<String> categories) {
@@ -53,25 +53,23 @@ public class RecordController {
 
     @GetMapping("/analysis")
     public ResponseDto<?> getAnalysisInfo(
-        @RequestHeader(name = "Authorization") String accessToken,
+        @RequestHeader(name = ACCESS_TOKEN) String accessToken,
         @RequestParam int year, @RequestParam @Valid @Min(1) @Max(12) int month) {
         return recordService.getAnalysisInfo(tokenProvider.getMemberIdByToken(accessToken), year, month);
     }
 
     @PutMapping("/{recordId}")
     public ResponseDto<?> updateRecord(
-        @RequestHeader(name = "Authorization") String accessToken,
+        @RequestHeader(name = ACCESS_TOKEN) String accessToken,
         @PathVariable Long recordId,
         @RequestBody @Valid UpdateRecordRequest request) {
-
         return recordService.update(request.toServiceDto(recordId, tokenProvider.getMemberIdByToken(accessToken)));
     }
 
     @DeleteMapping("/{recordId}")
     public ResponseDto<?> deleteRecord(
-        @RequestHeader(name = "Authorization") String accessToken,
+        @RequestHeader(name = ACCESS_TOKEN) String accessToken,
         @PathVariable Long recordId) {
-
         return recordService.delete(recordId, tokenProvider.getMemberIdByToken(accessToken));
     }
 
