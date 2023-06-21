@@ -47,7 +47,7 @@ public class MemberController {
         return memberService.updateNickname(tokenProvider.getMemberIdByToken(accessToken), request);
     }
 
-    // 회원 이미지 수정
+    // 프로필 이미지 수정
     @PutMapping("/detail/image")
     public ResponseDto<?> updateProfileImageUrl(@RequestHeader(name = ACCESS_TOKEN) String accessToken,
         @RequestBody UpdateProfileImageUrlRequest request) {
