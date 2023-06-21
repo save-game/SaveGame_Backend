@@ -41,50 +41,50 @@ public class AuthController {
     }
 
     // 회원가입
-    @PostMapping("/api/auth/signup")
+    @PostMapping("/auth/signup")
     public ResponseDto<?> signup(@RequestBody @Valid SignupRequest request) {
         return authService.signup(request);
     }
 
     // 로그인
-    @PostMapping("/api/auth/login")
+    @PostMapping("/auth/login")
     public ResponseDto<?> login(@RequestBody @Valid LoginRequest request, HttpServletResponse response) {
         return authService.login(request, response);
     }
 
     // 로그아웃
-    @PostMapping("/api/auth/logout")
+    @PostMapping("/auth/logout")
     public ResponseDto<?> logout(@RequestHeader(name = ACCESS_TOKEN) String accessToken) {
         return authService.logout(accessToken);
     }
 
     // 카카오 로그인
-    @GetMapping("/api/auth/kakaologin")
+    @GetMapping("/auth/kakaologin")
     public ResponseDto<?> kakaoLogin(@RequestParam("code") String code, HttpServletResponse response,
         HttpServletRequest request) throws JsonProcessingException {
         return kakaoOauthService.kakaoLogin(code, response, request);
     }
 
     // 카카오 로그아웃 (연동해제)
-    @GetMapping("/api/auth/kakaologout")
+    @GetMapping("/auth/kakaologout")
     public ResponseDto<?> kakaoLogout(@RequestParam("code") String code) throws JsonProcessingException {
         return kakaoOauthService.kakaoLogout(code);
     }
 
     // 이메일 중복 확인
-    @PostMapping("/api/auth/checkemail")
+    @PostMapping("/auth/checkemail")
     public ResponseDto<?> checkDuplicationemail(@RequestBody @Valid DuplicationRequest requestDto) {
         return authService.checkEmail(requestDto);
     }
 
     // 닉네임 중복 확인
-    @PostMapping("/api/auth/checknickname")
+    @PostMapping("/auth/checknickname")
     public ResponseDto<?> checkDuplicationNickname(@RequestBody @Valid DuplicationRequest requestDto) {
         return authService.checkNickname(requestDto);
     }
 
     // 토큰 재발급
-    @GetMapping("/api/auth/reissue")
+    @GetMapping("/auth/reissue")
     public ResponseDto<?> getNewAccessToken(@RequestHeader(name = ACCESS_TOKEN) String accessToken,
         @RequestHeader(name = REFRESH_TOKEN) String refreshToken, HttpServletResponse response)
         throws ParseException {
@@ -92,7 +92,7 @@ public class AuthController {
     }
 
     // 회원 탈퇴
-    @DeleteMapping("/api/auth/withdrawal")
+    @DeleteMapping("/auth/withdrawal")
     public ResponseDto<?> withdrawal(@RequestHeader(name = ACCESS_TOKEN) String accessToken) {
         return authService.withdrawal(tokenProvider.getMemberIdByToken(accessToken));
     }
