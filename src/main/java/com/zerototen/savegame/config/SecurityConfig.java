@@ -19,6 +19,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -49,11 +52,10 @@ public class SecurityConfig {
     @Bean
     @Order(SecurityProperties.BASIC_AUTH_ORDER)
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.cors();
-
         http.csrf().disable()
 
-            .headers().frameOptions().sameOrigin()
+//            .headers().frameOptions().sameOrigin()
+            .cors().configurationSource(corsConfigurationSource())
 
             .and()
             .exceptionHandling()
@@ -67,7 +69,7 @@ public class SecurityConfig {
             .and()
             .authorizeRequests()
             .antMatchers(HttpMethod.OPTIONS, "/**/*").permitAll()
-            .antMatchers("/api/member/**").permitAll()
+            .antMatchers("/api/auth/**").permitAll()
             .antMatchers("/sub/**").permitAll()
             .antMatchers("/pub/**").permitAll()
             .antMatchers("/ws-stomp/**").permitAll()
@@ -79,7 +81,22 @@ public class SecurityConfig {
             .and()
             .apply(new JwtSecurityConfig(SECRET_KEY, tokenProvider, userDetailsService));
 
-
         return http.build();
     }
+
+    // CORS 허용 적용
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        configuration.addAllowedOrigin("*");
+        configuration.addAllowedHeader("*");
+        configuration.addAllowedMethod("*");
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
 }
