@@ -39,7 +39,6 @@ public class RecordController {
     public ResponseDto<?> createRecord(
         @RequestHeader(name = ACCESS_TOKEN) String accessToken,
         @RequestBody @Valid CreateRecordRequest request) {
-
         return recordService.create(request.toServiceDto(tokenProvider.getMemberIdByToken(accessToken)));
     }
 
@@ -64,7 +63,6 @@ public class RecordController {
         @RequestHeader(name = ACCESS_TOKEN) String accessToken,
         @PathVariable Long recordId,
         @RequestBody @Valid UpdateRecordRequest request) {
-
         return recordService.update(request.toServiceDto(recordId, tokenProvider.getMemberIdByToken(accessToken)));
     }
 
@@ -72,7 +70,6 @@ public class RecordController {
     public ResponseDto<?> deleteRecord(
         @RequestHeader(name = ACCESS_TOKEN) String accessToken,
         @PathVariable Long recordId) {
-
         return recordService.delete(recordId, tokenProvider.getMemberIdByToken(accessToken));
     }
 
