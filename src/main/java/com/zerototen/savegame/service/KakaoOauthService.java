@@ -4,11 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zerototen.savegame.domain.UserDetailsImpl;
-import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.dto.SignupInfoDto;
 import com.zerototen.savegame.domain.dto.TokenDto;
 import com.zerototen.savegame.domain.dto.kakao.KakaoMemberInfoDto;
 import com.zerototen.savegame.domain.dto.kakao.OauthLoginResponseDto;
+import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.type.Authority;
 import com.zerototen.savegame.exception.CustomException;
@@ -48,7 +48,8 @@ public class KakaoOauthService {
     String API_KEY;
 
     @Transactional
-    public ResponseDto<?> kakaoLogin(String code, HttpServletResponse response, HttpServletRequest request) throws JsonProcessingException {
+    public ResponseDto<?> kakaoLogin(String code, HttpServletResponse response, HttpServletRequest request)
+        throws JsonProcessingException {
 
         log.info(request.getRequestURI());
         log.info(String.valueOf(request.getRequestURL()));
@@ -74,7 +75,7 @@ public class KakaoOauthService {
 
     // 카카오 로그인 연동 해제
     @Transactional
-    public ResponseDto<?> kakaoLogout(String code) throws JsonProcessingException{
+    public ResponseDto<?> kakaoLogout(String code) throws JsonProcessingException {
         // 1. 받은 code와 state로 accesstoken 받기
         String accessToken = getAccessToken(code, "logout");
         // 2. 로그인연동 해제
@@ -85,7 +86,7 @@ public class KakaoOauthService {
     private String doLogout(String accessToken) throws JsonProcessingException {
         HttpHeaders logoutHeaders = new HttpHeaders();
         logoutHeaders.add("Content-type", "application/x-www-form-urlencoded");
-        logoutHeaders.add("Authorization", "Bearer "+accessToken);
+        logoutHeaders.add("Authorization", "Bearer " + accessToken);
 
         MultiValueMap<String, String> logoutRequestParam = new LinkedMultiValueMap<>();
 
@@ -109,11 +110,12 @@ public class KakaoOauthService {
         String redirectUrl;
         if (mode.equals("login")) {
 //            redirectUrl = "http://localhost:8080/api/auth/kakaologin";
-            redirectUrl = "http://13.124.58.137:8080/api/auth/kakaologin";  // 백엔드 서버
+            redirectUrl = "http://13.124.58.137/auth/kakaologin";  // 백엔드 서버
         }
         else {
 //            redirectUrl = "http://localhost:8080/api/auth/kakaologout";
-            redirectUrl = "http://13.124.58.137:8080/api/auth/kakaologout";  // 백엔드 서버
+            redirectUrl = "http://13.124.58.137/auth/kakaologout";  // 백엔드 서버
+
         }
 
         // HTTP Header 생성
@@ -212,7 +214,8 @@ public class KakaoOauthService {
         response.addHeader("RefreshToken", token.getRefreshToken());
 
         UserDetails userDetails = new UserDetailsImpl(kakaoUser);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, token.getAccessToken(), userDetails.getAuthorities());
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, token.getAccessToken(),
+            userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 

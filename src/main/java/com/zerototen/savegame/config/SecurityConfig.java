@@ -69,7 +69,7 @@ public class SecurityConfig {
             .and()
             .authorizeRequests()
             .antMatchers(HttpMethod.OPTIONS, "/**/*").permitAll()
-            .antMatchers("/api/member/**").permitAll()
+            .antMatchers("/api/auth/**").permitAll()
             .antMatchers("/sub/**").permitAll()
             .antMatchers("/pub/**").permitAll()
             .antMatchers("/ws-stomp/**").permitAll()
@@ -80,7 +80,6 @@ public class SecurityConfig {
 
             .and()
             .apply(new JwtSecurityConfig(SECRET_KEY, tokenProvider, userDetailsService));
-
 
         return http.build();
     }

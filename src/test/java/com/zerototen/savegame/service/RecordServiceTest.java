@@ -1,7 +1,7 @@
 package com.zerototen.savegame.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -21,7 +21,6 @@ import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.entity.Record;
 import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.domain.type.PayType;
-import com.zerototen.savegame.exception.CustomException;
 import com.zerototen.savegame.exception.ErrorCode;
 import com.zerototen.savegame.repository.MemberRepository;
 import com.zerototen.savegame.repository.RecordRepository;
@@ -87,11 +86,12 @@ class RecordServiceTest {
                 .willReturn(Optional.empty());
 
             //when
-            CustomException exception = assertThrows(CustomException.class, () -> recordService.create(serviceDto));
+            ResponseDto<?> responseDto = recordService.create(serviceDto);
 
             //then
             then(recordRepository).should(never()).save(any());
-            assertEquals(ErrorCode.NOT_FOUND_MEMBER, exception.getErrorCode());
+            assertFalse(responseDto.isSuccess());
+            assertEquals(ErrorCode.NOT_FOUND_MEMBER.getDetail(), responseDto.getData());
         }
     }
 
@@ -119,6 +119,7 @@ class RecordServiceTest {
                 List<RecordResponse> recordResponses = (List<RecordResponse>) responseDto.getData();
 
                 //then
+                assertTrue(responseDto.isSuccess());
                 then(recordRepository).should()
                     .findByMemberIdAndUseDateDescWithOptional(anyLong(), any(LocalDate.class),
                         any(LocalDate.class), isNull());
@@ -153,6 +154,7 @@ class RecordServiceTest {
                 List<RecordResponse> recordResponses = (List<RecordResponse>) responseDto.getData();
 
                 //then
+                assertTrue(responseDto.isSuccess());
                 then(recordRepository).should().findByMemberIdAndUseDateDescWithOptional(
                     anyLong(), any(LocalDate.class), any(LocalDate.class), anyList());
                 int size = recordResponses.size();
@@ -178,11 +180,11 @@ class RecordServiceTest {
             LocalDate endDate = LocalDate.of(2023, 5, 31);
 
             //when
-            CustomException exception = assertThrows(CustomException.class,
-                () -> recordService.getInfos(2L, startDate, endDate, null));
+            ResponseDto<?> responseDto = recordService.getInfos(2L, startDate, endDate, null);
 
             //then
-            assertEquals(ErrorCode.STARTDATE_AFTER_ENDDATE, exception.getErrorCode());
+            assertFalse(responseDto.isSuccess());
+            assertEquals(ErrorCode.STARTDATE_AFTER_ENDDATE.getDetail(), responseDto.getData());
         }
     }
 
@@ -205,6 +207,7 @@ class RecordServiceTest {
             List<RecordAnalysisResponse> responses = (List<RecordAnalysisResponse>) responseDto.getData();
 
             //then
+            assertTrue(responseDto.isSuccess());
             then(recordRepository).should().findByMemberIdAndUseDateAndAmountSumDesc(anyLong(), any(LocalDate.class),
                 any(LocalDate.class));
             int size = responses.size();
@@ -231,11 +234,11 @@ class RecordServiceTest {
                     .willReturn(serviceDtos);
 
                 //when
-                CustomException exception = assertThrows(CustomException.class,
-                    () -> recordService.getAnalysisInfo(1L, 2023, 6));
+                ResponseDto<?> responseDto = recordService.getAnalysisInfo(1L, 2023, 6);
 
                 //then
-                assertEquals(ErrorCode.CATEGORY_IS_NULL, exception.getErrorCode());
+                assertFalse(responseDto.isSuccess());
+                assertEquals(ErrorCode.CATEGORY_IS_NULL.getDetail(), responseDto.getData());
             }
 
             @Test
@@ -250,11 +253,11 @@ class RecordServiceTest {
                     .willReturn(serviceDtos);
 
                 //when
-                CustomException exception = assertThrows(CustomException.class,
-                    () -> recordService.getAnalysisInfo(1L, 2023, 6));
+                ResponseDto<?> responseDto = recordService.getAnalysisInfo(1L, 2023, 6);
 
                 //then
-                assertEquals(ErrorCode.INVALID_TOTAL, exception.getErrorCode());
+                assertFalse(responseDto.isSuccess());
+                assertEquals(ErrorCode.INVALID_TOTAL.getDetail(), responseDto.getData());
             }
 
             @Test
@@ -269,11 +272,11 @@ class RecordServiceTest {
                     .willReturn(serviceDtos);
 
                 //when
-                CustomException exception = assertThrows(CustomException.class,
-                    () -> recordService.getAnalysisInfo(1L, 2023, 6));
+                ResponseDto<?> responseDto = recordService.getAnalysisInfo(1L, 2023, 6);
 
                 //then
-                assertEquals(ErrorCode.INVALID_TOTAL, exception.getErrorCode());
+                assertFalse(responseDto.isSuccess());
+                assertEquals(ErrorCode.INVALID_TOTAL.getDetail(), responseDto.getData());
             }
         }
     }
@@ -294,9 +297,11 @@ class RecordServiceTest {
                 .willReturn(Optional.of(record));
 
             //when
-            recordService.update(serviceDto);
+            ResponseDto<?> responseDto = recordService.update(serviceDto);
 
             //then
+            assertTrue(responseDto.isSuccess());
+            assertEquals("Update Success", responseDto.getData());
             then(recordRepository).should().findById(anyLong());
             assertEquals(1L, record.getId());
             assertEquals(2L, record.getMemberId());
@@ -324,12 +329,12 @@ class RecordServiceTest {
 
                 //when
                 // Custom Exception 연동 시 수정 예정
-                CustomException exception = assertThrows(CustomException.class,
-                    () -> recordService.update(serviceDto));
+                ResponseDto<?> responseDto = recordService.update(serviceDto);
 
                 //then
                 then(recordRepository).should().findById(anyLong());
-                assertEquals(ErrorCode.NOT_FOUND_RECORD, exception.getErrorCode());
+                assertFalse(responseDto.isSuccess());
+                assertEquals(ErrorCode.NOT_FOUND_RECORD.getDetail(), responseDto.getData());
 
             }
 
@@ -346,12 +351,12 @@ class RecordServiceTest {
                     .willReturn(Optional.of(record));
 
                 //when
-                CustomException exception = assertThrows(CustomException.class,
-                    () -> recordService.update(serviceDto));
+                ResponseDto<?> responseDto = recordService.update(serviceDto);
 
                 //then
                 then(recordRepository).should().findById(anyLong());
-                assertEquals(ErrorCode.NOT_MATCH_MEMBER, exception.getErrorCode());
+                assertFalse(responseDto.isSuccess());
+                assertEquals(ErrorCode.NOT_MATCH_MEMBER.getDetail(), responseDto.getData());
             }
         }
     }
@@ -372,9 +377,11 @@ class RecordServiceTest {
             ArgumentCaptor<Record> argumentCaptor = ArgumentCaptor.forClass(Record.class);
 
             //when
-            recordService.delete(1L, 2L);
+            ResponseDto<?> responseDto = recordService.delete(1L, 2L);
 
             //then
+            assertTrue(responseDto.isSuccess());
+            assertEquals("Delete Success", responseDto.getData());
             then(recordRepository).should().findById(anyLong());
             then(recordRepository).should().delete(argumentCaptor.capture());
         }
@@ -391,13 +398,13 @@ class RecordServiceTest {
                     .willReturn(Optional.empty());
 
                 //when
-                CustomException exception = assertThrows(CustomException.class,
-                    () -> recordService.delete(2L, 2L));
+                ResponseDto<?> responseDto = recordService.delete(2L, 2L);
 
                 //then
                 then(recordRepository).should().findById(anyLong());
                 then(recordRepository).should(never()).delete(any(Record.class));
-                assertEquals(ErrorCode.NOT_FOUND_RECORD, exception.getErrorCode());
+                assertFalse(responseDto.isSuccess());
+                assertEquals(ErrorCode.NOT_FOUND_RECORD.getDetail(), responseDto.getData());
 
             }
 
@@ -412,13 +419,13 @@ class RecordServiceTest {
                     .willReturn(Optional.of(record));
 
                 //when
-                CustomException exception = assertThrows(CustomException.class,
-                    () -> recordService.delete(1L, 3L));
+                ResponseDto<?> responseDto = recordService.delete(1L, 3L);
 
                 //then
                 then(recordRepository).should().findById(anyLong());
                 then(recordRepository).should(never()).delete(any(Record.class));
-                assertEquals(ErrorCode.NOT_MATCH_MEMBER, exception.getErrorCode());
+                assertFalse(responseDto.isSuccess());
+                assertEquals(ErrorCode.NOT_MATCH_MEMBER.getDetail(), responseDto.getData());
             }
         }
     }
