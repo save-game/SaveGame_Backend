@@ -15,7 +15,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreateRecordServiceDto {
 
-    private Long memberId;
     private int amount;
     private Category category;
     private String paidFor;
@@ -23,9 +22,9 @@ public class CreateRecordServiceDto {
     private LocalDate useDate;
     private PayType payType;
 
-    public Record toEntity() {
+    public Record toEntity(Long memberId) {
         return Record.builder()
-            .memberId(this.getMemberId())
+            .memberId(memberId)
             .amount(this.getAmount())
             .category(this.getCategory())
             .paidFor(this.getPaidFor())

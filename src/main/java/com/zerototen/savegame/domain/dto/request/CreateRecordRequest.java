@@ -37,9 +37,8 @@ public class CreateRecordRequest {
     @Enum(enumClass = PayType.class, ignoreCase = true)
     private String payType;
 
-    public CreateRecordServiceDto toServiceDto(Long memberId) {
+    public CreateRecordServiceDto toServiceDto() {
         return CreateRecordServiceDto.builder()
-            .memberId(memberId)
             .amount(this.getAmount())
             .category(Category.valueOf(this.getCategory().toUpperCase(Locale.ROOT)))
             .paidFor(this.getPaidFor())

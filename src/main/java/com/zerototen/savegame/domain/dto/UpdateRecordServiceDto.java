@@ -15,7 +15,6 @@ import lombok.NoArgsConstructor;
 public class UpdateRecordServiceDto {
 
     private Long id;
-    private Long memberId;
     private int amount;
     private Category category;
     private String paidFor;

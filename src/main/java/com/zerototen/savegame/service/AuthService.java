@@ -14,6 +14,7 @@ import com.zerototen.savegame.security.TokenProvider;
 import com.zerototen.savegame.util.PasswordUtil;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,7 @@ public class AuthService {
     private final TokenProvider tokenProvider;
 
     @Value("${image.default.profile}")
-    private String defaultImageUrl; // TODO: 기본 이미지 URL 경로 프론트에 물어보기
+    private String defaultImageUrl; // TODO: 기본 이미지 URL 경로설정
 
     // 회원가입
     @Transactional
@@ -90,21 +91,19 @@ public class AuthService {
 
     // 로그아웃
     @Transactional
-    public ResponseDto<?> logout(String accessToken) {
-        if (!tokenProvider.validateToken(accessToken)) {
-            return ResponseDto.fail("토큰 값이 올바르지 않습니다.");
+    public ResponseDto<?> logout(HttpServletRequest request) {
+        ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
+        if (!responseDto.isSuccess()) {
+            return responseDto;
         }
 
-        // 맴버객체 찾아오기
-        Member member = tokenProvider.getMemberFromAuthentication();
-        if (null == member) {
-            return ResponseDto.fail("사용자를 찾을 수 없습니다.");
-        }
+        Member member = (Member) responseDto.getData();
+
         if (tokenProvider.deleteRefreshToken(member)) {
             return ResponseDto.fail("존재하지 않는 Token 입니다.");
         }
 
-        tokenProvider.deleteRefreshToken(member);
+        tokenProvider.deleteRefreshToken(member); // TODO: 필요한가?
 
         return ResponseDto.success("로그아웃 성공");
     }
@@ -143,51 +142,54 @@ public class AuthService {
 
     // refresh token 재발급
     @Transactional
-    public ResponseDto<?> reissue(String accessToken, String refreshToken, HttpServletResponse response)
-        throws ParseException {
-        if (tokenProvider.getMemberIdByToken(accessToken) != null) {
+    public ResponseDto<?> reissue(HttpServletRequest request, HttpServletResponse response) throws ParseException {
+        if (tokenProvider.getMemberIdByToken(request.getHeader("Authorization")) != null) {
             return ResponseDto.fail("아직 유효한 access token 입니다.");
         }
-        if (!tokenProvider.validateToken(refreshToken)) {
+        if (!tokenProvider.validateToken(request.getHeader("RefreshToken"))) {
             return ResponseDto.fail("유효하지 않은 refresh token입니다.");
         }
-        String memberId = tokenProvider.getMemberFromExpiredAccessToken(accessToken);
+        String memberId = tokenProvider.getMemberFromExpiredAccessToken(request);
         if (null == memberId) {
             return ResponseDto.fail("access token의 값이 유효하지 않습니다.");
         }
         Member member = memberRepository.findById(Long.parseLong(memberId)).orElse(null);
 
-        RefreshToken refreshTokenDB = tokenProvider.isPresentRefreshToken(member);
+        RefreshToken refreshToken = tokenProvider.isPresentRefreshToken(member);
 
-        if (!refreshTokenDB.getKeyValue().equals(refreshToken)) {
-            log.info("refreshToken : " + refreshTokenDB.getKeyValue());
-            log.info("header rft : " + refreshToken);
+        if (!refreshToken.getKeyValue().equals(request.getHeader("RefreshToken"))) {
+            log.info("refreshToken : " + refreshToken.getKeyValue());
+            log.info("header rft : " + request.getHeader("RefreshToken"));
             return ResponseDto.fail("토큰이 일치하지 않습니다.");
         }
 
         TokenDto tokenDto = tokenProvider.generateTokenDto(member);
-        refreshTokenDB.updateValue(tokenDto.getRefreshToken());
+        refreshToken.updateValue(tokenDto.getRefreshToken());
         tokenToHeaders(tokenDto, response);
 
         return ResponseDto.success("재발급 완료");
     }
 
     @Transactional
-    public ResponseDto<?> withdrawal(Long memberId) {
-        Member member = memberRepository.findById(memberId).orElse(null);
-
-        if (member == null) {
-            return ResponseDto.fail(ErrorCode.NOT_FOUND_MEMBER.getDetail());
+    public ResponseDto<?> withdrawal(HttpServletRequest request) {
+        ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
+        if (!responseDto.isSuccess()) {
+            return responseDto;
         }
+
+        Member member = (Member) responseDto.getData();
 
         if (member.getDeletedAt() != null) {
             return ResponseDto.fail("이미 탈퇴한 사용자입니다.");
         }
 
-        tokenProvider.deleteRefreshToken(member);
+        if (tokenProvider.deleteRefreshToken(member)) {
+            return ResponseDto.fail("존재하지 않는 Token 입니다.");
+        }
+
         memberRepository.delete(member);
 
-        log.debug("Withdraw member -> memberId: {}", memberId);
+        log.debug("Withdraw member -> memberId: {}", member.getId());
         return ResponseDto.success("Delete Success");
     }
 

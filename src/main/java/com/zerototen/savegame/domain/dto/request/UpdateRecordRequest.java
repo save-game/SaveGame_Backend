@@ -37,10 +37,9 @@ public class UpdateRecordRequest {
     @Enum(enumClass = PayType.class, ignoreCase = true)
     private String payType;
 
-    public UpdateRecordServiceDto toServiceDto(Long id, Long memberId) {
+    public UpdateRecordServiceDto toServiceDto(Long recordId) {
         return UpdateRecordServiceDto.builder()
-            .id(id)
-            .memberId(memberId)
+            .id(recordId)
             .amount(this.getAmount())
             .category(Category.valueOf(this.getCategory().toUpperCase(Locale.ROOT)))
             .paidFor(this.getPaidFor())

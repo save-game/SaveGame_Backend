@@ -2,6 +2,7 @@ package com.zerototen.savegame.security;
 
 import com.zerototen.savegame.domain.UserDetailsImpl;
 import com.zerototen.savegame.domain.dto.TokenDto;
+import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.entity.RefreshToken;
 import com.zerototen.savegame.repository.RefreshTokenRepository;
@@ -20,6 +21,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -123,7 +125,7 @@ public class TokenProvider {
     }
 
     @Transactional
-    public boolean deleteRefreshToken(Member member) {
+    public boolean deleteRefreshToken(Member member) { // TODO: return의 t/f를 반대로 하는게?
         RefreshToken refreshToken = isPresentRefreshToken(member);
         if (null == refreshToken) {
             return true;
@@ -132,8 +134,8 @@ public class TokenProvider {
         return false;
     }
 
-    public Authentication getAuthentication(String accessToken) {
-        String token = getAccessToken(accessToken);
+    public Authentication getAuthentication(HttpServletRequest request) {
+        String token = getAccessToken(request);
         if (token == null) {
             return null;
         } else {
@@ -177,25 +179,46 @@ public class TokenProvider {
         return Long.parseLong(claims.getSubject());
     }
 
-    private String getAccessToken(String accessToken) {
-        if (StringUtils.hasText(accessToken) && accessToken.startsWith("Bearer ")) {
-            return accessToken.substring(7);
+    private String getAccessToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
         }
 
         return null;
     }
 
-    public String getMemberFromExpiredAccessToken(String accessToken) throws ParseException {
-        String jwt = getAccessToken(accessToken);
+    public String getMemberFromExpiredAccessToken(HttpServletRequest request) throws ParseException {
+        String jwt = getAccessToken(request);
 
         Base64.Decoder decoder = Base64.getUrlDecoder();
         assert jwt != null;
         String[] parts = jwt.split("\\.");
-
         JSONParser parser = new JSONParser();
         JSONObject jsonObject = (JSONObject) parser.parse(new String(decoder.decode(parts[1])));
-
         return jsonObject.get("sub").toString();
+    }
+
+    private Member validateMember(HttpServletRequest request) {
+        if (!this.validateToken(request.getHeader("RefreshToken"))) {
+            return null;
+        }
+        return this.getMemberFromAuthentication();
+    }
+
+    public ResponseDto<?> validateCheck(HttpServletRequest request) {
+
+        // RefreshToken 및 Authorization 유효성 검사
+        if (null == request.getHeader("RefreshToken") || null == request.getHeader("Authorization")) {
+            return ResponseDto.fail("로그인이 필요합니다.");
+        }
+        Member member = validateMember(request);
+        // token 정보 유효성 검사
+        if (null == member) {
+            return ResponseDto.fail("Token이 유효하지 않습니다.");
+        }
+        return ResponseDto.success(member);
     }
 
 }
