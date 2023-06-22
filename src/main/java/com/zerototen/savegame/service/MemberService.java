@@ -45,10 +45,6 @@ public class MemberService {
 
         Member member = (Member) responseDto.getData();
 
-        if (!passwordRequest.getNewPassword().equals(passwordRequest.getNewPasswordCheck())) {
-            return ResponseDto.fail("비밀번호가 일치하지 않습니다.");
-        }
-
         if (!(new BCryptPasswordEncoder().matches(passwordRequest.getOldPassword(), member.getPassword()))) {
             return ResponseDto.fail("이전 비밀번호가 일치하지 않습니다.");
         }
