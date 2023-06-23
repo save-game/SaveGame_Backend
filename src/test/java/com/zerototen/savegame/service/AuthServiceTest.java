@@ -239,7 +239,7 @@ class AuthServiceTest {
                 .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
             given(tokenProvider.deleteRefreshToken(any(Member.class)))
-                .willReturn(Boolean.FALSE);
+                .willReturn(Boolean.TRUE);
 
             //when
             ResponseDto<?> responseDto = authService.withdrawal(request);
@@ -285,7 +285,7 @@ class AuthServiceTest {
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
                 given(tokenProvider.deleteRefreshToken(any(Member.class)))
-                    .willReturn(Boolean.TRUE);
+                    .willReturn(Boolean.FALSE);
 
                 //when
                 ResponseDto<?> responseDto = authService.withdrawal(request);

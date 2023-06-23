@@ -79,8 +79,7 @@ class MemberServiceTest {
                 HttpServletRequest request = mock(HttpServletRequest.class);
                 Member member = getMember();
                 ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
-                UpdatePasswordRequest passwordRequest = getUpdatePasswordRequest("password11!!", "password11@@",
-                    "password11@@");
+                UpdatePasswordRequest passwordRequest = getUpdatePasswordRequest("password11!!", "password11@@");
 
                 willReturn(validateCheckResponse)
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
@@ -94,51 +93,24 @@ class MemberServiceTest {
                 assertTrue(PasswordUtil.checkPassword(passwordRequest.getNewPassword(), member.getPassword()));
             }
 
-            @Nested
-            @DisplayName("실패")
-            class Fail {
+            @Test
+            @DisplayName("이전 비밀번호 불일치")
+            void fail_notMatchOldPassword() {
+                //given
+                HttpServletRequest request = mock(HttpServletRequest.class);
+                Member member = getMember();
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
+                UpdatePasswordRequest passwordRequest = getUpdatePasswordRequest("password22!!", "password11@@");
 
-                @Test
-                @DisplayName("비밀번호 확인 불일치")
-                void notMatchNewPasswordCheck() {
-                    //given
-                    HttpServletRequest request = mock(HttpServletRequest.class);
-                    Member member = getMember();
-                    ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
-                    UpdatePasswordRequest passwordRequest = getUpdatePasswordRequest("password11!!", "password11@@",
-                        "password11##");
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-                    willReturn(validateCheckResponse)
-                        .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
+                //when
+                ResponseDto<?> responseDto = memberService.updatePassword(request, passwordRequest);
 
-                    //when
-                    ResponseDto<?> responseDto = memberService.updatePassword(request, passwordRequest);
-
-                    //then
-                    assertFalse(responseDto.isSuccess());
-                    assertEquals("비밀번호가 일치하지 않습니다.", responseDto.getData());
-                }
-
-                @Test
-                @DisplayName("이전 비밀번호 불일치")
-                void notMatchOldPassword() {
-                    //given
-                    HttpServletRequest request = mock(HttpServletRequest.class);
-                    Member member = getMember();
-                    ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
-                    UpdatePasswordRequest passwordRequest = getUpdatePasswordRequest("password22!!", "password11@@",
-                        "password11@@");
-
-                    willReturn(validateCheckResponse)
-                        .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
-
-                    //when
-                    ResponseDto<?> responseDto = memberService.updatePassword(request, passwordRequest);
-
-                    //then
-                    assertFalse(responseDto.isSuccess());
-                    assertEquals("이전 비밀번호가 일치하지 않습니다.", responseDto.getData());
-                }
+                //then
+                assertFalse(responseDto.isSuccess());
+                assertEquals("이전 비밀번호가 일치하지 않습니다.", responseDto.getData());
             }
         }
 
@@ -238,11 +210,10 @@ class MemberServiceTest {
             .build();
     }
 
-    private static UpdatePasswordRequest getUpdatePasswordRequest(String oldPw, String newPw, String newPwChk) {
+    private static UpdatePasswordRequest getUpdatePasswordRequest(String oldPw, String newPw) {
         return UpdatePasswordRequest.builder()
             .oldPassword(oldPw)
             .newPassword(newPw)
-            .newPasswordCheck(newPwChk)
             .build();
     }
 
