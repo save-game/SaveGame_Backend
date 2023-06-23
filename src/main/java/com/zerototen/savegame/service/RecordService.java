@@ -40,7 +40,7 @@ public class RecordService {
         Member member = (Member) responseDto.getData();
 
         log.debug("Create record -> memberId: {}", member.getId());
-        return ResponseDto.success(recordRepository.save(serviceDto.toEntity(member.getId())));
+        return ResponseDto.success(recordRepository.save(Record.from(member.getId(), serviceDto)));
     }
 
     // 지출 내역 조회 (가계부 메인)
@@ -86,7 +86,7 @@ public class RecordService {
             if (serviceDto.getTotal() == null || serviceDto.getTotal() <= 0) {
                 return ResponseDto.fail(ErrorCode.INVALID_TOTAL.getDetail());
             }
-            responses.add(serviceDto.toResponse());
+            responses.add(RecordAnalysisResponse.from(serviceDto));
         }
 
         return ResponseDto.success(responses);

@@ -1,5 +1,6 @@
 package com.zerototen.savegame.domain.entity;
 
+import com.zerototen.savegame.domain.dto.CreateRecordServiceDto;
 import com.zerototen.savegame.domain.dto.UpdateRecordServiceDto;
 import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.domain.type.PayType;
@@ -57,6 +58,18 @@ public class Record {
         this.memo = serviceDto.getMemo();
         this.useDate = serviceDto.getUseDate();
         this.payType = serviceDto.getPayType();
+    }
+
+    public static Record from(Long memberId, CreateRecordServiceDto serviceDto) {
+        return Record.builder()
+            .memberId(memberId)
+            .amount(serviceDto.getAmount())
+            .category(serviceDto.getCategory())
+            .paidFor(serviceDto.getPaidFor())
+            .useDate(serviceDto.getUseDate())
+            .payType(serviceDto.getPayType())
+            .memo(serviceDto.getMemo())
+            .build();
     }
 
 }

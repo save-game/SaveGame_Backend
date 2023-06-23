@@ -37,15 +37,4 @@ public class CreateRecordRequest {
     @Enum(enumClass = PayType.class, ignoreCase = true)
     private String payType;
 
-    public CreateRecordServiceDto toServiceDto() {
-        return CreateRecordServiceDto.builder()
-            .amount(this.getAmount())
-            .category(Category.valueOf(this.getCategory().toUpperCase(Locale.ROOT)))
-            .paidFor(this.getPaidFor())
-            .useDate(ConvertUtil.stringToLocalDate(this.getUseDate()))
-            .payType(PayType.valueOf(this.getPayType().toUpperCase(Locale.ROOT)))
-            .memo(this.getMemo())
-            .build();
-    }
-
 }

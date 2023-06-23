@@ -18,11 +18,4 @@ public class RecordAnalysisServiceDto {
     private Category category;
     private Long total;
 
-    public RecordAnalysisResponse toResponse() {
-        return RecordAnalysisResponse.builder()
-            .category(this.getCategory().getName())
-            .total(this.getTotal())
-            .build();
-    }
-
 }

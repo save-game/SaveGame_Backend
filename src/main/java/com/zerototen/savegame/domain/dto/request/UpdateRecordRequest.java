@@ -37,16 +37,4 @@ public class UpdateRecordRequest {
     @Enum(enumClass = PayType.class, ignoreCase = true)
     private String payType;
 
-    public UpdateRecordServiceDto toServiceDto(Long recordId) {
-        return UpdateRecordServiceDto.builder()
-            .id(recordId)
-            .amount(this.getAmount())
-            .category(Category.valueOf(this.getCategory().toUpperCase(Locale.ROOT)))
-            .paidFor(this.getPaidFor())
-            .useDate(ConvertUtil.stringToLocalDate(this.getUseDate()))
-            .payType(PayType.valueOf(this.getPayType().toUpperCase(Locale.ROOT)))
-            .memo(this.getMemo())
-            .build();
-    }
-
 }

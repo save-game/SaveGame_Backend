@@ -1,5 +1,7 @@
 package com.zerototen.savegame.controller;
 
+import com.zerototen.savegame.domain.dto.CreateRecordServiceDto;
+import com.zerototen.savegame.domain.dto.UpdateRecordServiceDto;
 import com.zerototen.savegame.domain.dto.request.CreateRecordRequest;
 import com.zerototen.savegame.domain.dto.request.UpdateRecordRequest;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
@@ -35,7 +37,7 @@ public class RecordController {
     @PostMapping
     public ResponseDto<?> createRecord(
         HttpServletRequest request, @RequestBody @Valid CreateRecordRequest createRecordRequest) {
-        return recordService.create(request, createRecordRequest.toServiceDto());
+        return recordService.create(request, CreateRecordServiceDto.from(createRecordRequest));
     }
 
     @GetMapping
@@ -56,7 +58,7 @@ public class RecordController {
     public ResponseDto<?> updateRecord(
         HttpServletRequest request, @PathVariable Long recordId,
         @RequestBody @Valid UpdateRecordRequest updateRecordRequest) {
-        return recordService.update(request, updateRecordRequest.toServiceDto(recordId));
+        return recordService.update(request, UpdateRecordServiceDto.from(recordId, updateRecordRequest));
     }
 
     @DeleteMapping("/{recordId}")
