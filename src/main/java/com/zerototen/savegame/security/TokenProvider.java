@@ -139,7 +139,7 @@ public class TokenProvider {
         return true;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean checkBlacklistToken(String accessToken) {
         return blacklistTokenRepository.existsById(accessToken);
     }
@@ -217,18 +217,20 @@ public class TokenProvider {
             return null;
         }
 
-        if (checkBlacklistToken(request.getHeader("Authorization"))) {
+        if (checkBlacklistToken(getAccessToken(request))) {
             return null;
         }
 
         Member member = getMemberFromAuthentication();
-        if (!isPresentRefreshToken(member).getKeyValue().equals(refreshTokenOfHeader)) {
+        if (isPresentRefreshToken(member) == null || !isPresentRefreshToken(member).getKeyValue()
+            .equals(refreshTokenOfHeader)) {
             return null;
         }
 
         return member;
     }
 
+    @Transactional
     public ResponseDto<?> validateCheck(HttpServletRequest request) {
         // RefreshToken 및 Authorization 유효성 검사
         if (null == request.getHeader("RefreshToken") || null == request.getHeader("Authorization")) {
