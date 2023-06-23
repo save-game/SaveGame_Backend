@@ -3,8 +3,10 @@ package com.zerototen.savegame.security;
 import com.zerototen.savegame.domain.UserDetailsImpl;
 import com.zerototen.savegame.domain.dto.TokenDto;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
+import com.zerototen.savegame.domain.entity.BlacklistToken;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.entity.RefreshToken;
+import com.zerototen.savegame.repository.BlacklistTokenRepository;
 import com.zerototen.savegame.repository.RefreshTokenRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -15,6 +17,8 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import java.security.Key;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
@@ -50,11 +54,12 @@ public class TokenProvider {
     private final Key key;
 
     private final RefreshTokenRepository refreshTokenRepository;
-
+    private final BlacklistTokenRepository blacklistTokenRepository;
 
     // 암호화
     public TokenProvider(@Value("${jwt.secret}") String secretKey,
-        RefreshTokenRepository refreshTokenRepository) {
+        RefreshTokenRepository refreshTokenRepository, BlacklistTokenRepository blacklistTokenRepository) {
+        this.blacklistTokenRepository = blacklistTokenRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
@@ -125,16 +130,21 @@ public class TokenProvider {
     }
 
     @Transactional
-    public boolean deleteRefreshToken(Member member) { // TODO: return의 t/f를 반대로 하는게?
+    public boolean deleteRefreshToken(Member member) {
         RefreshToken refreshToken = isPresentRefreshToken(member);
         if (null == refreshToken) {
-            return true;
+            return false;
         }
         refreshTokenRepository.delete(refreshToken);
-        return false;
+        return true;
     }
 
-    public Authentication getAuthentication(HttpServletRequest request) {
+    @Transactional
+    public boolean checkBlacklistToken(String accessToken) {
+        return blacklistTokenRepository.existsById(accessToken);
+    }
+
+    public Authentication getAuthentication(HttpServletRequest request) { // TODO: 사용하지 않은 메소드
         String token = getAccessToken(request);
         if (token == null) {
             return null;
@@ -200,15 +210,26 @@ public class TokenProvider {
         return jsonObject.get("sub").toString();
     }
 
-    private Member validateMember(HttpServletRequest request) {
-        if (!this.validateToken(request.getHeader("RefreshToken"))) {
+    @Transactional
+    public Member validateMember(HttpServletRequest request) {
+        String refreshTokenOfHeader = request.getHeader("RefreshToken");
+        if (!validateToken(refreshTokenOfHeader)) {
             return null;
         }
-        return this.getMemberFromAuthentication();
+
+        if (checkBlacklistToken(request.getHeader("Authorization"))) {
+            return null;
+        }
+
+        Member member = getMemberFromAuthentication();
+        if (!isPresentRefreshToken(member).getKeyValue().equals(refreshTokenOfHeader)) {
+            return null;
+        }
+
+        return member;
     }
 
     public ResponseDto<?> validateCheck(HttpServletRequest request) {
-
         // RefreshToken 및 Authorization 유효성 검사
         if (null == request.getHeader("RefreshToken") || null == request.getHeader("Authorization")) {
             return ResponseDto.fail("로그인이 필요합니다.");
@@ -219,6 +240,26 @@ public class TokenProvider {
             return ResponseDto.fail("Token이 유효하지 않습니다.");
         }
         return ResponseDto.success(member);
+    }
+
+    // access token 만료 시간 구하기
+    private LocalDateTime getExpiredDateTime(String token) {
+        Claims claims = Jwts.parserBuilder()
+            .setSigningKey(key)
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
+
+        return claims.getExpiration().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+    }
+
+    public void saveBlacklistToken(HttpServletRequest request) {
+        String accessToken = getAccessToken(request);
+        log.info("Blacklist add : {}", accessToken);
+        blacklistTokenRepository.save(BlacklistToken.builder()
+            .keyValue(accessToken)
+            .expiredDateTime(getExpiredDateTime(accessToken))
+            .build());
     }
 
 }

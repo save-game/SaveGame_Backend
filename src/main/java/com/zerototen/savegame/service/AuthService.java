@@ -19,7 +19,6 @@ import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.parser.ParseException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,9 +30,6 @@ public class AuthService {
 
     private final MemberRepository memberRepository;
     private final TokenProvider tokenProvider;
-
-    @Value("${image.default.profile}")
-    private String defaultImageUrl; // TODO: 기본 이미지 URL 경로설정
 
     // 회원가입
     @Transactional
@@ -47,12 +43,10 @@ public class AuthService {
             return ResponseDto.fail("중복된 닉네임 입니다.");
         }
 
-        //TODO: 기본 프로필 이미지 등록
         member = Member.builder()
             .email(request.getEmail())
             .password(new BCryptPasswordEncoder().encode(request.getPassword()))
             .nickname(request.getNickname())
-            .profileImageUrl(defaultImageUrl)
             .userRole(Authority.ROLE_MEMBER)
             .build();
 
@@ -77,6 +71,10 @@ public class AuthService {
             return ResponseDto.fail(ErrorCode.WRONG_PASSWORD.getDetail());
         }
 
+        if (tokenProvider.isPresentRefreshToken(member) != null) {
+            return ResponseDto.fail("이미 로그인되어 있습니다.");
+        }
+
         TokenDto tokenDto = tokenProvider.generateTokenDto(member);
         tokenToHeaders(tokenDto, response);
 
@@ -99,11 +97,11 @@ public class AuthService {
 
         Member member = (Member) responseDto.getData();
 
-        if (tokenProvider.deleteRefreshToken(member)) {
+        if (!tokenProvider.deleteRefreshToken(member)) {
             return ResponseDto.fail("존재하지 않는 Token 입니다.");
         }
 
-        tokenProvider.deleteRefreshToken(member); // TODO: 필요한가?
+        tokenProvider.saveBlacklistToken(request);
 
         return ResponseDto.success("로그아웃 성공");
     }
@@ -183,7 +181,7 @@ public class AuthService {
             return ResponseDto.fail("이미 탈퇴한 사용자입니다.");
         }
 
-        if (tokenProvider.deleteRefreshToken(member)) {
+        if (!tokenProvider.deleteRefreshToken(member)) {
             return ResponseDto.fail("존재하지 않는 Token 입니다.");
         }
 
