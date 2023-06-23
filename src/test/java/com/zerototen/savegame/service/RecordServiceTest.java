@@ -9,6 +9,8 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 
 import com.zerototen.savegame.domain.dto.CreateRecordServiceDto;
@@ -22,12 +24,13 @@ import com.zerototen.savegame.domain.entity.Record;
 import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.domain.type.PayType;
 import com.zerototen.savegame.exception.ErrorCode;
-import com.zerototen.savegame.repository.MemberRepository;
 import com.zerototen.savegame.repository.RecordRepository;
+import com.zerototen.savegame.security.TokenProvider;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -41,10 +44,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class RecordServiceTest {
 
     @Mock
-    private MemberRepository memberRepository;
+    private RecordRepository recordRepository;
 
     @Mock
-    private RecordRepository recordRepository;
+    TokenProvider tokenProvider;
 
     @InjectMocks
     private RecordService recordService;
@@ -61,37 +64,21 @@ class RecordServiceTest {
         void success() {
             //given
             CreateRecordServiceDto serviceDto = getCreateServiceDto();
+            HttpServletRequest request = mock(HttpServletRequest.class);
             Member member = getMember();
+            ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
 
-            given(memberRepository.findById(serviceDto.getMemberId()))
-                .willReturn(Optional.of(member));
+            willReturn(validateCheckResponse)
+                .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
             ArgumentCaptor<Record> argumentCaptor = ArgumentCaptor.forClass(Record.class);
 
             //when
-            ResponseDto<?> responseDto = recordService.create(serviceDto);
+            ResponseDto<?> responseDto = recordService.create(request, serviceDto);
 
             //then
             then(recordRepository).should().save(argumentCaptor.capture());
             assertTrue(responseDto.isSuccess());
-        }
-
-        @Test
-        @DisplayName("실패 - 존재하지 않는 사용자")
-        void fail_NotFoundUser() {
-            //given
-            CreateRecordServiceDto serviceDto = getCreateServiceDto();
-
-            given(memberRepository.findById(serviceDto.getMemberId()))
-                .willReturn(Optional.empty());
-
-            //when
-            ResponseDto<?> responseDto = recordService.create(serviceDto);
-
-            //then
-            then(recordRepository).should(never()).save(any());
-            assertFalse(responseDto.isSuccess());
-            assertEquals(ErrorCode.NOT_FOUND_MEMBER.getDetail(), responseDto.getData());
         }
     }
 
@@ -107,14 +94,20 @@ class RecordServiceTest {
             @DisplayName("필수값만 입력")
             void inputRequiredOnly() {
                 //given
+                HttpServletRequest request = mock(HttpServletRequest.class);
+                Member member = getMember();
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
                 List<Record> records = getRecords(5);
+
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
                 given(recordRepository.findByMemberIdAndUseDateDescWithOptional(anyLong(), any(LocalDate.class),
                     any(LocalDate.class), isNull()))
                     .willReturn(records);
 
                 //when
-                ResponseDto<?> responseDto = recordService.getInfos(2L,
+                ResponseDto<?> responseDto = recordService.getInfos(request,
                     LocalDate.of(2023, 6, 1), LocalDate.of(2023, 6, 30), null);
                 List<RecordResponse> recordResponses = (List<RecordResponse>) responseDto.getData();
 
@@ -141,15 +134,21 @@ class RecordServiceTest {
             @DisplayName("모든값 입력")
             void inputAll() {
                 //given
+                HttpServletRequest request = mock(HttpServletRequest.class);
+                Member member = getMember();
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
                 List<Record> records = getRecords(10);
                 List<String> categories = getCategories(10);
+
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
                 given(recordRepository.findByMemberIdAndUseDateDescWithOptional(anyLong(), any(LocalDate.class),
                     any(LocalDate.class), anyList()))
                     .willReturn(records);
 
                 //when
-                ResponseDto<?> responseDto = recordService.getInfos(2L,
+                ResponseDto<?> responseDto = recordService.getInfos(request,
                     LocalDate.of(2023, 6, 1), LocalDate.of(2023, 6, 30), categories);
                 List<RecordResponse> recordResponses = (List<RecordResponse>) responseDto.getData();
 
@@ -176,11 +175,17 @@ class RecordServiceTest {
         @DisplayName("실패 - 시작일이 종료일보다 이후")
         void fail_StartDateIsAfterEndDate() {
             //given
+            HttpServletRequest request = mock(HttpServletRequest.class);
+            Member member = getMember();
+            ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
             LocalDate startDate = LocalDate.of(2023, 6, 1);
             LocalDate endDate = LocalDate.of(2023, 5, 31);
 
+            willReturn(validateCheckResponse)
+                .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
+
             //when
-            ResponseDto<?> responseDto = recordService.getInfos(2L, startDate, endDate, null);
+            ResponseDto<?> responseDto = recordService.getInfos(request, startDate, endDate, null);
 
             //then
             assertFalse(responseDto.isSuccess());
@@ -196,14 +201,20 @@ class RecordServiceTest {
         @DisplayName("성공")
         void success() {
             //given
+            HttpServletRequest request = mock(HttpServletRequest.class);
+            Member member = getMember();
+            ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
             List<RecordAnalysisServiceDto> serviceDtos = getRecordAnalysisServiceDtos(10);
+
+            willReturn(validateCheckResponse)
+                .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
             given(recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(anyLong(), any(LocalDate.class),
                 any(LocalDate.class)))
                 .willReturn(serviceDtos);
 
             //when
-            ResponseDto<?> responseDto = recordService.getAnalysisInfo(1L, 2023, 6);
+            ResponseDto<?> responseDto = recordService.getAnalysisInfo(request, 2023, 6);
             List<RecordAnalysisResponse> responses = (List<RecordAnalysisResponse>) responseDto.getData();
 
             //then
@@ -226,15 +237,21 @@ class RecordServiceTest {
             @DisplayName("카테고리가 null")
             void categoryIsNull() {
                 //given
+                HttpServletRequest request = mock(HttpServletRequest.class);
+                Member member = getMember();
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
                 List<RecordAnalysisServiceDto> serviceDtos = getRecordAnalysisServiceDtos(10);
                 serviceDtos.get(0).setCategory(null);
+
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
                 given(recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(anyLong(), any(LocalDate.class),
                     any(LocalDate.class)))
                     .willReturn(serviceDtos);
 
                 //when
-                ResponseDto<?> responseDto = recordService.getAnalysisInfo(1L, 2023, 6);
+                ResponseDto<?> responseDto = recordService.getAnalysisInfo(request, 2023, 6);
 
                 //then
                 assertFalse(responseDto.isSuccess());
@@ -245,15 +262,21 @@ class RecordServiceTest {
             @DisplayName("합계가 0 이하")
             void invalidTotal_ZeroOrBelow() {
                 //given
+                HttpServletRequest request = mock(HttpServletRequest.class);
+                Member member = getMember();
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
                 List<RecordAnalysisServiceDto> serviceDtos = getRecordAnalysisServiceDtos(10);
                 serviceDtos.get(0).setTotal(0L);
+
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
                 given(recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(anyLong(), any(LocalDate.class),
                     any(LocalDate.class)))
                     .willReturn(serviceDtos);
 
                 //when
-                ResponseDto<?> responseDto = recordService.getAnalysisInfo(1L, 2023, 6);
+                ResponseDto<?> responseDto = recordService.getAnalysisInfo(request, 2023, 6);
 
                 //then
                 assertFalse(responseDto.isSuccess());
@@ -264,15 +287,21 @@ class RecordServiceTest {
             @DisplayName("합계가 null")
             void invalidTotal_IsNull() {
                 //given
+                HttpServletRequest request = mock(HttpServletRequest.class);
+                Member member = getMember();
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
                 List<RecordAnalysisServiceDto> serviceDtos = getRecordAnalysisServiceDtos(10);
                 serviceDtos.get(0).setTotal(null);
+
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
                 given(recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(anyLong(), any(LocalDate.class),
                     any(LocalDate.class)))
                     .willReturn(serviceDtos);
 
                 //when
-                ResponseDto<?> responseDto = recordService.getAnalysisInfo(1L, 2023, 6);
+                ResponseDto<?> responseDto = recordService.getAnalysisInfo(request, 2023, 6);
 
                 //then
                 assertFalse(responseDto.isSuccess());
@@ -290,14 +319,19 @@ class RecordServiceTest {
         void success() {
             //given
             UpdateRecordServiceDto serviceDto = getUpdateServiceDto();
-
+            HttpServletRequest request = mock(HttpServletRequest.class);
+            Member member = getMember();
+            ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
             Record record = getRecord();
+
+            willReturn(validateCheckResponse)
+                .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
             given(recordRepository.findById(anyLong()))
                 .willReturn(Optional.of(record));
 
             //when
-            ResponseDto<?> responseDto = recordService.update(serviceDto);
+            ResponseDto<?> responseDto = recordService.update(request, serviceDto);
 
             //then
             assertTrue(responseDto.isSuccess());
@@ -311,7 +345,6 @@ class RecordServiceTest {
             assertEquals("커트", record.getMemo());
             assertEquals(LocalDate.of(2023, 5, 5), record.getUseDate());
             assertEquals(PayType.CASH, record.getPayType());
-
         }
 
         @Nested
@@ -323,19 +356,24 @@ class RecordServiceTest {
             void notFoundRecord() {
                 //given
                 UpdateRecordServiceDto serviceDto = getUpdateServiceDto();
+                HttpServletRequest request = mock(HttpServletRequest.class);
+                Member member = getMember();
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
+
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
                 given(recordRepository.findById(anyLong()))
                     .willReturn(Optional.empty());
 
                 //when
                 // Custom Exception 연동 시 수정 예정
-                ResponseDto<?> responseDto = recordService.update(serviceDto);
+                ResponseDto<?> responseDto = recordService.update(request, serviceDto);
 
                 //then
                 then(recordRepository).should().findById(anyLong());
                 assertFalse(responseDto.isSuccess());
                 assertEquals(ErrorCode.NOT_FOUND_RECORD.getDetail(), responseDto.getData());
-
             }
 
             @Test
@@ -343,15 +381,20 @@ class RecordServiceTest {
             void notMatchMember() {
                 //given
                 UpdateRecordServiceDto serviceDto = getUpdateServiceDto();
-
+                HttpServletRequest request = mock(HttpServletRequest.class);
+                Member member = getMember();
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
                 Record record = getRecord();
                 record.setMemberId(3L);
+
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
                 given(recordRepository.findById(anyLong()))
                     .willReturn(Optional.of(record));
 
                 //when
-                ResponseDto<?> responseDto = recordService.update(serviceDto);
+                ResponseDto<?> responseDto = recordService.update(request, serviceDto);
 
                 //then
                 then(recordRepository).should().findById(anyLong());
@@ -369,7 +412,13 @@ class RecordServiceTest {
         @DisplayName("성공")
         void success() {
             //given
+            HttpServletRequest request = mock(HttpServletRequest.class);
+            Member member = getMember();
+            ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
             Record record = getRecord();
+
+            willReturn(validateCheckResponse)
+                .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
             given(recordRepository.findById(anyLong()))
                 .willReturn(Optional.of(record));
@@ -377,7 +426,7 @@ class RecordServiceTest {
             ArgumentCaptor<Record> argumentCaptor = ArgumentCaptor.forClass(Record.class);
 
             //when
-            ResponseDto<?> responseDto = recordService.delete(1L, 2L);
+            ResponseDto<?> responseDto = recordService.delete(request, 1L);
 
             //then
             assertTrue(responseDto.isSuccess());
@@ -394,11 +443,18 @@ class RecordServiceTest {
             @DisplayName("찾을 수 없는 지출내역")
             void notFoundRecord() {
                 //given
+                HttpServletRequest request = mock(HttpServletRequest.class);
+                Member member = getMember();
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
+
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
+
                 given(recordRepository.findById(anyLong()))
                     .willReturn(Optional.empty());
 
                 //when
-                ResponseDto<?> responseDto = recordService.delete(2L, 2L);
+                ResponseDto<?> responseDto = recordService.delete(request, 2L);
 
                 //then
                 then(recordRepository).should().findById(anyLong());
@@ -412,14 +468,20 @@ class RecordServiceTest {
             @DisplayName("일치하지 않는 사용자")
             void notMatchMember() {
                 //given
-
+                HttpServletRequest request = mock(HttpServletRequest.class);
+                Member member = getMember();
+                member.setId(3L);
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
                 Record record = getRecord();
+
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
                 given(recordRepository.findById(anyLong()))
                     .willReturn(Optional.of(record));
 
                 //when
-                ResponseDto<?> responseDto = recordService.delete(1L, 3L);
+                ResponseDto<?> responseDto = recordService.delete(request, 1L);
 
                 //then
                 then(recordRepository).should().findById(anyLong());
@@ -442,7 +504,6 @@ class RecordServiceTest {
 
     private CreateRecordServiceDto getCreateServiceDto() {
         return CreateRecordServiceDto.builder()
-            .memberId(2L)
             .amount(10000)
             .category(Category.FOOD)
             .paidFor("식당")
@@ -455,7 +516,6 @@ class RecordServiceTest {
     private UpdateRecordServiceDto getUpdateServiceDto() {
         return UpdateRecordServiceDto.builder()
             .id(1L)
-            .memberId(2L)
             .amount(20000)
             .category(Category.BEAUTY)
             .paidFor("미용실")

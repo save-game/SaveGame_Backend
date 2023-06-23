@@ -1,11 +1,8 @@
 package com.zerototen.savegame.domain.dto.request;
 
-import com.zerototen.savegame.domain.dto.UpdateRecordServiceDto;
 import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.domain.type.PayType;
-import com.zerototen.savegame.util.ConvertUtil;
 import com.zerototen.savegame.validation.Enum;
-import java.util.Locale;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
@@ -36,18 +33,5 @@ public class UpdateRecordRequest {
 
     @Enum(enumClass = PayType.class, ignoreCase = true)
     private String payType;
-
-    public UpdateRecordServiceDto toServiceDto(Long id, Long memberId) {
-        return UpdateRecordServiceDto.builder()
-            .id(id)
-            .memberId(memberId)
-            .amount(this.getAmount())
-            .category(Category.valueOf(this.getCategory().toUpperCase(Locale.ROOT)))
-            .paidFor(this.getPaidFor())
-            .useDate(ConvertUtil.stringToLocalDate(this.getUseDate()))
-            .payType(PayType.valueOf(this.getPayType().toUpperCase(Locale.ROOT)))
-            .memo(this.getMemo())
-            .build();
-    }
 
 }

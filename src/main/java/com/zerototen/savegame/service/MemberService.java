@@ -6,8 +6,9 @@ import com.zerototen.savegame.domain.dto.request.UpdateProfileImageUrlRequest;
 import com.zerototen.savegame.domain.dto.response.MemberResponse;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Member;
-import com.zerototen.savegame.exception.ErrorCode;
 import com.zerototen.savegame.repository.MemberRepository;
+import com.zerototen.savegame.security.TokenProvider;
+import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,68 +21,74 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final TokenProvider tokenProvider;
 
     // 회원정보 조회
-    public ResponseDto<?> getDetail(Long memberId) {
-        Member member = memberRepository.findById(memberId).orElse(null);
-        if (member == null) {
-            return ResponseDto.fail(ErrorCode.NOT_FOUND_MEMBER.getDetail());
+    public ResponseDto<?> getDetail(HttpServletRequest request) {
+        ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
+        if (!responseDto.isSuccess()) {
+            return responseDto;
         }
+
+        Member member = (Member) responseDto.getData();
 
         return ResponseDto.success(MemberResponse.from(member));
     }
 
     // 비밀번호 수정
     @Transactional
-    public ResponseDto<?> updatePassword(Long memberId, UpdatePasswordRequest request) {
-        Member member = memberRepository.findById(memberId).orElse(null);
-        if (member == null) {
-            return ResponseDto.fail(ErrorCode.NOT_FOUND_MEMBER.getDetail());
+    public ResponseDto<?> updatePassword(HttpServletRequest request, UpdatePasswordRequest passwordRequest) {
+        ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
+        if (!responseDto.isSuccess()) {
+            return responseDto;
         }
 
-        if (!request.getNewPassword().equals(request.getNewPasswordCheck())) {
-            return ResponseDto.fail("비밀번호가 일치하지 않습니다.");
-        }
+        Member member = (Member) responseDto.getData();
 
-        if (!(new BCryptPasswordEncoder().matches(request.getOldPassword(), member.getPassword()))) {
+        if (!(new BCryptPasswordEncoder().matches(passwordRequest.getOldPassword(), member.getPassword()))) {
             return ResponseDto.fail("이전 비밀번호가 일치하지 않습니다.");
         }
 
-        member.updatePassword(request);
-
-        log.debug("Update password -> memberId: {}", memberId);
+        member.updatePassword(passwordRequest);
+        memberRepository.save(member);
+        log.debug("Update password -> memberId: {}", member.getId());
         return ResponseDto.success("Update Password Success");
     }
 
     // 닉네임 수정
     @Transactional
-    public ResponseDto<?> updateNickname(Long memberId, UpdateNicknameRequest request) {
-        Member member = memberRepository.findById(memberId).orElse(null);
-        if (member == null) {
-            return ResponseDto.fail(ErrorCode.NOT_FOUND_MEMBER.getDetail());
+    public ResponseDto<?> updateNickname(HttpServletRequest request, UpdateNicknameRequest nicknameRequest) {
+        ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
+        if (!responseDto.isSuccess()) {
+            return responseDto;
         }
 
-        if (memberRepository.findByNickname(request.getNickname()).isPresent()) {
+        Member member = (Member) responseDto.getData();
+
+        if (memberRepository.findByNickname(nicknameRequest.getNickname()).isPresent()) {
             return ResponseDto.fail("중복된 닉네임 입니다.");
         }
 
-        member.updateNickname(request);
-
-        log.debug("Update nickname -> memberId: {}", memberId);
+        member.updateNickname(nicknameRequest);
+        memberRepository.save(member);
+        log.debug("Update nickname -> memberId: {}", member.getId());
         return ResponseDto.success("Update Nickname Success");
     }
 
     // 회원 이미지 수정
     @Transactional
-    public ResponseDto<?> updateProfileImageUrl(Long memberId, UpdateProfileImageUrlRequest request) {
-        Member member = memberRepository.findById(memberId).orElse(null);
-        if (member == null) {
-            return ResponseDto.fail(ErrorCode.NOT_FOUND_MEMBER.getDetail());
+    public ResponseDto<?> updateProfileImageUrl(HttpServletRequest request,
+        UpdateProfileImageUrlRequest imageUrlRequest) {
+        ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
+        if (!responseDto.isSuccess()) {
+            return responseDto;
         }
 
-        member.updateProfileImageUrl(request);
+        Member member = (Member) responseDto.getData();
 
-        log.debug("Update profile image url -> memberId: {}", memberId);
+        member.updateProfileImageUrl(imageUrlRequest);
+        memberRepository.save(member);
+        log.debug("Update profile image url -> memberId: {}", member.getId());
         return ResponseDto.success("Update Profile Image Success");
     }
 

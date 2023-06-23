@@ -5,7 +5,6 @@ import com.zerototen.savegame.domain.dto.request.DuplicationRequest;
 import com.zerototen.savegame.domain.dto.request.LoginRequest;
 import com.zerototen.savegame.domain.dto.request.SignupRequest;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
-import com.zerototen.savegame.security.TokenProvider;
 import com.zerototen.savegame.service.AuthService;
 import com.zerototen.savegame.service.KakaoOauthService;
 import javax.servlet.http.HttpServletRequest;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,10 +28,6 @@ public class AuthController {
 
     private final KakaoOauthService kakaoOauthService;
     private final AuthService authService;
-    private final TokenProvider tokenProvider;
-
-    private static final String ACCESS_TOKEN = "Authorization";
-    private static final String REFRESH_TOKEN = "refreshtoken";
 
     @GetMapping("/index")
     public String index() {
@@ -48,14 +42,14 @@ public class AuthController {
 
     // 로그인
     @PostMapping("/auth/login")
-    public ResponseDto<?> login(@RequestBody @Valid LoginRequest request, HttpServletResponse response) {
+    public ResponseDto<String> login(@RequestBody @Valid LoginRequest request, HttpServletResponse response) {
         return authService.login(request, response);
     }
 
     // 로그아웃
     @PostMapping("/auth/logout")
-    public ResponseDto<?> logout(@RequestHeader(name = ACCESS_TOKEN) String accessToken) {
-        return authService.logout(accessToken);
+    public ResponseDto<?> logout(HttpServletRequest request) {
+        return authService.logout(request);
     }
 
     // 카카오 로그인
@@ -73,28 +67,27 @@ public class AuthController {
 
     // 이메일 중복 확인
     @GetMapping("/auth/checkemail")
-    public ResponseDto<?> checkDuplicationemail(@RequestBody @Valid DuplicationRequest requestDto) {
+    public ResponseDto<String> checkDuplicationemail(@RequestBody @Valid DuplicationRequest requestDto) {
         return authService.checkEmail(requestDto);
     }
 
     // 닉네임 중복 확인
     @GetMapping("/auth/checknickname")
-    public ResponseDto<?> checkDuplicationNickname(@RequestBody @Valid DuplicationRequest requestDto) {
+    public ResponseDto<String> checkDuplicationNickname(@RequestBody @Valid DuplicationRequest requestDto) {
         return authService.checkNickname(requestDto);
     }
 
     // 토큰 재발급
     @GetMapping("/auth/reissue")
-    public ResponseDto<?> getNewAccessToken(@RequestHeader(name = ACCESS_TOKEN) String accessToken,
-        @RequestHeader(name = REFRESH_TOKEN) String refreshToken, HttpServletResponse response)
+    public ResponseDto<String> getNewAccessToken(HttpServletRequest request, HttpServletResponse response)
         throws ParseException {
-        return authService.reissue(accessToken, refreshToken, response);
+        return authService.reissue(request, response);
     }
 
     // 회원 탈퇴
     @DeleteMapping("/auth/withdrawal")
-    public ResponseDto<?> withdrawal(@RequestHeader(name = ACCESS_TOKEN) String accessToken) {
-        return authService.withdrawal(tokenProvider.getMemberIdByToken(accessToken));
+    public ResponseDto<?> withdrawal(HttpServletRequest request) {
+        return authService.withdrawal(request);
     }
 
 }

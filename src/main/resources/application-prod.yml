@@ -27,7 +27,3 @@ jwt:
 
 kakao:
   rest-api-key: ${KAKAO_RESTAPIKEY}
-
-image:
-  default:
-    profile: /default.png

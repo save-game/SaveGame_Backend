@@ -9,12 +9,13 @@ import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.entity.Record;
 import com.zerototen.savegame.exception.ErrorCode;
-import com.zerototen.savegame.repository.MemberRepository;
 import com.zerototen.savegame.repository.RecordRepository;
+import com.zerototen.savegame.security.TokenProvider;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,40 +26,56 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class RecordService {
 
-    private final MemberRepository memberRepository;
     private final RecordRepository recordRepository;
+    private final TokenProvider tokenProvider;
 
     // 지출 내역 등록
     @Transactional
-    public ResponseDto<?> create(CreateRecordServiceDto serviceDto) {
-        Member member = memberRepository.findById(serviceDto.getMemberId()).orElse(null);
-        if (member == null) {
-            return ResponseDto.fail(ErrorCode.NOT_FOUND_MEMBER.getDetail());
+    public ResponseDto<?> create(HttpServletRequest request, CreateRecordServiceDto serviceDto) {
+        ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
+        if (!responseDto.isSuccess()) {
+            return responseDto;
         }
 
-        log.debug("Create record -> memberId: {}", serviceDto.getMemberId());
-        return ResponseDto.success(recordRepository.save(serviceDto.toEntity()));
+        Member member = (Member) responseDto.getData();
+
+        log.debug("Create record -> memberId: {}", member.getId());
+        return ResponseDto.success(recordRepository.save(Record.from(member.getId(), serviceDto)));
     }
 
     // 지출 내역 조회 (가계부 메인)
-    public ResponseDto<?> getInfos(Long memberId, LocalDate startDate, LocalDate endDate,
+    public ResponseDto<?> getInfos(HttpServletRequest request, LocalDate startDate, LocalDate endDate,
         List<String> categories) {
+        ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
+        if (!responseDto.isSuccess()) {
+            return responseDto;
+        }
+
+        Member member = (Member) responseDto.getData();
+
         if (startDate.isAfter(endDate)) {
             return ResponseDto.fail(ErrorCode.STARTDATE_AFTER_ENDDATE.getDetail());
         }
         List<Record> records = recordRepository.findByMemberIdAndUseDateDescWithOptional(
-            memberId, startDate, endDate, categories);
+            member.getId(), startDate, endDate, categories);
 
         return ResponseDto.success(records.stream().map(RecordResponse::from).collect(Collectors.toList()));
     }
 
     // 지출 내역 분석 (가계부 분석)
-    public ResponseDto<?> getAnalysisInfo(Long memberId, int year, int month) {
+    public ResponseDto<?> getAnalysisInfo(HttpServletRequest request, int year, int month) {
+        ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
+        if (!responseDto.isSuccess()) {
+            return responseDto;
+        }
+
+        Member member = (Member) responseDto.getData();
+
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
 
-        List<RecordAnalysisServiceDto> serviceDtos = recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(memberId,
-            startDate, endDate);
+        List<RecordAnalysisServiceDto> serviceDtos = recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(
+            member.getId(), startDate, endDate);
 
         List<RecordAnalysisResponse> responses = new ArrayList<>();
 
@@ -69,7 +86,7 @@ public class RecordService {
             if (serviceDto.getTotal() == null || serviceDto.getTotal() <= 0) {
                 return ResponseDto.fail(ErrorCode.INVALID_TOTAL.getDetail());
             }
-            responses.add(serviceDto.toResponse());
+            responses.add(RecordAnalysisResponse.from(serviceDto));
         }
 
         return ResponseDto.success(responses);
@@ -77,13 +94,20 @@ public class RecordService {
 
     // 지출 내역 수정
     @Transactional
-    public ResponseDto<?> update(UpdateRecordServiceDto serviceDto) {
+    public ResponseDto<?> update(HttpServletRequest request, UpdateRecordServiceDto serviceDto) {
+        ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
+        if (!responseDto.isSuccess()) {
+            return responseDto;
+        }
+
+        Member member = (Member) responseDto.getData();
+
         Record record = recordRepository.findById(serviceDto.getId()).orElse(null);
         if (record == null) {
             return ResponseDto.fail(ErrorCode.NOT_FOUND_RECORD.getDetail());
         }
 
-        if (!record.getMemberId().equals(serviceDto.getMemberId())) {
+        if (!validateAuthority(record, member)) {
             return ResponseDto.fail(ErrorCode.NOT_MATCH_MEMBER.getDetail());
         }
 
@@ -94,19 +118,30 @@ public class RecordService {
 
     // 지출 내역 삭제
     @Transactional
-    public ResponseDto<?> delete(Long id, Long memberId) {
-        Record record = recordRepository.findById(id).orElse(null);
+    public ResponseDto<?> delete(HttpServletRequest request, Long recordId) {
+        ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
+        if (!responseDto.isSuccess()) {
+            return responseDto;
+        }
+
+        Member member = (Member) responseDto.getData();
+
+        Record record = recordRepository.findById(recordId).orElse(null);
         if (record == null) {
             return ResponseDto.fail(ErrorCode.NOT_FOUND_RECORD.getDetail());
         }
 
-        if (!record.getMemberId().equals(memberId)) {
+        if (!validateAuthority(record, member)) {
             return ResponseDto.fail(ErrorCode.NOT_MATCH_MEMBER.getDetail());
         }
 
         recordRepository.delete(record);
-        log.debug("Delete record -> id: {}", id);
+        log.debug("Delete record -> id: {}", recordId);
         return ResponseDto.success("Delete Success");
+    }
+
+    private boolean validateAuthority(Record record, Member member) {
+        return record.getMemberId().equals(member.getId());
     }
 
 }
