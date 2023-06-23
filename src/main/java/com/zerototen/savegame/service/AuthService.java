@@ -60,7 +60,7 @@ public class AuthService {
 
     // 로그인
     @Transactional
-    public ResponseDto<?> login(LoginRequest request, HttpServletResponse response) {
+    public ResponseDto<String> login(LoginRequest request, HttpServletResponse response) {
         Member member = getMemberByEmail(request.getEmail());
         if (member == null) {
             return ResponseDto.fail(ErrorCode.NOT_FOUND_MEMBER.getDetail());
@@ -108,7 +108,7 @@ public class AuthService {
 
     // 이메일 중복 검사
     @Transactional(readOnly = true)
-    public ResponseDto<?> checkEmail(DuplicationRequest request) {
+    public ResponseDto<String> checkEmail(DuplicationRequest request) {
         String regExp = "^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$";
         if (!Pattern.matches(regExp, request.getValue())) {
             return ResponseDto.fail("이메일 양식을 지켜주세요.");
@@ -124,7 +124,7 @@ public class AuthService {
 
     // 닉네임 중복 검사
     @Transactional(readOnly = true)
-    public ResponseDto<?> checkNickname(DuplicationRequest request) {
+    public ResponseDto<String> checkNickname(DuplicationRequest request) {
         String regExp = "^[가-힣a-zA-Z0-9]{2,10}$";
         if (!Pattern.matches(regExp, request.getValue())) {
             return ResponseDto.fail("2~10자리 한글,대소문자,숫자만 입력해주세요.");
@@ -140,7 +140,7 @@ public class AuthService {
 
     // refresh token 재발급
     @Transactional
-    public ResponseDto<?> reissue(HttpServletRequest request, HttpServletResponse response) throws ParseException {
+    public ResponseDto<String> reissue(HttpServletRequest request, HttpServletResponse response) throws ParseException {
         if (tokenProvider.getMemberIdByToken(request.getHeader("Authorization")) != null) {
             return ResponseDto.fail("아직 유효한 access token 입니다.");
         }

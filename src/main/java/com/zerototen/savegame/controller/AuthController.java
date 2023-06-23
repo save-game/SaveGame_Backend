@@ -42,7 +42,7 @@ public class AuthController {
 
     // 로그인
     @PostMapping("/auth/login")
-    public ResponseDto<?> login(@RequestBody @Valid LoginRequest request, HttpServletResponse response) {
+    public ResponseDto<String> login(@RequestBody @Valid LoginRequest request, HttpServletResponse response) {
         return authService.login(request, response);
     }
 
@@ -67,19 +67,19 @@ public class AuthController {
 
     // 이메일 중복 확인
     @GetMapping("/auth/checkemail")
-    public ResponseDto<?> checkDuplicationemail(@RequestBody @Valid DuplicationRequest requestDto) {
+    public ResponseDto<String> checkDuplicationemail(@RequestBody @Valid DuplicationRequest requestDto) {
         return authService.checkEmail(requestDto);
     }
 
     // 닉네임 중복 확인
     @GetMapping("/auth/checknickname")
-    public ResponseDto<?> checkDuplicationNickname(@RequestBody @Valid DuplicationRequest requestDto) {
+    public ResponseDto<String> checkDuplicationNickname(@RequestBody @Valid DuplicationRequest requestDto) {
         return authService.checkNickname(requestDto);
     }
 
     // 토큰 재발급
     @GetMapping("/auth/reissue")
-    public ResponseDto<?> getNewAccessToken(HttpServletRequest request, HttpServletResponse response)
+    public ResponseDto<String> getNewAccessToken(HttpServletRequest request, HttpServletResponse response)
         throws ParseException {
         return authService.reissue(request, response);
     }
