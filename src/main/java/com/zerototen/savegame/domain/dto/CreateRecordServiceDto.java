@@ -1,7 +1,6 @@
 package com.zerototen.savegame.domain.dto;
 
 import com.zerototen.savegame.domain.dto.request.CreateRecordRequest;
-import com.zerototen.savegame.domain.entity.Record;
 import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.domain.type.PayType;
 import com.zerototen.savegame.util.ConvertUtil;

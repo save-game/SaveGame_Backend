@@ -1,11 +1,8 @@
 package com.zerototen.savegame.domain.dto.request;
 
-import com.zerototen.savegame.domain.dto.UpdateRecordServiceDto;
 import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.domain.type.PayType;
-import com.zerototen.savegame.util.ConvertUtil;
 import com.zerototen.savegame.validation.Enum;
-import java.util.Locale;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
