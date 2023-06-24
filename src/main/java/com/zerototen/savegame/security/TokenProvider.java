@@ -62,14 +62,17 @@ public class TokenProvider {
     public TokenDto generateTokenDto(Member member) {
         long now = (new Date().getTime());
 
+        // AccessToken 생성
         Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
         String accessToken = Jwts.builder()
-            .setSubject(member.getId().toString())
+            .setSubject(member.getId().toString())  // memberId
             .claim(AUTHORITIES_KEY, member.getUserRole().toString())
             .setExpiration(accessTokenExpiresIn)
             .signWith(key, SignatureAlgorithm.HS256)
             .compact();
 
+        // RefreshToken 생성
+        // AccessToken의 재발급 목적으로 만들어진 토큰이므로 만료기한 외 별다른 정보를 담지 않는다
         String refreshToken = Jwts.builder()
             .setExpiration(new Date(now + REFRESH_TOKEN_EXPRIRE_TIME))
             .signWith(key, SignatureAlgorithm.HS256)
