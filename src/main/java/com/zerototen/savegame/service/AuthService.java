@@ -138,7 +138,8 @@ public class AuthService {
         return ResponseDto.success("사용 가능한 닉네임 입니다.");
     }
 
-    // refresh token 재발급
+    // AccessToken, RefreshToken 재발급
+    // RefreshToken이 유효하고 AccessToken이 만료되었을 때 새로 발급된다
     @Transactional
     public ResponseDto<String> reissue(HttpServletRequest request, HttpServletResponse response) throws ParseException {
         if (tokenProvider.getMemberIdByToken(request.getHeader("Authorization")) != null) {
@@ -147,11 +148,16 @@ public class AuthService {
         if (!tokenProvider.validateToken(request.getHeader("RefreshToken"))) {
             return ResponseDto.fail("유효하지 않은 refresh token입니다.");
         }
+
         String memberId = tokenProvider.getMemberFromExpiredAccessToken(request);
         if (null == memberId) {
             return ResponseDto.fail("access token의 값이 유효하지 않습니다.");
         }
+
         Member member = memberRepository.findById(Long.parseLong(memberId)).orElse(null);
+        if (null == member) {
+            return ResponseDto.fail("memberId에 해당하는 멤버가 없습니다.");
+        }
 
         RefreshToken refreshToken = tokenProvider.isPresentRefreshToken(member);
 
