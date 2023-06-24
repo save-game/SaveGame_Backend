@@ -3,9 +3,11 @@ package com.zerototen.savegame.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willReturn;
+import static org.mockito.Mockito.mock;
 
 import com.zerototen.savegame.domain.dto.request.UpdateNicknameRequest;
 import com.zerototen.savegame.domain.dto.request.UpdatePasswordRequest;
@@ -14,10 +16,11 @@ import com.zerototen.savegame.domain.dto.response.MemberResponse;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.type.Authority;
-import com.zerototen.savegame.exception.ErrorCode;
 import com.zerototen.savegame.repository.MemberRepository;
+import com.zerototen.savegame.security.TokenProvider;
 import com.zerototen.savegame.util.PasswordUtil;
 import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -35,50 +38,34 @@ class MemberServiceTest {
     @Mock
     MemberRepository memberRepository;
 
+    @Mock
+    TokenProvider tokenProvider;
+
     @Nested
     @DisplayName("마이페이지")
     class testMypage {
 
-        @Nested
-        @DisplayName("조회")
-        class GetDetail {
+        @Test
+        @DisplayName("조회 성공")
+        void getDetailSuccess() {
+            //given
+            HttpServletRequest request = mock(HttpServletRequest.class);
+            Member member = getMember();
+            ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
 
-            @Test
-            @DisplayName("성공")
-            void success() {
-                //given
-                Member member = getMember();
+            willReturn(validateCheckResponse)
+                .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-                given(memberRepository.findById(anyLong()))
-                    .willReturn(Optional.of(member));
+            //when
+            ResponseDto<?> responseDto = memberService.getDetail(request);
+            MemberResponse response = (MemberResponse) responseDto.getData();
 
-                //when
-                ResponseDto<?> responseDto = memberService.getDetail(1L);
-                MemberResponse response = (MemberResponse) responseDto.getData();
-
-                //then
-                assertTrue(responseDto.isSuccess());
-                assertEquals("*".repeat(8), response.getPassword());
-                assertEquals(member.getEmail(), response.getEmail());
-                assertEquals(member.getNickname(), response.getNickname());
-                assertEquals(member.getProfileImageUrl(), response.getProfileImageUrl());
-            }
-
-            @Test
-            @DisplayName("실패 - 존재하지 않는 사용자")
-            void fail_NotFoundMember() {
-                //given
-                given(memberRepository.findById(anyLong()))
-                    .willReturn(Optional.empty());
-
-                //when
-                ResponseDto<?> responseDto = memberService.getDetail(1L);
-
-                //then
-                assertFalse(responseDto.isSuccess());
-                assertEquals(ErrorCode.NOT_FOUND_MEMBER.getDetail(), responseDto.getData());
-            }
-
+            //then
+            assertTrue(responseDto.isSuccess());
+            assertEquals("*".repeat(8), response.getPassword());
+            assertEquals(member.getEmail(), response.getEmail());
+            assertEquals(member.getNickname(), response.getNickname());
+            assertEquals(member.getProfileImageUrl(), response.getProfileImageUrl());
         }
 
         @Nested
@@ -89,81 +76,41 @@ class MemberServiceTest {
             @DisplayName("성공")
             void success() {
                 //given
+                HttpServletRequest request = mock(HttpServletRequest.class);
                 Member member = getMember();
-                UpdatePasswordRequest request = getUpdatePasswordRequest("password11!!", "password11@@",
-                    "password11@@");
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
+                UpdatePasswordRequest passwordRequest = getUpdatePasswordRequest("password11!!", "password11@@");
 
-                given(memberRepository.findById(anyLong()))
-                    .willReturn(Optional.of(member));
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
                 //when
-                ResponseDto<?> responseDto = memberService.updatePassword(1L, request);
+                ResponseDto<?> responseDto = memberService.updatePassword(request, passwordRequest);
 
                 //then
                 assertTrue(responseDto.isSuccess());
                 assertEquals("Update Password Success", responseDto.getData());
-                assertTrue(PasswordUtil.checkPassword(request.getNewPassword(), member.getPassword()));
+                assertTrue(PasswordUtil.checkPassword(passwordRequest.getNewPassword(), member.getPassword()));
             }
 
-            @Nested
-            @DisplayName("실패")
-            class Fail {
+            @Test
+            @DisplayName("이전 비밀번호 불일치")
+            void fail_notMatchOldPassword() {
+                //given
+                HttpServletRequest request = mock(HttpServletRequest.class);
+                Member member = getMember();
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
+                UpdatePasswordRequest passwordRequest = getUpdatePasswordRequest("password22!!", "password11@@");
 
-                @Test
-                @DisplayName("존재하지 않는 사용자")
-                void notFoundMember() {
-                    //given
-                    UpdatePasswordRequest request = getUpdatePasswordRequest("password11!!", "password11@@",
-                        "password11@@");
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-                    given(memberRepository.findById(anyLong()))
-                        .willReturn(Optional.empty());
+                //when
+                ResponseDto<?> responseDto = memberService.updatePassword(request, passwordRequest);
 
-                    //when
-                    ResponseDto<?> responseDto = memberService.updatePassword(1L, request);
-
-                    //then
-                    assertFalse(responseDto.isSuccess());
-                    assertEquals(ErrorCode.NOT_FOUND_MEMBER.getDetail(), responseDto.getData());
-                }
-
-                @Test
-                @DisplayName("비밀번호 확인 불일치")
-                void notMatchNewPasswordCheck() {
-                    //given
-                    Member member = getMember();
-                    UpdatePasswordRequest request = getUpdatePasswordRequest("password11!!", "password11@@",
-                        "password11##");
-
-                    given(memberRepository.findById(anyLong()))
-                        .willReturn(Optional.of(member));
-
-                    //when
-                    ResponseDto<?> responseDto = memberService.updatePassword(1L, request);
-
-                    //then
-                    assertFalse(responseDto.isSuccess());
-                    assertEquals("비밀번호가 일치하지 않습니다.", responseDto.getData());
-                }
-
-                @Test
-                @DisplayName("이전 비밀번호 불일치")
-                void notMatchOldPassword() {
-                    //given
-                    Member member = getMember();
-                    UpdatePasswordRequest request = getUpdatePasswordRequest("password22!!", "password11@@",
-                        "password11@@");
-
-                    given(memberRepository.findById(anyLong()))
-                        .willReturn(Optional.of(member));
-
-                    //when
-                    ResponseDto<?> responseDto = memberService.updatePassword(1L, request);
-
-                    //then
-                    assertFalse(responseDto.isSuccess());
-                    assertEquals("이전 비밀번호가 일치하지 않습니다.", responseDto.getData());
-                }
+                //then
+                assertFalse(responseDto.isSuccess());
+                assertEquals("이전 비밀번호가 일치하지 않습니다.", responseDto.getData());
             }
         }
 
@@ -175,72 +122,53 @@ class MemberServiceTest {
             @DisplayName("성공")
             void success() {
                 //given
+                HttpServletRequest request = mock(HttpServletRequest.class);
                 Member member = getMember();
-                UpdateNicknameRequest request = getUpdateNicknameRequest("newNickname");
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
+                UpdateNicknameRequest nicknameRequest = getUpdateNicknameRequest("newNickname");
 
-                given(memberRepository.findById(anyLong()))
-                    .willReturn(Optional.of(member));
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
                 given(memberRepository.findByNickname(anyString()))
                     .willReturn(Optional.empty());
 
                 //when
-                ResponseDto<?> responseDto = memberService.updateNickname(1L, request);
+                ResponseDto<?> responseDto = memberService.updateNickname(request, nicknameRequest);
 
                 //then
                 assertTrue(responseDto.isSuccess());
                 assertEquals("Update Nickname Success", responseDto.getData());
-                assertEquals(request.getNickname(), member.getNickname());
+                assertEquals(nicknameRequest.getNickname(), member.getNickname());
             }
 
-            @Nested
-            @DisplayName("실패")
-            class Fail {
+            @Test
+            @DisplayName("실패 - 중복된 닉네임")
+            void fail_AlreadyExistNickname() {
+                //given
+                HttpServletRequest request = mock(HttpServletRequest.class);
+                Member member = getMember();
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
+                UpdateNicknameRequest nicknameRequest = getUpdateNicknameRequest("newNickname");
 
-                @Test
-                @DisplayName("실패 - 존재하지 않는 사용자")
-                void notFoundMember() {
-                    //given
-                    UpdateNicknameRequest request = getUpdateNicknameRequest("newNickname");
+                Member sameNicknameMember = getMember();
+                sameNicknameMember.setId(2L);
+                sameNicknameMember.setEmail("same@gmail.com");
+                sameNicknameMember.setNickname(nicknameRequest.getNickname());
 
-                    given(memberRepository.findById(anyLong()))
-                        .willReturn(Optional.empty());
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-                    //when
-                    ResponseDto<?> responseDto = memberService.updateNickname(1L, request);
+                given(memberRepository.findByNickname(anyString()))
+                    .willReturn(Optional.of(sameNicknameMember));
 
-                    //then
-                    assertFalse(responseDto.isSuccess());
-                    assertEquals(ErrorCode.NOT_FOUND_MEMBER.getDetail(), responseDto.getData());
-                }
+                //when
+                ResponseDto<?> responseDto = memberService.updateNickname(request, nicknameRequest);
 
-                @Test
-                @DisplayName("실패 - 중복된 닉네임")
-                void alreadyExistNickname() {
-                    //given
-                    Member member = getMember();
-                    UpdateNicknameRequest request = getUpdateNicknameRequest("newNickname");
-
-                    Member sameNicknameMember = getMember();
-                    sameNicknameMember.setId(2L);
-                    sameNicknameMember.setEmail("same@gmail.com");
-                    sameNicknameMember.setNickname(request.getNickname());
-
-                    given(memberRepository.findById(anyLong()))
-                        .willReturn(Optional.of(member));
-
-                    given(memberRepository.findByNickname(anyString()))
-                        .willReturn(Optional.of(sameNicknameMember));
-
-                    //when
-                    ResponseDto<?> responseDto = memberService.updateNickname(1L, request);
-
-                    //then
-                    assertFalse(responseDto.isSuccess());
-                    assertEquals("중복된 닉네임 입니다.", responseDto.getData());
-                }
+                //then
+                assertFalse(responseDto.isSuccess());
+                assertEquals("중복된 닉네임 입니다.", responseDto.getData());
             }
-
         }
 
         @Nested
@@ -251,38 +179,22 @@ class MemberServiceTest {
             @DisplayName("성공")
             void success() {
                 //given
+                HttpServletRequest request = mock(HttpServletRequest.class);
                 Member member = getMember();
-                UpdateProfileImageUrlRequest request = getUpdateProfileImageUrlRequest(
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
+                UpdateProfileImageUrlRequest imageUrlRequest = getUpdateProfileImageUrlRequest(
                     "http://image.com/profile/1.png");
 
-                given(memberRepository.findById(anyLong()))
-                    .willReturn(Optional.of(member));
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
                 //when
-                ResponseDto<?> responseDto = memberService.updateProfileImageUrl(1L, request);
+                ResponseDto<?> responseDto = memberService.updateProfileImageUrl(request, imageUrlRequest);
 
                 //then
                 assertTrue(responseDto.isSuccess());
                 assertEquals("Update Profile Image Success", responseDto.getData());
-                assertEquals(request.getProfileImageUrl(), member.getProfileImageUrl());
-            }
-
-            @Test
-            @DisplayName("실패 - 존재하지 않는 사용자")
-            void fail_NotFoundMember() {
-                //given
-                UpdateProfileImageUrlRequest request = getUpdateProfileImageUrlRequest(
-                    "http://image.com/profile/1.png");
-
-                given(memberRepository.findById(anyLong()))
-                    .willReturn(Optional.empty());
-
-                //when
-                ResponseDto<?> responseDto = memberService.updateProfileImageUrl(1L, request);
-
-                //then
-                assertFalse(responseDto.isSuccess());
-                assertEquals(ErrorCode.NOT_FOUND_MEMBER.getDetail(), responseDto.getData());
+                assertEquals(imageUrlRequest.getProfileImageUrl(), member.getProfileImageUrl());
             }
         }
     }
@@ -298,11 +210,10 @@ class MemberServiceTest {
             .build();
     }
 
-    private static UpdatePasswordRequest getUpdatePasswordRequest(String oldPw, String newPw, String newPwChk) {
+    private static UpdatePasswordRequest getUpdatePasswordRequest(String oldPw, String newPw) {
         return UpdatePasswordRequest.builder()
             .oldPassword(oldPw)
             .newPassword(newPw)
-            .newPasswordCheck(newPwChk)
             .build();
     }
 

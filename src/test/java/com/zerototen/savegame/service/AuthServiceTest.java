@@ -4,9 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -20,6 +21,7 @@ import com.zerototen.savegame.repository.MemberRepository;
 import com.zerototen.savegame.security.TokenProvider;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -229,16 +231,18 @@ class AuthServiceTest {
         @DisplayName("성공")
         void success() {
             //given
+            HttpServletRequest request = mock(HttpServletRequest.class);
             Member member = getMember();
+            ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
 
-            given(memberRepository.findById(anyLong()))
-                .willReturn(Optional.of(member));
+            willReturn(validateCheckResponse)
+                .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
             given(tokenProvider.deleteRefreshToken(any(Member.class)))
                 .willReturn(Boolean.TRUE);
 
             //when
-            ResponseDto<?> responseDto = authService.withdrawal(1L);
+            ResponseDto<?> responseDto = authService.withdrawal(request);
 
             //then
             assertTrue(responseDto.isSuccess());
@@ -250,35 +254,45 @@ class AuthServiceTest {
         class Fail {
 
             @Test
-            @DisplayName("존재하지 않는 사용자")
-            void notFoundMember() {
-                //given
-                given(memberRepository.findById(anyLong()))
-                    .willReturn(Optional.empty());
-
-                //when
-                ResponseDto<?> responseDto = authService.withdrawal(1L);
-
-                //then
-                assertEquals(ErrorCode.NOT_FOUND_MEMBER.getDetail(), responseDto.getData());
-            }
-
-            @Test
             @DisplayName("이미 탈퇴한 사용자")
             void alreadyWithdrawnMember() {
                 //given
+                HttpServletRequest request = mock(HttpServletRequest.class);
                 Member member = getMember();
                 member.setDeletedAt(LocalDateTime.now());
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
 
-                given(memberRepository.findById(anyLong()))
-                    .willReturn(Optional.of(member));
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
                 //when
-                ResponseDto<?> responseDto = authService.withdrawal(1L);
+                ResponseDto<?> responseDto = authService.withdrawal(request);
 
                 //then
                 assertFalse(responseDto.isSuccess());
                 assertEquals("이미 탈퇴한 사용자입니다.", responseDto.getData());
+            }
+
+            @Test
+            @DisplayName("존재하지 않는 Refresh 토큰")
+            void notExistRefreshToken() {
+                //given
+                HttpServletRequest request = mock(HttpServletRequest.class);
+                Member member = getMember();
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
+
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
+
+                given(tokenProvider.deleteRefreshToken(any(Member.class)))
+                    .willReturn(Boolean.FALSE);
+
+                //when
+                ResponseDto<?> responseDto = authService.withdrawal(request);
+
+                //then
+                assertFalse(responseDto.isSuccess());
+                assertEquals("존재하지 않는 Token 입니다.", responseDto.getData());
             }
         }
     }
