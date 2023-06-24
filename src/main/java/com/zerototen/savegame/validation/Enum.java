@@ -28,6 +28,8 @@ public @interface Enum {
 
     Class<? extends java.lang.Enum<?>> enumClass();
 
-    boolean ignoreCase() default false;
+    boolean ignoreCase() default false; // 대소문자 무시
+
+    boolean nullable() default false; // ALL 카테고리 허용
 
 }
