@@ -222,8 +222,9 @@ public class TokenProvider {
         }
 
         Member member = getMemberFromAuthentication();
-        if (isPresentRefreshToken(member) == null || !isPresentRefreshToken(member).getKeyValue()
-            .equals(refreshTokenOfHeader)) {
+        RefreshToken refreshToken = isPresentRefreshToken(member);
+
+        if (refreshToken == null || !refreshToken.getKeyValue().equals(refreshTokenOfHeader)) {
             return null;
         }
 
