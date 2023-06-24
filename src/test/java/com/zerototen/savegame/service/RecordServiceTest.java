@@ -47,7 +47,7 @@ class RecordServiceTest {
     private RecordRepository recordRepository;
 
     @Mock
-    TokenProvider tokenProvider;
+    private TokenProvider tokenProvider;
 
     @InjectMocks
     private RecordService recordService;
