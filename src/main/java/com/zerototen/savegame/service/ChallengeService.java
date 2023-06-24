@@ -36,8 +36,8 @@ public class ChallengeService {
         log.info("Create challenge -> challengeId: {}", challenge.getId());
 
         ChallengeMember challengeMember = ChallengeMember.builder()
-            .challengeId(challenge.getId())
-            .memberId(member.getId())
+            .challenge(challenge)
+            .member(member)
             .ongoingYn(true)
             .build();
 
