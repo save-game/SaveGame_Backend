@@ -19,7 +19,7 @@ public class ChallengeController {
 
     private final ChallengeService challengeService;
 
-    // 챌린지 생서
+    // 챌린지 생성
     @PostMapping
     public ResponseDto<?> createChallenge(HttpServletRequest request,
         @RequestBody @Valid CreateChallengeRequest createRequest) {
