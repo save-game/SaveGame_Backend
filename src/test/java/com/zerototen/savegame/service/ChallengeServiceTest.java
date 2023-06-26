@@ -68,14 +68,13 @@ class ChallengeServiceTest {
         then(challengeRepository).should().save(challengeArgumentCaptor.capture());
         then(challengeMemberRepository).should().save(challengeMemberArgumentCaptor.capture());
         assertTrue(responseDto.isSuccess());
-        assertEquals(challenge.getId(), ((Challenge) responseDto.getData()).getId());
-        assertEquals(serviceDto.getTitle(), ((Challenge) responseDto.getData()).getTitle());
-        assertEquals(serviceDto.getContent(), ((Challenge) responseDto.getData()).getContent());
-        assertEquals(serviceDto.getStartDate(), ((Challenge) responseDto.getData()).getStartDate());
-        assertEquals(serviceDto.getEndDate(), ((Challenge) responseDto.getData()).getEndDate());
-        assertEquals(serviceDto.getGoalAmount(), ((Challenge) responseDto.getData()).getGoalAmount());
-        assertEquals(serviceDto.getCategory(), ((Challenge) responseDto.getData()).getCategory());
-        assertEquals(serviceDto.getMaxPeople(), ((Challenge) responseDto.getData()).getMaxPeople());
+        assertEquals(serviceDto.getTitle(), challengeArgumentCaptor.getValue().getTitle());
+        assertEquals(serviceDto.getContent(), challengeArgumentCaptor.getValue().getContent());
+        assertEquals(serviceDto.getStartDate(), challengeArgumentCaptor.getValue().getStartDate());
+        assertEquals(serviceDto.getEndDate(), challengeArgumentCaptor.getValue().getEndDate());
+        assertEquals(serviceDto.getGoalAmount(), challengeArgumentCaptor.getValue().getGoalAmount());
+        assertEquals(serviceDto.getCategory(), challengeArgumentCaptor.getValue().getCategory());
+        assertEquals(serviceDto.getMaxPeople(), challengeArgumentCaptor.getValue().getMaxPeople());
     }
 
     private Member getMember() {
