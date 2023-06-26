@@ -66,13 +66,13 @@ public class AuthController {
     }
 
     // 이메일 중복 확인
-    @GetMapping("/auth/checkemail")
+    @PostMapping("/auth/checkemail")
     public ResponseDto<String> checkDuplicationemail(@RequestBody @Valid DuplicationRequest requestDto) {
         return authService.checkEmail(requestDto);
     }
 
     // 닉네임 중복 확인
-    @GetMapping("/auth/checknickname")
+    @PostMapping("/auth/checknickname")
     public ResponseDto<String> checkDuplicationNickname(@RequestBody @Valid DuplicationRequest requestDto) {
         return authService.checkNickname(requestDto);
     }
