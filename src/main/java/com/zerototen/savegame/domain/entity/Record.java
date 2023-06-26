@@ -60,7 +60,7 @@ public class Record {
         this.payType = serviceDto.getPayType();
     }
 
-    public static Record from(Long memberId, CreateRecordServiceDto serviceDto) {
+    public static Record of(Long memberId, CreateRecordServiceDto serviceDto) {
         return Record.builder()
             .memberId(memberId)
             .amount(serviceDto.getAmount())

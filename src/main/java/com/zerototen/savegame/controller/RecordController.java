@@ -58,7 +58,7 @@ public class RecordController {
     public ResponseDto<?> updateRecord(
         HttpServletRequest request, @PathVariable Long recordId,
         @RequestBody @Valid UpdateRecordRequest updateRecordRequest) {
-        return recordService.update(request, UpdateRecordServiceDto.from(recordId, updateRecordRequest));
+        return recordService.update(request, UpdateRecordServiceDto.of(recordId, updateRecordRequest));
     }
 
     @DeleteMapping("/{recordId}")

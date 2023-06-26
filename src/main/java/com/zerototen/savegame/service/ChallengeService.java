@@ -33,9 +33,9 @@ public class ChallengeService {
 
         Member member = (Member) responseDto.getData();
 
-        Challenge challenge = challengeRepository.save(Challenge.from(serviceDto, member.getId()));
+        Challenge challenge = challengeRepository.save(Challenge.of(serviceDto, member.getId()));
         log.info("Create challenge -> challengeId: {}, createMemberId: {}", challenge.getId(),
-            challenge.getCreateMemberId());
+            challenge.getMasterMemberId());
 
         ChallengeMember challengeMember = ChallengeMember.builder()
             .challenge(challenge)
@@ -58,7 +58,8 @@ public class ChallengeService {
 
         Member member = (Member) responseDto.getData();
 
-        Challenge challenge = challengeRepository.findById(challengeId).orElse(null);
+        Challenge challenge = challengeRepository.findById(challengeId)
+            .orElse(null);
         if (challenge == null) {
             return ResponseDto.fail("챌린지가 존재하지 않습니다.");
         }
@@ -67,8 +68,8 @@ public class ChallengeService {
             return ResponseDto.fail("이미 참가한 챌린지입니다.");
         }
 
-        if (challenge.getEndDate().isBefore(LocalDate.now())) {
-            return ResponseDto.fail("이미 종료된 챌린지입니다.");
+        if (challenge.getEndDate().isBefore(LocalDate.now())) { // 종료일이 오늘 이전이면
+            return ResponseDto.fail("이미 종료된 챌린지입니다."); // TODO: 중도참가 허용?
         }
 
         if (challengeMemberRepository.countByChallenge(challenge) >= challenge.getMaxPeople()) {
