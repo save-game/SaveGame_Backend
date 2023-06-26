@@ -123,33 +123,65 @@ class ChallengeServiceTest {
 
         }
 
-        @Test
-        @DisplayName("실패 - 인원이 가득찬 챌린지")
-        void fail_ChallengeIsFull() {
-            HttpServletRequest request = mock(HttpServletRequest.class);
-            Member member = getMember();
-            ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
-            Challenge challenge = getChallenge(Category.FOOD, member.getId());
+        @Nested
+        @DisplayName("실패")
+        class Fail {
 
-            willReturn(validateCheckResponse)
-                .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
+            @Test
+            @DisplayName("인원이 가득찬 챌린지")
+            void challengeIsFull() {
+                HttpServletRequest request = mock(HttpServletRequest.class);
+                Member member = getMember();
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
+                Challenge challenge = getChallenge(Category.FOOD, member.getId());
 
-            given(challengeRepository.findById(anyLong()))
-                .willReturn(Optional.of(challenge));
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-            given(challengeMemberRepository.existsByMemberAndChallenge(any(Member.class), any(Challenge.class)))
-                .willReturn(Boolean.FALSE);
+                given(challengeRepository.findById(anyLong()))
+                    .willReturn(Optional.of(challenge));
 
-            given(challengeMemberRepository.countByChallenge(any(Challenge.class)))
-                .willReturn(challenge.getMaxPeople());
+                given(challengeMemberRepository.existsByMemberAndChallenge(any(Member.class), any(Challenge.class)))
+                    .willReturn(Boolean.FALSE);
 
-            //when
-            ResponseDto<?> responseDto = challengeService.join(request, 1L);
+                given(challengeMemberRepository.countByChallenge(any(Challenge.class)))
+                    .willReturn(challenge.getMaxPeople());
 
-            //then
-            then(challengeMemberRepository).should(never()).save(any());
-            assertFalse(responseDto.isSuccess());
-            assertEquals("인원이 다 찼습니다.", responseDto.getData());
+                //when
+                ResponseDto<?> responseDto = challengeService.join(request, 1L);
+
+                //then
+                then(challengeMemberRepository).should(never()).save(any());
+                assertFalse(responseDto.isSuccess());
+                assertEquals("인원이 다 찼습니다.", responseDto.getData());
+            }
+
+            @Test
+            @DisplayName("이미 종료된 챌린지")
+            void fail_ChallengeIsAlreadyEnd() {
+                HttpServletRequest request = mock(HttpServletRequest.class);
+                Member member = getMember();
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
+                Challenge challenge = getChallenge(Category.FOOD, member.getId());
+                challenge.setEndDate(LocalDate.now().minusDays(1));
+
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
+
+                given(challengeRepository.findById(anyLong()))
+                    .willReturn(Optional.of(challenge));
+
+                given(challengeMemberRepository.existsByMemberAndChallenge(any(Member.class), any(Challenge.class)))
+                    .willReturn(Boolean.FALSE);
+
+                //when
+                ResponseDto<?> responseDto = challengeService.join(request, 1L);
+
+                //then
+                then(challengeMemberRepository).should(never()).save(any());
+                assertFalse(responseDto.isSuccess());
+                assertEquals("이미 종료된 챌린지입니다.", responseDto.getData());
+            }
         }
     }
 
