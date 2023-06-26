@@ -73,7 +73,7 @@ class ChallengeServiceTest {
         then(challengeRepository).should().save(challengeArgumentCaptor.capture());
         then(challengeMemberRepository).should().save(challengeMemberArgumentCaptor.capture());
         assertTrue(responseDto.isSuccess());
-        assertEquals(member.getId(), challengeArgumentCaptor.getValue().getCreateMemberId());
+        assertEquals(member.getId(), challengeArgumentCaptor.getValue().getMasterMemberId());
         assertEquals(serviceDto.getTitle(), challengeArgumentCaptor.getValue().getTitle());
         assertEquals(serviceDto.getContent(), challengeArgumentCaptor.getValue().getContent());
         assertEquals(serviceDto.getStartDate(), challengeArgumentCaptor.getValue().getStartDate());
@@ -158,7 +158,7 @@ class ChallengeServiceTest {
 
             @Test
             @DisplayName("이미 종료된 챌린지")
-            void fail_ChallengeIsAlreadyEnd() {
+            void alreadyEndedChallenge() {
                 HttpServletRequest request = mock(HttpServletRequest.class);
                 Member member = getMember();
                 ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
@@ -185,7 +185,7 @@ class ChallengeServiceTest {
         }
     }
 
-    private Member getMember() {
+    private static Member getMember() {
         return Member.builder()
             .id(2L)
             .email("abc@gmail.com")
@@ -198,7 +198,7 @@ class ChallengeServiceTest {
     private static Challenge getChallenge(Category category, Long createMemberId) {
         return Challenge.builder()
             .id(1L)
-            .createMemberId(createMemberId)
+            .masterMemberId(createMemberId)
             .title("title")
             .content("content")
             .startDate(LocalDate.of(2023, 7, 1))
