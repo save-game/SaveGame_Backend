@@ -18,6 +18,7 @@ public enum ErrorCode {
 
     // record
     NOT_FOUND_RECORD(HttpStatus.BAD_REQUEST, "지출 내역을 찾을 수 없습니다"),
+    NOT_FOUND_POST(HttpStatus.BAD_REQUEST, "게시물을 찾을 수 없습니다"),
     NOT_MATCH_MEMBER(HttpStatus.BAD_REQUEST, "해당 내역이 사용자의 내역이 아닙니다"),
     STARTDATE_AFTER_ENDDATE(HttpStatus.BAD_REQUEST, "조회시작일이 조회종료일 이후입니다"),
     CATEGORY_IS_NULL(HttpStatus.BAD_REQUEST, "카테고리가 null 입니다"),
