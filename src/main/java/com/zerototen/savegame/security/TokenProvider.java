@@ -19,12 +19,9 @@ import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
@@ -32,12 +29,8 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -69,14 +62,17 @@ public class TokenProvider {
     public TokenDto generateTokenDto(Member member) {
         long now = (new Date().getTime());
 
+        // AccessToken 생성
         Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
         String accessToken = Jwts.builder()
-            .setSubject(member.getId().toString())
+            .setSubject(member.getId().toString())  // memberId
             .claim(AUTHORITIES_KEY, member.getUserRole().toString())
             .setExpiration(accessTokenExpiresIn)
             .signWith(key, SignatureAlgorithm.HS256)
             .compact();
 
+        // RefreshToken 생성
+        // AccessToken의 재발급 목적으로 만들어진 토큰이므로 만료기한 외 별다른 정보를 담지 않는다
         String refreshToken = Jwts.builder()
             .setExpiration(new Date(now + REFRESH_TOKEN_EXPRIRE_TIME))
             .signWith(key, SignatureAlgorithm.HS256)
@@ -95,7 +91,6 @@ public class TokenProvider {
             .accessToken(accessToken)
             .refreshToken(refreshToken)
             .build();
-
     }
 
     public Member getMemberFromAuthentication() {
@@ -144,31 +139,31 @@ public class TokenProvider {
         return blacklistTokenRepository.existsById(accessToken);
     }
 
-    public Authentication getAuthentication(HttpServletRequest request) { // TODO: 사용하지 않은 메소드
-        String token = getAccessToken(request);
-        if (token == null) {
-            return null;
-        } else {
-            Claims claims = Jwts
-                .parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-
-            Collection<? extends GrantedAuthority> authorities =
-                Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList());
-
-            User principal = new User(claims.getSubject(), "@", authorities);
-
-            return new UsernamePasswordAuthenticationToken(principal, token, authorities);
-        }
-    }
+//    public Authentication getAuthentication(HttpServletRequest request) {
+//        String token = getAccessToken(request);
+//        if (token == null) {
+//            return null;
+//        } else {
+//            Claims claims = Jwts
+//                .parserBuilder()
+//                .setSigningKey(key)
+//                .build()
+//                .parseClaimsJws(token)
+//                .getBody();
+//
+//            Collection<? extends GrantedAuthority> authorities =
+//                Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
+//                    .map(SimpleGrantedAuthority::new)
+//                    .collect(Collectors.toList());
+//
+//            User principal = new User(claims.getSubject(), "@", authorities);
+//
+//            return new UsernamePasswordAuthenticationToken(principal, token, authorities);
+//        }
+//    }
 
     public Long getMemberIdByToken(String accessToken) {
-        String token = "";
+        String token;
         if (StringUtils.hasText(accessToken) && accessToken.startsWith("Bearer ")) {
             token = accessToken.substring(7);
         } else {
