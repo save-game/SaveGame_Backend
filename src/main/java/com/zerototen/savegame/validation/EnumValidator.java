@@ -16,11 +16,18 @@ public class EnumValidator implements ConstraintValidator<Enum, String> {
     public boolean isValid(String value, ConstraintValidatorContext context) {
         Object[] enumValues = this.annotation.enumClass().getEnumConstants();
         if (enumValues != null) {
-            for (Object enumValue : enumValues) {
-                if (value.equals(enumValue.toString())
-                    || (this.annotation.ignoreCase() && value.equalsIgnoreCase(enumValue.toString()))) {
-                    return true;
+            if (value != null) {
+                for (Object enumValue : enumValues) {
+                    if (enumValue.toString().equals("ALL")) {
+                        continue;
+                    }
+                    if (value.equals(enumValue.toString())
+                        || (this.annotation.ignoreCase() && value.equalsIgnoreCase(enumValue.toString()))) {
+                        return true;
+                    }
                 }
+            } else {
+                return this.annotation.nullable();
             }
         }
         return false;
