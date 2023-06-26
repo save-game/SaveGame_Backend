@@ -34,6 +34,8 @@ public class Challenge extends BaseEntity {
     @Column(name = "challenge_id")
     private Long id;
 
+    private Long createMemberId;
+
     private String title;
     private String content;
     private LocalDate startDate;
@@ -46,8 +48,9 @@ public class Challenge extends BaseEntity {
     private int maxPeople;
     private LocalDateTime deletedAt;
 
-    public static Challenge from(CreateChallengeServiceDto serviceDto) {
+    public static Challenge from(CreateChallengeServiceDto serviceDto, Long memberId) {
         return Challenge.builder()
+            .createMemberId(memberId)
             .title(serviceDto.getTitle())
             .content(serviceDto.getContent())
             .startDate(serviceDto.getStartDate())
