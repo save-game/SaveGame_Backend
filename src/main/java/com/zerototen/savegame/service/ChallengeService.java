@@ -68,7 +68,7 @@ public class ChallengeService {
         }
 
         if (challenge.getEndDate().isBefore(LocalDate.now())) {
-            return ResponseDto.fail("이미 완료된 챌린지입니다.");
+            return ResponseDto.fail("이미 종료된 챌린지입니다.");
         }
 
         if (challengeMemberRepository.countByChallenge(challenge) >= challenge.getMaxPeople()) {
