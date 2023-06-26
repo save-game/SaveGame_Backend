@@ -4,6 +4,7 @@ import com.zerototen.savegame.exception.AccessDeniedHandlerException;
 import com.zerototen.savegame.exception.AuthenticationEntryPointException;
 import com.zerototen.savegame.security.TokenProvider;
 import com.zerototen.savegame.service.UserDetailsServiceImpl;
+import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -85,15 +86,26 @@ public class SecurityConfig {
     // CORS 허용 적용
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
+        CorsConfiguration config = new CorsConfiguration();
 
-        configuration.addAllowedOriginPattern("*");
-        configuration.addAllowedHeader("*");
-        configuration.addAllowedMethod("*");
-        configuration.setAllowCredentials(true);
+        config.setAllowCredentials(true);
+        config.setAllowedOrigins(Arrays.asList(
+            "http://localhost:8080",
+            "https://save-game-jeongseonp.vercel.app"
+        ));
+        config.setAllowedHeaders(Arrays.asList("*"));
+        config.setExposedHeaders(Arrays.asList("*"));
+        config.setAllowedMethods(Arrays.asList(
+            HttpMethod.GET.name(),
+            HttpMethod.POST.name(),
+            HttpMethod.DELETE.name(),
+            HttpMethod.PUT.name(),
+            HttpMethod.HEAD.name(),
+            HttpMethod.OPTIONS.name()
+        ));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 
