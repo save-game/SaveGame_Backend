@@ -7,9 +7,8 @@ import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Image;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.entity.Post;
-import com.zerototen.savegame.exception.CustomException;
 import com.zerototen.savegame.exception.ErrorCode;
-import com.zerototen.savegame.repository.HeartsRepository;
+import com.zerototen.savegame.repository.HeartRepository;
 import com.zerototen.savegame.repository.MemberRepository;
 import com.zerototen.savegame.repository.PostRepository;
 import com.zerototen.savegame.security.TokenProvider;
@@ -35,10 +34,10 @@ public class PostService {
     private final TokenProvider tokenProvider;
     private final ImageService imageService;
     private final MemberRepository memberRepository;
-    private final HeartsRepository heartsRepository;
+    private final HeartRepository heartRepository;
 
     @Transactional
-    public ResponseDto<?> postList(Long challengeId, HttpServletRequest request, Pageable pageable){
+    public ResponseDto<?> getPostList(Long challengeId, HttpServletRequest request, Pageable pageable){
         Member member = validation(request);
         log.info("check posts -> memberId: {}", member.getId());
         Page<Post> all = postRepository.findByChallengeIdOrderByIdDesc(challengeId, pageable);
@@ -53,11 +52,11 @@ public class PostService {
                 .profileImage(memberRepository.findById(
                     post.getMemberId()).get().getProfileImageUrl())
                 .content(post.getContent())
-                .urlImages(post.getImage().stream().map(Image::getPostImage)
+                .urlImages(post.getImageList().stream().map(Image::getPostImage)
                     .collect(Collectors.toList()))
-                .heartCount(heartsRepository.countByPost_Id(post.getId()))
-                .heartState(heartsRepository.existsByMember_IdAndPost_Id(
-                    member.getId(),post.getId()))
+                .heartCount(heartRepository.countByPost_Id(post.getId()))
+                .heartState(heartRepository.existsByMemberAndPost(
+                    member, post))
                 .build();
 
             postDetailDtoList.add(postDetailDto);
@@ -69,17 +68,17 @@ public class PostService {
     }
 
     @Transactional
-    public ResponseDto<?> create(CreatePostServiceDto serviceDto, List<String> urlImages, HttpServletRequest request) {
+    public ResponseDto<?> create(CreatePostServiceDto serviceDto, List<String> imageList, HttpServletRequest request) {
         Member member = validation(request);
         log.info("Create post -> memberId: {}", member.getId());
         serviceDto.setMemberId(member.getId());
-        Post post = postRepository.save(serviceDto.toEntity());
+        Post post = postRepository.save(Post.from(serviceDto));
 
-        for(String image : urlImages){
-            Image po = new Image();
-            po.setPostImage(image);
-            po.setPost(post);
-            imageService.save(po);
+        for(String image : imageList){
+            Image img = new Image();
+            img.setPostImage(image);
+            img.setPost(post);
+            imageService.save(img);
         }
 
         return ResponseDto.success(post);
@@ -138,6 +137,5 @@ public class PostService {
 
         return member;
     }
-
 
 }

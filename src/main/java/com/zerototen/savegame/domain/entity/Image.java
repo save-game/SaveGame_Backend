@@ -1,6 +1,5 @@
 package com.zerototen.savegame.domain.entity;
 
-import java.time.LocalDateTime;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;

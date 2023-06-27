@@ -1,7 +1,7 @@
 package com.zerototen.savegame.controller;
 
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
-import com.zerototen.savegame.service.HeartsService;
+import com.zerototen.savegame.service.HeartService;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class HeartController {
 
-    private final HeartsService heartsService;
+    private final HeartService heartsService;
 
     @PostMapping("/heart/{postId}")
     public ResponseDto<?> create(HttpServletRequest request, @PathVariable Long postId) {

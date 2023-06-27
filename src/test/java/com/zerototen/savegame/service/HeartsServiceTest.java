@@ -8,8 +8,7 @@ import static org.mockito.Mockito.mock;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.entity.Post;
-import com.zerototen.savegame.repository.HeartsRepository;
-import com.zerototen.savegame.repository.ImageRepository;
+import com.zerototen.savegame.repository.HeartRepository;
 import com.zerototen.savegame.repository.PostRepository;
 import com.zerototen.savegame.security.TokenProvider;
 import java.util.Optional;
@@ -28,16 +27,16 @@ class HeartsServiceTest {
     private TokenProvider tokenProvider;
 
     @Mock
-    private HeartsRepository heartsRepository;
+    private HeartRepository heartRepository;
 
     @Mock
     private PostRepository postRepository;
 
     @InjectMocks
-    private HeartsService heartsService;
+    private HeartService heartsService;
 
     @Test
-    @DisplayName("하트 활성화")
+    @DisplayName("하트 생성_성공")
     void saveHearts() {
         //given
         HttpServletRequest request = mock(HttpServletRequest.class);
@@ -50,7 +49,7 @@ class HeartsServiceTest {
             .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
         //when
-        ResponseDto<?> responseDto = heartsService.saveHearts(request, post.getId());
+        ResponseDto<?> responseDto = heartsService.create(request, post.getId());
 
         //then
         assertTrue(responseDto.isSuccess());
@@ -59,7 +58,7 @@ class HeartsServiceTest {
     }
 
     @Test
-    @DisplayName("하트 활성화 중복")
+    @DisplayName("하트 생성 중복")
     void twoTimesSaveHearts() {
         //given
         HttpServletRequest request = mock(HttpServletRequest.class);
@@ -71,10 +70,10 @@ class HeartsServiceTest {
         willReturn(validateCheckResponse)
             .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
         willReturn(true)
-            .given(heartsRepository).existsByMember_IdAndPost_Id(member.getId(),post.getId());
+            .given(heartRepository).existsByMemberAndPost(member, post);
 
         //when
-        ResponseDto<?> responseDto = heartsService.saveHearts(request, post.getId());
+        ResponseDto<?> responseDto = heartsService.create(request, post.getId());
 
         //then
         assertTrue(responseDto.isSuccess());
@@ -82,7 +81,7 @@ class HeartsServiceTest {
     }
 
     @Test
-    @DisplayName("하트 비활성화")
+    @DisplayName("하트 삭제")
     void unHearts() {
         //given
         HttpServletRequest request = mock(HttpServletRequest.class);
@@ -94,10 +93,10 @@ class HeartsServiceTest {
         willReturn(validateCheckResponse)
             .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
         willReturn(true)
-            .given(heartsRepository).existsByMember_IdAndPost_Id(member.getId(),post.getId());
+            .given(heartRepository).existsByMemberAndPost(member, post);
 
         //when
-        ResponseDto<?> responseDto = heartsService.unHearts(request, post.getId());
+        ResponseDto<?> responseDto = heartsService.delete(request, post.getId());
 
         //then
         assertTrue(responseDto.isSuccess());
@@ -105,7 +104,7 @@ class HeartsServiceTest {
     }
 
     @Test
-    @DisplayName("하트 비활성화 중복")
+    @DisplayName("하트 삭제 중복")
     void twoTimesUnHearts() {
         //given
         HttpServletRequest request = mock(HttpServletRequest.class);
@@ -117,10 +116,10 @@ class HeartsServiceTest {
         willReturn(validateCheckResponse)
             .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
         willReturn(false)
-            .given(heartsRepository).existsByMember_IdAndPost_Id(member.getId(),post.getId());
+            .given(heartRepository).existsByMemberAndPost(member, post);
 
         //when
-        ResponseDto<?> responseDto = heartsService.unHearts(request, post.getId());
+        ResponseDto<?> responseDto = heartsService.delete(request, post.getId());
 
         //then
         assertTrue(responseDto.isSuccess());
@@ -142,4 +141,5 @@ class HeartsServiceTest {
             .id(1L)
             .build();
     }
+
 }

@@ -1,6 +1,7 @@
 package com.zerototen.savegame.controller;
 
 
+import com.zerototen.savegame.domain.dto.CreatePostServiceDto;
 import com.zerototen.savegame.domain.dto.UpdatePostServiceDto;
 import com.zerototen.savegame.domain.dto.request.CreatePostRequest;
 import com.zerototen.savegame.domain.dto.request.UpdatePostRequest;
@@ -35,21 +36,21 @@ public class PostController {
     @GetMapping("/challenge/{challengeId}")
     public ResponseDto<?> challengePosts(HttpServletRequest request, @PathVariable Long challengeId,
     @PageableDefault(10) Pageable pageable){
-        return postService.postList(challengeId, request, pageable);
+        return postService.getPostList(challengeId, request, pageable);
     }
 
     @PostMapping
-    public ResponseDto<?> post(HttpServletRequest request, @RequestParam List<String> urlImages,
+    public ResponseDto<?> post(HttpServletRequest request, @RequestParam List<String> imageList,
         @RequestParam Long challengeId, @RequestBody @Valid CreatePostRequest postRequest) {
         // 이미지 이름 중복 없이 시분초+보드id로 작명될 수 있도록 요청 필요
-        return postService.create(postRequest.toServiceDto(challengeId), urlImages, request);
+        return postService.create(CreatePostServiceDto.of(postRequest, challengeId), imageList, request);
     }
 
-        //인스타그램 확인 시, 사진 수정/삭제 기능 없음, 필요하면 추가 필요
+    //인스타그램 확인 시, 사진 수정/삭제 기능 없음, 필요하면 추가 필요
     @PutMapping("/{postId}")
     public ResponseDto<?> updatePost(HttpServletRequest request, @PathVariable Long postId,
         @RequestBody @Valid UpdatePostRequest updatePostRequest) {
-        return postService.update(request, UpdatePostServiceDto.from(postId, updatePostRequest));
+        return postService.update(request, UpdatePostServiceDto.of(postId, updatePostRequest));
     }
 
     @DeleteMapping("/{postId}")

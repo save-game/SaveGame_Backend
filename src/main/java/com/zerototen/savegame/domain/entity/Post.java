@@ -1,5 +1,6 @@
 package com.zerototen.savegame.domain.entity;
 
+import com.zerototen.savegame.domain.dto.CreatePostServiceDto;
 import com.zerototen.savegame.domain.dto.UpdatePostServiceDto;
 import java.util.List;
 import javax.persistence.CascadeType;
@@ -34,12 +35,21 @@ public class Post extends BaseEntity {
     private String content;
 
     @OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Image> image;
+    private List<Image> imageList;
 
     @OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Hearts> heart_cnt;
+    private List<Heart> heartList;
 
     public void update(UpdatePostServiceDto serviceDto){
         this.content = serviceDto.getComment();
     }
+
+    public static Post from(CreatePostServiceDto dto) {
+        return Post.builder()
+            .challengeId(dto.getChallengeId())
+            .memberId(dto.getMemberId())
+            .content(dto.getContent())
+            .build();
+    }
+
 }

@@ -6,19 +6,20 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdatePostServiceDto {
+
     private Long id;
     private String comment;
 
-    public static UpdatePostServiceDto from(Long postId, UpdatePostRequest request){
+    public static UpdatePostServiceDto of(Long postId, UpdatePostRequest request){
         return UpdatePostServiceDto.builder()
             .id(postId)
             .comment(request.getContent())
             .build();
     }
+
 }

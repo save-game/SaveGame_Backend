@@ -1,5 +1,6 @@
 package com.zerototen.savegame.domain.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -32,7 +33,7 @@ public class Heart {
     @ManyToOne(fetch = FetchType.LAZY)
     private Member member;
 
-    public static Heart from(Member member, Post post){
+    public static Heart of(Member member, Post post){
         return Heart.builder()
             .member(member)
             .post(post)

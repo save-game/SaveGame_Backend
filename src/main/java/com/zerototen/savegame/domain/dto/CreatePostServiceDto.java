@@ -1,8 +1,7 @@
 package com.zerototen.savegame.domain.dto;
 
 
-import com.zerototen.savegame.domain.entity.Image;
-import com.zerototen.savegame.domain.entity.Post;
+import com.zerototen.savegame.domain.dto.request.CreatePostRequest;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,15 +14,15 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreatePostServiceDto {
+
     private Long challengeId;
     private Long memberId;
     private String content;
 
-    public Post toEntity() {
-        return Post.builder()
-            .challengeId(this.getChallengeId())
-            .memberId(this.getMemberId())
-            .content(this.getContent())
+    public static CreatePostServiceDto of(CreatePostRequest request, Long challengeId){
+        return CreatePostServiceDto.builder()
+            .challengeId(challengeId)
+            .content(request.getContent())
             .build();
     }
 

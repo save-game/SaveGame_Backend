@@ -1,9 +1,10 @@
 package com.zerototen.savegame.service;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willReturn;
 import static org.mockito.Mockito.mock;
@@ -11,28 +12,21 @@ import static org.mockito.Mockito.verify;
 
 import com.zerototen.savegame.domain.dto.CreatePostServiceDto;
 import com.zerototen.savegame.domain.dto.UpdatePostServiceDto;
-import com.zerototen.savegame.domain.dto.UpdateRecordServiceDto;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
-import com.zerototen.savegame.domain.entity.Hearts;
+import com.zerototen.savegame.domain.entity.Heart;
 import com.zerototen.savegame.domain.entity.Image;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.entity.Post;
-import com.zerototen.savegame.domain.entity.Record;
-import com.zerototen.savegame.domain.type.Category;
-import com.zerototen.savegame.domain.type.PayType;
-import com.zerototen.savegame.repository.HeartsRepository;
+import com.zerototen.savegame.repository.HeartRepository;
 import com.zerototen.savegame.repository.MemberRepository;
 import com.zerototen.savegame.repository.PostRepository;
 import com.zerototen.savegame.security.TokenProvider;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,7 +36,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,7 +54,7 @@ class PostServiceTest {
     private ImageService imageService;
 
     @Mock
-    private HeartsRepository heartsRepository;
+    private HeartRepository heartRepository;
 
     @InjectMocks
     private PostService postService;
@@ -87,7 +80,7 @@ class PostServiceTest {
             .given(postRepository).findByChallengeIdOrderByIdDesc(anyLong(),any());
 
         //when
-        ResponseDto<?> responseDto = postService.postList(1L,request,pageable);
+        ResponseDto<?> responseDto = postService.getPostList(1L,request,pageable);
         Page<Post> all = postRepository.findByChallengeIdOrderByIdDesc(1L,pageable);
 
         //then
@@ -209,11 +202,11 @@ class PostServiceTest {
             .id(1L)
             .memberId(2L)
             .content("내용")
-            .image(getImages())
+            .imageList(getImages())
             .build();
     }
 
-    private List<Hearts> getHearts() {
+    private List<Heart> getHearts() {
         return new ArrayList<>();
     }
 
@@ -230,9 +223,9 @@ class PostServiceTest {
                 .id((long) i)
                 .challengeId(1L)
                 .memberId(2L)
-                .image(getImages())
+                .imageList(getImages())
                 .content("내용")
-                .heart_cnt(getHearts())
+                .heartList(getHearts())
                 .build();
            posts.add(post);
         }
