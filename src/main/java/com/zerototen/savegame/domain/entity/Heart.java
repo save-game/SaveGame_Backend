@@ -17,25 +17,26 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 @Entity
-public class Hearts {
+public class Heart {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "heart_id")
     private long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
+    @ManyToOne(fetch = FetchType.LAZY)
     private Post post;
 
     @JoinColumn(name = "member_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private Member member;
 
-
-    public static Hearts from(Member member, Post post){
-        return Hearts.builder()
+    public static Heart from(Member member, Post post){
+        return Heart.builder()
             .member(member)
             .post(post)
             .build();
     }
+    
 }
