@@ -97,12 +97,12 @@ class RecordServiceTest {
                 HttpServletRequest request = mock(HttpServletRequest.class);
                 Member member = getMember();
                 ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
-                List<Record> records = getRecords(5);
+                List<Record> records = getRecords(member, 5);
 
                 willReturn(validateCheckResponse)
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-                given(recordRepository.findByMemberIdAndUseDateDescWithOptional(anyLong(), any(LocalDate.class),
+                given(recordRepository.findByMemberAndUseDateDescWithOptional(any(Member.class), any(LocalDate.class),
                     any(LocalDate.class), isNull()))
                     .willReturn(records);
 
@@ -114,7 +114,7 @@ class RecordServiceTest {
                 //then
                 assertTrue(responseDto.isSuccess());
                 then(recordRepository).should()
-                    .findByMemberIdAndUseDateDescWithOptional(anyLong(), any(LocalDate.class),
+                    .findByMemberAndUseDateDescWithOptional(any(Member.class), any(LocalDate.class),
                         any(LocalDate.class), isNull());
                 int size = recordResponses.size();
                 for (int i = size; i >= 1; i--) {
@@ -137,13 +137,13 @@ class RecordServiceTest {
                 HttpServletRequest request = mock(HttpServletRequest.class);
                 Member member = getMember();
                 ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
-                List<Record> records = getRecords(10);
+                List<Record> records = getRecords(member, 10);
                 List<String> categories = getCategories(10);
 
                 willReturn(validateCheckResponse)
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-                given(recordRepository.findByMemberIdAndUseDateDescWithOptional(anyLong(), any(LocalDate.class),
+                given(recordRepository.findByMemberAndUseDateDescWithOptional(any(Member.class), any(LocalDate.class),
                     any(LocalDate.class), anyList()))
                     .willReturn(records);
 
@@ -154,8 +154,8 @@ class RecordServiceTest {
 
                 //then
                 assertTrue(responseDto.isSuccess());
-                then(recordRepository).should().findByMemberIdAndUseDateDescWithOptional(
-                    anyLong(), any(LocalDate.class), any(LocalDate.class), anyList());
+                then(recordRepository).should().findByMemberAndUseDateDescWithOptional(
+                    any(Member.class), any(LocalDate.class), any(LocalDate.class), anyList());
                 int size = recordResponses.size();
                 for (int i = recordResponses.size(); i >= 1; i--) {
                     assertEquals(i, recordResponses.get(size - i).getRecordId());
@@ -209,7 +209,7 @@ class RecordServiceTest {
             willReturn(validateCheckResponse)
                 .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-            given(recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(anyLong(), any(LocalDate.class),
+            given(recordRepository.findByMemberAndUseDateAndAmountSumDesc(any(Member.class), any(LocalDate.class),
                 any(LocalDate.class)))
                 .willReturn(serviceDtos);
 
@@ -219,7 +219,7 @@ class RecordServiceTest {
 
             //then
             assertTrue(responseDto.isSuccess());
-            then(recordRepository).should().findByMemberIdAndUseDateAndAmountSumDesc(anyLong(), any(LocalDate.class),
+            then(recordRepository).should().findByMemberAndUseDateAndAmountSumDesc(any(Member.class), any(LocalDate.class),
                 any(LocalDate.class));
             int size = responses.size();
             for (int i = size; i >= 1; i--) {
@@ -246,7 +246,7 @@ class RecordServiceTest {
                 willReturn(validateCheckResponse)
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-                given(recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(anyLong(), any(LocalDate.class),
+                given(recordRepository.findByMemberAndUseDateAndAmountSumDesc(any(Member.class), any(LocalDate.class),
                     any(LocalDate.class)))
                     .willReturn(serviceDtos);
 
@@ -271,7 +271,7 @@ class RecordServiceTest {
                 willReturn(validateCheckResponse)
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-                given(recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(anyLong(), any(LocalDate.class),
+                given(recordRepository.findByMemberAndUseDateAndAmountSumDesc(any(Member.class), any(LocalDate.class),
                     any(LocalDate.class)))
                     .willReturn(serviceDtos);
 
@@ -296,7 +296,7 @@ class RecordServiceTest {
                 willReturn(validateCheckResponse)
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-                given(recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(anyLong(), any(LocalDate.class),
+                given(recordRepository.findByMemberAndUseDateAndAmountSumDesc(any(Member.class), any(LocalDate.class),
                     any(LocalDate.class)))
                     .willReturn(serviceDtos);
 
@@ -322,7 +322,7 @@ class RecordServiceTest {
             HttpServletRequest request = mock(HttpServletRequest.class);
             Member member = getMember();
             ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
-            Record record = getRecord();
+            Record record = getRecord(member);
 
             willReturn(validateCheckResponse)
                 .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
@@ -338,7 +338,7 @@ class RecordServiceTest {
             assertEquals("Update Success", responseDto.getData());
             then(recordRepository).should().findById(anyLong());
             assertEquals(1L, record.getId());
-            assertEquals(2L, record.getMemberId());
+            assertEquals(2L, record.getMember().getId());
             assertEquals(20000, record.getAmount());
             assertEquals(Category.BEAUTY, record.getCategory());
             assertEquals("미용실", record.getPaidFor());
@@ -382,10 +382,11 @@ class RecordServiceTest {
                 //given
                 UpdateRecordServiceDto serviceDto = getUpdateServiceDto();
                 HttpServletRequest request = mock(HttpServletRequest.class);
-                Member member = getMember();
-                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
-                Record record = getRecord();
-                record.setMemberId(3L);
+                Member requestMember = getMember();
+                Member recordMember = getMember();
+                recordMember.setId(3L);
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(requestMember);
+                Record record = getRecord(recordMember);
 
                 willReturn(validateCheckResponse)
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
@@ -415,7 +416,7 @@ class RecordServiceTest {
             HttpServletRequest request = mock(HttpServletRequest.class);
             Member member = getMember();
             ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
-            Record record = getRecord();
+            Record record = getRecord(member);
 
             willReturn(validateCheckResponse)
                 .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
@@ -469,10 +470,11 @@ class RecordServiceTest {
             void notMatchMember() {
                 //given
                 HttpServletRequest request = mock(HttpServletRequest.class);
-                Member member = getMember();
-                member.setId(3L);
-                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
-                Record record = getRecord();
+                Member recordMember = getMember();
+                Member requestMember = getMember();
+                requestMember.setId(3L);
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(requestMember);
+                Record record = getRecord(recordMember);
 
                 willReturn(validateCheckResponse)
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
@@ -541,10 +543,10 @@ class RecordServiceTest {
         return serviceDtos;
     }
 
-    private Record getRecord() {
+    private Record getRecord(Member member) {
         return Record.builder()
             .id(1L)
-            .memberId(2L)
+            .member(member)
             .amount(10000)
             .category(Category.MEDICAL)
             .paidFor("병원")
@@ -554,7 +556,7 @@ class RecordServiceTest {
             .build();
     }
 
-    private List<Record> getRecords(int size) {
+    private List<Record> getRecords(Member member, int size) {
         List<Record> records = new ArrayList<>();
 
         size = Math.max(size, 1);
@@ -562,7 +564,7 @@ class RecordServiceTest {
         for (int i = size; i >= 1; i--) {
             Record record = Record.builder()
                 .id((long) i)
-                .memberId(2L)
+                .member(member)
                 .amount(10000 * i)
                 .category(Category.values()[(i - 1) % CATEGORY_LENGTH])
                 .paidFor("가게" + i)
