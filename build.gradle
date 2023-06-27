@@ -61,14 +61,14 @@ tasks.named("jar") {
 
 // QueryDSL
 ext {
-    querydslSrcDir = 'src/main/generated'
+    querydslSrcDir = 'build/generated'
     queryDslVersion = '4.1.4' }
 configurations {
     querydsl.extendsFrom compileClasspath
 }
 querydsl {
     library = "com.querydsl:querydsl-apt"
-    querydslSourcesDir = 'src/main/generated'
+    querydslSourcesDir = 'build/generated'
     jpa = true
     querydslDefault = true
 }
