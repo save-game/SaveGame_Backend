@@ -11,18 +11,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController
-public class HeartsController {
+public class HeartController {
 
     private final HeartsService heartsService;
 
-    @PostMapping("/likes/{postId}")
-    public ResponseDto<?> hearts(HttpServletRequest request, @PathVariable Long postId) {
-        return heartsService.saveHearts(request, postId);
+    @PostMapping("/heart/{postId}")
+    public ResponseDto<?> create(HttpServletRequest request, @PathVariable Long postId) {
+        return heartsService.create(request, postId);
     }
 
-    @DeleteMapping("/likes/{postId}")
-    public ResponseDto<?> unHearts(HttpServletRequest request, @PathVariable Long postId){
-        return heartsService.unHearts(request, postId);
+    @DeleteMapping("/heart/{postId}")
+    public ResponseDto<?> delete(HttpServletRequest request, @PathVariable Long postId){
+        return heartsService.delete(request, postId);
     }
 
 }
