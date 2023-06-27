@@ -6,6 +6,8 @@ import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.BlacklistToken;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.entity.RefreshToken;
+import com.zerototen.savegame.exception.CustomException;
+import com.zerototen.savegame.exception.ErrorCode;
 import com.zerototen.savegame.repository.BlacklistTokenRepository;
 import com.zerototen.savegame.repository.RefreshTokenRepository;
 import io.jsonwebtoken.Claims;
@@ -230,12 +232,12 @@ public class TokenProvider {
     public ResponseDto<?> validateCheck(HttpServletRequest request) {
         // RefreshToken 및 Authorization 유효성 검사
         if (null == request.getHeader("RefreshToken") || null == request.getHeader("Authorization")) {
-            return ResponseDto.fail("로그인이 필요합니다.");
+            throw new CustomException(ErrorCode.UNAUTHORIZED_TOKEN);
         }
         Member member = validateMember(request);
         // token 정보 유효성 검사
         if (null == member) {
-            return ResponseDto.fail("Token이 유효하지 않습니다.");
+            throw new CustomException(ErrorCode.EXPIRED_TOKEN);
         }
         return ResponseDto.success(member);
     }

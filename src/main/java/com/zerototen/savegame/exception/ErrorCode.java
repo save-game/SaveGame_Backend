@@ -15,6 +15,8 @@ public enum ErrorCode {
 
     //로그인 & 로그아웃
     WRONG_PASSWORD(HttpStatus.BAD_REQUEST, "틀린 비밀번호입니다."),
+    UNAUTHORIZED_TOKEN(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다."),
+    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "토큰이 유효하지 않습니다."),
 
     // record
     NOT_FOUND_RECORD(HttpStatus.BAD_REQUEST, "지출 내역을 찾을 수 없습니다"),
