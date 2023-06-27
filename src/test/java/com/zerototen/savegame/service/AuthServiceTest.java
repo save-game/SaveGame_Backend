@@ -134,7 +134,7 @@ class AuthServiceTest {
     @DisplayName("이메일 중복 검사_실패_이미 등록된 이메일")
     void checkEmail_fail_alreadyRegistered() {
         //given
-        String value = "testnaver.com";
+        String value = "test@naver.com";
         Member member = getMember();
 
         given(memberRepository.findByEmail(anyString()))
@@ -164,7 +164,7 @@ class AuthServiceTest {
     @DisplayName("이메일 중복 검사_성공")
     void checkEmail_success() {
         //given
-        String value = "testnaver.com";
+        String value = "test@naver.com";
 
         given(memberRepository.findByEmail(anyString()))
             .willReturn(Optional.empty());
@@ -180,7 +180,7 @@ class AuthServiceTest {
     @DisplayName("닉네임 중복 검사_실패_양식 미준수")
     void checkNickname_fail_formError() {
         //given
-        String value = "nick";
+        String value = "n";
 
         //when
         ResponseDto<?> responseDto = authService.checkNickname(value);
