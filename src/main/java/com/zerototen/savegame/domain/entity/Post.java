@@ -2,20 +2,10 @@ package com.zerototen.savegame.domain.entity;
 
 import com.zerototen.savegame.domain.dto.CreatePostServiceDto;
 import com.zerototen.savegame.domain.dto.UpdatePostServiceDto;
+import lombok.*;
+
+import javax.persistence.*;
 import java.util.List;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Getter
@@ -30,8 +20,14 @@ public class Post extends BaseEntity {
     @Column(name = "post_id")
     private Long id;
 
-    private Long challengeId;
-    private Long memberId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "challenge_id")
+    private Challenge challenge;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
+
     private String content;
 
     @OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
@@ -40,16 +36,16 @@ public class Post extends BaseEntity {
     @OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Heart> heartList;
 
-    public void update(UpdatePostServiceDto serviceDto){
+    public void update(UpdatePostServiceDto serviceDto) {
         this.content = serviceDto.getComment();
     }
 
-    public static Post from(CreatePostServiceDto dto) {
+    public static Post of(CreatePostServiceDto dto, Member member, Challenge challenge) {
         return Post.builder()
-            .challengeId(dto.getChallengeId())
-            .memberId(dto.getMemberId())
-            .content(dto.getContent())
-            .build();
+                .challenge(challenge)
+                .member(member)
+                .content(dto.getContent())
+                .build();
     }
 
 }

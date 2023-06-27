@@ -2,11 +2,7 @@ package com.zerototen.savegame.domain.dto;
 
 
 import com.zerototen.savegame.domain.dto.request.CreatePostRequest;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
@@ -15,15 +11,12 @@ import lombok.Setter;
 @AllArgsConstructor
 public class CreatePostServiceDto {
 
-    private Long challengeId;
-    private Long memberId;
     private String content;
 
-    public static CreatePostServiceDto of(CreatePostRequest request, Long challengeId){
+    public static CreatePostServiceDto from(CreatePostRequest request) {
         return CreatePostServiceDto.builder()
-            .challengeId(challengeId)
-            .content(request.getContent())
-            .build();
+                .content(request.getContent())
+                .build();
     }
 
 }

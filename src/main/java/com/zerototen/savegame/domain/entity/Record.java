@@ -4,19 +4,10 @@ import com.zerototen.savegame.domain.dto.CreateRecordServiceDto;
 import com.zerototen.savegame.domain.dto.UpdateRecordServiceDto;
 import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.domain.type.PayType;
+import lombok.*;
+
+import javax.persistence.*;
 import java.time.LocalDate;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Getter
@@ -28,10 +19,12 @@ public class Record {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "record_id")
     private Long id;
 
-    @Column(nullable = false)
-    private Long memberId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
     private int amount;
 
@@ -60,16 +53,16 @@ public class Record {
         this.payType = serviceDto.getPayType();
     }
 
-    public static Record of(Long memberId, CreateRecordServiceDto serviceDto) {
+    public static Record of(Member member, CreateRecordServiceDto serviceDto) {
         return Record.builder()
-            .memberId(memberId)
-            .amount(serviceDto.getAmount())
-            .category(serviceDto.getCategory())
-            .paidFor(serviceDto.getPaidFor())
-            .useDate(serviceDto.getUseDate())
-            .payType(serviceDto.getPayType())
-            .memo(serviceDto.getMemo())
-            .build();
+                .member(member)
+                .amount(serviceDto.getAmount())
+                .category(serviceDto.getCategory())
+                .paidFor(serviceDto.getPaidFor())
+                .useDate(serviceDto.getUseDate())
+                .payType(serviceDto.getPayType())
+                .memo(serviceDto.getMemo())
+                .build();
     }
 
 }

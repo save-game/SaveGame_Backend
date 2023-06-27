@@ -11,15 +11,16 @@ import com.zerototen.savegame.domain.entity.Record;
 import com.zerototen.savegame.exception.ErrorCode;
 import com.zerototen.savegame.repository.RecordRepository;
 import com.zerototen.savegame.security.TokenProvider;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletRequest;
-import javax.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -40,12 +41,12 @@ public class RecordService {
         Member member = (Member) responseDto.getData();
 
         log.debug("Create record -> memberId: {}", member.getId());
-        return ResponseDto.success(recordRepository.save(Record.of(member.getId(), serviceDto)));
+        return ResponseDto.success(recordRepository.save(Record.of(member, serviceDto)));
     }
 
     // 지출 내역 조회 (가계부 메인)
     public ResponseDto<?> getInfos(HttpServletRequest request, LocalDate startDate, LocalDate endDate,
-        List<String> categories) {
+                                   List<String> categories) {
         ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
         if (!responseDto.isSuccess()) {
             return responseDto;
@@ -56,8 +57,8 @@ public class RecordService {
         if (startDate.isAfter(endDate)) {
             return ResponseDto.fail(ErrorCode.STARTDATE_AFTER_ENDDATE.getDetail());
         }
-        List<Record> records = recordRepository.findByMemberIdAndUseDateDescWithOptional(
-            member.getId(), startDate, endDate, categories);
+        List<Record> records = recordRepository.findByMemberAndUseDateDescWithOptional(
+                member, startDate, endDate, categories);
 
         return ResponseDto.success(records.stream().map(RecordResponse::from).collect(Collectors.toList()));
     }
@@ -74,8 +75,8 @@ public class RecordService {
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
 
-        List<RecordAnalysisServiceDto> serviceDtos = recordRepository.findByMemberIdAndUseDateAndAmountSumDesc(
-            member.getId(), startDate, endDate);
+        List<RecordAnalysisServiceDto> serviceDtos = recordRepository.findByMemberAndUseDateAndAmountSumDesc(
+                member, startDate, endDate);
 
         List<RecordAnalysisResponse> responses = new ArrayList<>();
 
@@ -141,7 +142,7 @@ public class RecordService {
     }
 
     private boolean validateAuthority(Record record, Member member) {
-        return record.getMemberId().equals(member.getId());
+        return record.getMember().getId().equals(member.getId());
     }
 
 }
