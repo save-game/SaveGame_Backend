@@ -1,7 +1,6 @@
 package com.zerototen.savegame.service;
 
 import com.zerototen.savegame.domain.dto.TokenDto;
-import com.zerototen.savegame.domain.dto.request.DuplicationRequest;
 import com.zerototen.savegame.domain.dto.request.LoginRequest;
 import com.zerototen.savegame.domain.dto.request.SignupRequest;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
@@ -108,13 +107,13 @@ public class AuthService {
 
     // 이메일 중복 검사
     @Transactional(readOnly = true)
-    public ResponseDto<String> checkEmail(DuplicationRequest request) {
+    public ResponseDto<String> checkEmail(String value) {
         String regExp = "^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$";
-        if (!Pattern.matches(regExp, request.getValue())) {
+        if (!Pattern.matches(regExp, value)) {
             return ResponseDto.fail("이메일 양식을 지켜주세요.");
         }
 
-        Optional<Member> optionalMember = memberRepository.findByEmail(request.getValue());
+        Optional<Member> optionalMember = memberRepository.findByEmail(value);
         if (optionalMember.isPresent()) {
             return ResponseDto.fail("사용중인 이메일 입니다.");
         }
@@ -124,13 +123,13 @@ public class AuthService {
 
     // 닉네임 중복 검사
     @Transactional(readOnly = true)
-    public ResponseDto<String> checkNickname(DuplicationRequest request) {
+    public ResponseDto<String> checkNickname(String value) {
         String regExp = "^[가-힣a-zA-Z0-9]{2,10}$";
-        if (!Pattern.matches(regExp, request.getValue())) {
+        if (!Pattern.matches(regExp, value)) {
             return ResponseDto.fail("2~10자리 한글,대소문자,숫자만 입력해주세요.");
         }
 
-        Optional<Member> optionalMember = memberRepository.findByNickname(request.getValue());
+        Optional<Member> optionalMember = memberRepository.findByNickname(value);
         if (optionalMember.isPresent()) {
             return ResponseDto.fail("중복된 닉네임 입니다.");
         }

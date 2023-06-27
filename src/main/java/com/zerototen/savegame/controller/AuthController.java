@@ -1,7 +1,6 @@
 package com.zerototen.savegame.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.zerototen.savegame.domain.dto.request.DuplicationRequest;
 import com.zerototen.savegame.domain.dto.request.LoginRequest;
 import com.zerototen.savegame.domain.dto.request.SignupRequest;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
@@ -66,15 +65,15 @@ public class AuthController {
     }
 
     // 이메일 중복 확인
-    @PostMapping("/auth/checkemail")
-    public ResponseDto<String> checkDuplicationemail(@RequestBody @Valid DuplicationRequest requestDto) {
-        return authService.checkEmail(requestDto);
+    @GetMapping("/auth/checkemail")
+    public ResponseDto<String> checkDuplicationemail(@RequestParam @Valid String value) {
+        return authService.checkEmail(value);
     }
 
     // 닉네임 중복 확인
-    @PostMapping("/auth/checknickname")
-    public ResponseDto<String> checkDuplicationNickname(@RequestBody @Valid DuplicationRequest requestDto) {
-        return authService.checkNickname(requestDto);
+    @GetMapping("/auth/checknickname")
+    public ResponseDto<String> checkDuplicationNickname(@RequestParam @Valid String value) {
+        return authService.checkNickname(value);
     }
 
     // 토큰 재발급

@@ -11,7 +11,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.zerototen.savegame.domain.dto.request.DuplicationRequest;
 import com.zerototen.savegame.domain.dto.request.SignupRequest;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Member;
@@ -135,14 +134,14 @@ class AuthServiceTest {
     @DisplayName("이메일 중복 검사_실패_이미 등록된 이메일")
     void checkEmail_fail_alreadyRegistered() {
         //given
-        DuplicationRequest request = new DuplicationRequest("test@naver.com");
+        String value = "testnaver.com";
         Member member = getMember();
 
         given(memberRepository.findByEmail(anyString()))
             .willReturn(Optional.of(member));
 
         //when
-        ResponseDto<?> responseDto = authService.checkEmail(request);
+        ResponseDto<?> responseDto = authService.checkEmail(value);
 
         //then
         assertFalse(responseDto.isSuccess());
@@ -152,10 +151,10 @@ class AuthServiceTest {
     @DisplayName("이메일 중복 검사_실패_양식 미준수")
     void checkEmail_fail_formError() {
         //given
-        DuplicationRequest request = new DuplicationRequest("testnaver.com");
+        String value = "testnaver.com";
 
         //when
-        ResponseDto<?> responseDto = authService.checkEmail(request);
+        ResponseDto<?> responseDto = authService.checkEmail(value);
 
         //then
         assertFalse(responseDto.isSuccess());
@@ -165,13 +164,13 @@ class AuthServiceTest {
     @DisplayName("이메일 중복 검사_성공")
     void checkEmail_success() {
         //given
-        DuplicationRequest request = new DuplicationRequest("test2@naver.com");
+        String value = "testnaver.com";
 
         given(memberRepository.findByEmail(anyString()))
             .willReturn(Optional.empty());
 
         //when
-        ResponseDto<?> responseDto = authService.checkEmail(request);
+        ResponseDto<?> responseDto = authService.checkEmail(value);
 
         //then
         assertTrue(responseDto.isSuccess());
@@ -181,10 +180,10 @@ class AuthServiceTest {
     @DisplayName("닉네임 중복 검사_실패_양식 미준수")
     void checkNickname_fail_formError() {
         //given
-        DuplicationRequest request = new DuplicationRequest("t");
+        String value = "nick";
 
         //when
-        ResponseDto<?> responseDto = authService.checkNickname(request);
+        ResponseDto<?> responseDto = authService.checkNickname(value);
 
         //then
         assertFalse(responseDto.isSuccess());
@@ -194,14 +193,14 @@ class AuthServiceTest {
     @DisplayName("닉네임 중복 검사_실패_이미 등록된 닉네임")
     void checkNickname_fail_alreadyRegistered() {
         //given
-        DuplicationRequest request = new DuplicationRequest("test");
+        String value = "nick";
         Member member = getMember();
 
         given(memberRepository.findByNickname(anyString()))
             .willReturn(Optional.of(member));
 
         //when
-        ResponseDto<?> responseDto = authService.checkNickname(request);
+        ResponseDto<?> responseDto = authService.checkNickname(value);
 
         //then
         assertFalse(responseDto.isSuccess());
@@ -211,13 +210,13 @@ class AuthServiceTest {
     @DisplayName("닉네임 중복 검사_성공")
     void checkNickname_success() {
         //given
-        DuplicationRequest request = new DuplicationRequest("test2");
+        String value = "nick";
 
         given(memberRepository.findByNickname(anyString()))
             .willReturn(Optional.empty());
 
         //when
-        ResponseDto<?> responseDto = authService.checkNickname(request);
+        ResponseDto<?> responseDto = authService.checkNickname(value);
 
         //then
         assertTrue(responseDto.isSuccess());
