@@ -92,6 +92,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(Arrays.asList(
             "http://localhost:8080",
             "http://localhost:5175",
+            "http://localhost:5173",
             "https://save-game-jeongseonp.vercel.app"
         ));
         config.setAllowedHeaders(Arrays.asList("*"));
