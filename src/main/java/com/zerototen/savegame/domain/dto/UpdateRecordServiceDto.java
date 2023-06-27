@@ -25,7 +25,7 @@ public class UpdateRecordServiceDto {
     private LocalDate useDate;
     private PayType payType;
 
-    public static UpdateRecordServiceDto from(Long recordId, UpdateRecordRequest request) {
+    public static UpdateRecordServiceDto of(Long recordId, UpdateRecordRequest request) {
         return UpdateRecordServiceDto.builder()
             .id(recordId)
             .amount(request.getAmount())

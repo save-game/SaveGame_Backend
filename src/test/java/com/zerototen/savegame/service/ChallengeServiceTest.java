@@ -1,12 +1,15 @@
 package com.zerototen.savegame.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 
 import com.zerototen.savegame.domain.dto.CreateChallengeServiceDto;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
@@ -18,8 +21,10 @@ import com.zerototen.savegame.repository.ChallengeMemberRepository;
 import com.zerototen.savegame.repository.ChallengeRepository;
 import com.zerototen.savegame.security.TokenProvider;
 import java.time.LocalDate;
+import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -50,7 +55,7 @@ class ChallengeServiceTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         Member member = getMember();
         ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
-        Challenge challenge = getChallenge(Category.FOOD);
+        Challenge challenge = getChallenge(Category.FOOD, member.getId());
 
         willReturn(validateCheckResponse)
             .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
@@ -68,6 +73,7 @@ class ChallengeServiceTest {
         then(challengeRepository).should().save(challengeArgumentCaptor.capture());
         then(challengeMemberRepository).should().save(challengeMemberArgumentCaptor.capture());
         assertTrue(responseDto.isSuccess());
+        assertEquals(member.getId(), challengeArgumentCaptor.getValue().getMasterMemberId());
         assertEquals(serviceDto.getTitle(), challengeArgumentCaptor.getValue().getTitle());
         assertEquals(serviceDto.getContent(), challengeArgumentCaptor.getValue().getContent());
         assertEquals(serviceDto.getStartDate(), challengeArgumentCaptor.getValue().getStartDate());
@@ -77,7 +83,109 @@ class ChallengeServiceTest {
         assertEquals(serviceDto.getMaxPeople(), challengeArgumentCaptor.getValue().getMaxPeople());
     }
 
-    private Member getMember() {
+    @Nested
+    @DisplayName("챌린지 참가")
+    class testJoinChallenge {
+
+        @Test
+        @DisplayName("성공")
+        void success() {
+            //given
+            HttpServletRequest request = mock(HttpServletRequest.class);
+            Member member = getMember();
+            ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
+            Challenge challenge = getChallenge(Category.FOOD, member.getId());
+
+            willReturn(validateCheckResponse)
+                .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
+
+            given(challengeRepository.findById(anyLong()))
+                .willReturn(Optional.of(challenge));
+
+            given(challengeMemberRepository.existsByMemberAndChallenge(any(Member.class), any(Challenge.class)))
+                .willReturn(Boolean.FALSE);
+
+            given(challengeMemberRepository.countByChallenge(any(Challenge.class)))
+                .willReturn(challenge.getMaxPeople() - 1);
+
+            ArgumentCaptor<ChallengeMember> argumentCaptor = ArgumentCaptor.forClass(ChallengeMember.class);
+
+            //when
+            ResponseDto<?> responseDto = challengeService.join(request, 1L);
+
+            //then
+            then(challengeMemberRepository).should().save(argumentCaptor.capture());
+            assertEquals(member, argumentCaptor.getValue().getMember());
+            assertEquals(challenge, argumentCaptor.getValue().getChallenge());
+            assertTrue(argumentCaptor.getValue().isOngoingYn());
+            assertTrue(responseDto.isSuccess());
+            assertEquals("Join Challenge Success", responseDto.getData());
+
+        }
+
+        @Nested
+        @DisplayName("실패")
+        class Fail {
+
+            @Test
+            @DisplayName("인원이 가득찬 챌린지")
+            void challengeIsFull() {
+                HttpServletRequest request = mock(HttpServletRequest.class);
+                Member member = getMember();
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
+                Challenge challenge = getChallenge(Category.FOOD, member.getId());
+
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
+
+                given(challengeRepository.findById(anyLong()))
+                    .willReturn(Optional.of(challenge));
+
+                given(challengeMemberRepository.existsByMemberAndChallenge(any(Member.class), any(Challenge.class)))
+                    .willReturn(Boolean.FALSE);
+
+                given(challengeMemberRepository.countByChallenge(any(Challenge.class)))
+                    .willReturn(challenge.getMaxPeople());
+
+                //when
+                ResponseDto<?> responseDto = challengeService.join(request, 1L);
+
+                //then
+                then(challengeMemberRepository).should(never()).save(any());
+                assertFalse(responseDto.isSuccess());
+                assertEquals("인원이 다 찼습니다.", responseDto.getData());
+            }
+
+            @Test
+            @DisplayName("이미 종료된 챌린지")
+            void alreadyEndedChallenge() {
+                HttpServletRequest request = mock(HttpServletRequest.class);
+                Member member = getMember();
+                ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
+                Challenge challenge = getChallenge(Category.FOOD, member.getId());
+                challenge.setEndDate(LocalDate.now().minusDays(1));
+
+                willReturn(validateCheckResponse)
+                    .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
+
+                given(challengeRepository.findById(anyLong()))
+                    .willReturn(Optional.of(challenge));
+
+                given(challengeMemberRepository.existsByMemberAndChallenge(any(Member.class), any(Challenge.class)))
+                    .willReturn(Boolean.FALSE);
+
+                //when
+                ResponseDto<?> responseDto = challengeService.join(request, 1L);
+
+                //then
+                then(challengeMemberRepository).should(never()).save(any());
+                assertFalse(responseDto.isSuccess());
+                assertEquals("이미 종료된 챌린지입니다.", responseDto.getData());
+            }
+        }
+    }
+
+    private static Member getMember() {
         return Member.builder()
             .id(2L)
             .email("abc@gmail.com")
@@ -87,9 +195,10 @@ class ChallengeServiceTest {
             .build();
     }
 
-    private static Challenge getChallenge(Category category) {
+    private static Challenge getChallenge(Category category, Long createMemberId) {
         return Challenge.builder()
             .id(1L)
+            .masterMemberId(createMemberId)
             .title("title")
             .content("content")
             .startDate(LocalDate.of(2023, 7, 1))

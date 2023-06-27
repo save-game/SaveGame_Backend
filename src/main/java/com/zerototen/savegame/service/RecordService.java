@@ -40,7 +40,7 @@ public class RecordService {
         Member member = (Member) responseDto.getData();
 
         log.debug("Create record -> memberId: {}", member.getId());
-        return ResponseDto.success(recordRepository.save(Record.from(member.getId(), serviceDto)));
+        return ResponseDto.success(recordRepository.save(Record.of(member.getId(), serviceDto)));
     }
 
     // 지출 내역 조회 (가계부 메인)
