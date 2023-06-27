@@ -22,7 +22,7 @@ public class Heart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "heart_id")
-    private long id;
+    private Long id;
 
     @JoinColumn(name = "post_id")
     @ManyToOne(fetch = FetchType.LAZY)
