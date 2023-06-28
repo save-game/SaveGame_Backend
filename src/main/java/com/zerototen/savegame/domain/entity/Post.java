@@ -20,21 +20,20 @@ public class Post extends BaseEntity {
     @Column(name = "post_id")
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne
     @JoinColumn(name = "challenge_id")
     private Challenge challenge;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "member_id")
     private Member member;
 
     private String content;
 
-    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "post", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Image> imageList;
 
-    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Heart> heartList;
+    private int heartCnt;
 
     public void update(UpdatePostServiceDto serviceDto) {
         this.content = serviceDto.getComment();
@@ -45,7 +44,18 @@ public class Post extends BaseEntity {
                 .challenge(challenge)
                 .member(member)
                 .content(dto.getContent())
+                .heartCnt(0)
                 .build();
+    }
+
+    public void plusHeart() {
+        this.heartCnt++;
+    }
+
+    public void minusHeart() {
+        if (heartCnt != 0) {
+            this.heartCnt--;
+        }
     }
 
 }

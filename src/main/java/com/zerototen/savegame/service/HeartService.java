@@ -30,15 +30,16 @@ public class HeartService {
         Member member = validation(request);
         Post post = postRepository.findById(postId).orElseThrow(
             () -> new CustomException(ErrorCode.NOT_FOUND_POST));
+        post.plusHeart();
 
-        // 연속 클릭시
+        // 중복 요청 시
         if (heartRepository.existsByMemberAndPost(member, post)) {
             throw new CustomException(ErrorCode.ALREADY_REGISTERED_HEART);
         }
 
         heartRepository.save(Heart.of(member,post));
         log.info("Create heart -> memberId: {}, postId: {}", member.getId(), postId);
-        return ResponseDto.success("Heart create success");
+        return ResponseDto.success("Heart Create Success");
     }
 
     @Transactional
@@ -46,15 +47,16 @@ public class HeartService {
         Member member = validation(request);
         Post post = postRepository.findById(postId).orElseThrow(
             () -> new CustomException(ErrorCode.NOT_FOUND_POST));
+        post.minusHeart();
 
-        // 연속 클릭시
+        // 중복 요청 시
         if (!heartRepository.existsByMemberAndPost(member, post)) {
             throw new CustomException(ErrorCode.NOT_FOUND_HEART);
         }
 
         heartRepository.deleteByMemberAndPost(member,post);
         log.info("Delete heart -> memberId: {}, postId: {}", member.getId(), postId);
-        return ResponseDto.success("Heart delete success");
+        return ResponseDto.success("Heart Delete Success");
     }
 
     public Member validation(HttpServletRequest request) {
@@ -64,9 +66,7 @@ public class HeartService {
             throw new ValidationException("Validation failed.");
         }
 
-        Member member = (Member) responseDto.getData();
-
-        return member;
+        return (Member) responseDto.getData();
     }
 
 }

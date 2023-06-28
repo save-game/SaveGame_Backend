@@ -5,8 +5,8 @@ import com.zerototen.savegame.service.HeartService;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
@@ -15,13 +15,13 @@ public class HeartController {
 
     private final HeartService heartsService;
 
-    @PostMapping("/heart/{postId}")
-    public ResponseDto<?> create(HttpServletRequest request, @PathVariable Long postId) {
+    @PostMapping("/hearts")
+    public ResponseDto<?> create(HttpServletRequest request, @RequestParam Long postId) {
         return heartsService.create(request, postId);
     }
 
-    @DeleteMapping("/heart/{postId}")
-    public ResponseDto<?> delete(HttpServletRequest request, @PathVariable Long postId){
+    @DeleteMapping("/hearts")
+    public ResponseDto<?> delete(HttpServletRequest request, @RequestParam Long postId){
         return heartsService.delete(request, postId);
     }
 
