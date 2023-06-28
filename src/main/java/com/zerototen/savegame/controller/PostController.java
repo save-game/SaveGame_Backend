@@ -5,10 +5,12 @@ import com.zerototen.savegame.domain.dto.CreatePostServiceDto;
 import com.zerototen.savegame.domain.dto.UpdatePostServiceDto;
 import com.zerototen.savegame.domain.dto.request.CreatePostRequest;
 import com.zerototen.savegame.domain.dto.request.UpdatePostRequest;
+import com.zerototen.savegame.domain.dto.response.PostResponse;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
@@ -25,11 +27,11 @@ public class PostController {
     private final PostService postService;
 
     @GetMapping("/posts")
-    public ResponseDto<?> getPostList(
+    public ResponseDto<Page<PostResponse>> getPostList(
         HttpServletRequest request,
         @RequestParam Long challengeId,
         @PageableDefault(10) Pageable pageable) {
-        return postService.getPostList(challengeId, request, pageable);
+        return postService.getPostList(request, challengeId, pageable);
     }
 
     @PostMapping("/posts")

@@ -55,7 +55,7 @@ class HeartsServiceTest {
 
         //then
         assertTrue(responseDto.isSuccess());
-        assertEquals("Heart create success", responseDto.getData());
+        assertEquals("Heart Create Success", responseDto.getData());
 
     }
 
@@ -102,7 +102,7 @@ class HeartsServiceTest {
 
         //then
         assertTrue(responseDto.isSuccess());
-        assertEquals("Heart delete success", responseDto.getData());
+        assertEquals("Heart Delete Success", responseDto.getData());
     }
 
     @Test
