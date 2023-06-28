@@ -44,7 +44,8 @@ public class ChallengeService {
             .build();
 
         challengeMemberRepository.save(challengeMember);
-        log.info("Add challenge member -> challengeId: {}, memberId: {}", challenge.getId(), member.getId());
+        log.info("Add challenge member -> challengeId: {}, memberId: {}", challenge.getId(),
+            member.getId());
 
         return ResponseDto.success(challenge);
     }
@@ -68,8 +69,8 @@ public class ChallengeService {
             return ResponseDto.fail("이미 참가한 챌린지입니다.");
         }
 
-        if (challenge.getEndDate().isBefore(LocalDate.now())) { // 종료일이 오늘 이전이면
-            return ResponseDto.fail("이미 종료된 챌린지입니다."); // TODO: 중도참가 허용?
+        if (challenge.getStartDate().minusDays(1).isBefore(LocalDate.now())) { // 시작일이 오늘과 같거나 이전이면
+            return ResponseDto.fail("이미 시작된 챌린지입니다.");
         }
 
         if (challengeMemberRepository.countByChallenge(challenge) >= challenge.getMaxPeople()) {
@@ -83,8 +84,45 @@ public class ChallengeService {
             .build();
 
         challengeMemberRepository.save(challengeMember);
-        log.info("Add challenge member -> challengeId: {}, memberId: {}", challengeId, member.getId());
+        log.info("Add challenge member -> challengeId: {}, memberId: {}", challengeId,
+            member.getId());
         return ResponseDto.success("Join Challenge Success");
+    }
+
+    @Transactional
+    public ResponseDto<?> exit(HttpServletRequest request, Long challengeId) {
+        ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
+        if (!responseDto.isSuccess()) {
+            return responseDto;
+        }
+
+        Member member = (Member) responseDto.getData();
+
+        Challenge challenge = challengeRepository.findById(challengeId)
+            .orElse(null);
+        if (challenge == null) {
+            return ResponseDto.fail("챌린지가 존재하지 않습니다.");
+        }
+
+        ChallengeMember challengeMember = challengeMemberRepository.findByMemberAndChallenge(member,
+                challenge)
+            .orElse(null);
+
+        if (challengeMember == null) {
+            return ResponseDto.fail("참가하지 않은 챌린지입니다.");
+        }
+
+        if (member.getId().equals(challenge.getMasterMemberId())) {
+            return ResponseDto.fail("챌린지를 생성한 사용자는 나갈 수 없습니다.");
+        }
+
+        if (challenge.getStartDate().minusDays(1).isBefore(LocalDate.now())) { // 시작일이 오늘과 같거나 이전이면
+            return ResponseDto.fail("이미 시작된 챌린지입니다.");
+        }
+
+        challengeMemberRepository.delete(challengeMember);
+        log.info("Exit Challenge -> {}, memberId: {}", challengeId, member.getId());
+        return ResponseDto.success("Exit Challenge Success");
     }
 
 }
