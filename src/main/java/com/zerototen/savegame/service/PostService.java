@@ -11,22 +11,20 @@ import com.zerototen.savegame.domain.entity.Post;
 import com.zerototen.savegame.exception.ErrorCode;
 import com.zerototen.savegame.repository.ChallengeRepository;
 import com.zerototen.savegame.repository.HeartRepository;
-import com.zerototen.savegame.repository.MemberRepository;
 import com.zerototen.savegame.repository.PostRepository;
 import com.zerototen.savegame.security.TokenProvider;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
+import javax.transaction.Transactional;
+import javax.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.transaction.Transactional;
-import javax.validation.ValidationException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,12 +34,12 @@ public class PostService {
     private final PostRepository postRepository;
     private final TokenProvider tokenProvider;
     private final ImageService imageService;
-    private final MemberRepository memberRepository;
     private final HeartRepository heartRepository;
     private final ChallengeRepository challengeRepository;
 
     @Transactional
-    public ResponseDto<?> getPostList(Long challengeId, HttpServletRequest request, Pageable pageable) {
+    public ResponseDto<?> getPostList(Long challengeId, HttpServletRequest request,
+        Pageable pageable) {
         Member member = validation(request);
         log.info("check posts -> memberId: {}", member.getId());
         Page<Post> all = postRepository.findByChallengeIdOrderByIdDesc(challengeId, pageable);
@@ -49,33 +47,32 @@ public class PostService {
         List<PostDetailDto> postDetailDtoList = new ArrayList<>();
 
         for (Post post : all) {
-            Member postMember = memberRepository.findById(member.getId()).get();
             PostDetailDto postDetailDto = PostDetailDto.builder()
-                    .postId(post.getId())
-                    .nickname(postMember.getNickname())
-                    .profileImage(postMember.getProfileImageUrl())
-                    .content(post.getContent())
-                    .urlImages(post.getImageList().stream().map(Image::getPostImage)
-                            .collect(Collectors.toList()))
-                    .heartCount(heartRepository.countByPost_Id(post.getId()))
-                    .heartState(heartRepository.existsByMemberAndPost(
-                            member, post))
-                    .build();
+                .postId(post.getId())
+                .nickname(post.getMember().getNickname())
+                .profileImage(post.getMember().getProfileImageUrl())
+                .content(post.getContent())
+                .urlImages(post.getImageList().stream().map(Image::getPostImage)
+                    .collect(Collectors.toList()))
+                .heartCount(heartRepository.countByPost_Id(post.getId()))
+                .heartState(heartRepository.existsByMemberAndPost(member, post))
+                .build();
 
             postDetailDtoList.add(postDetailDto);
         }
 
         return ResponseDto.success(new PageImpl<>(postDetailDtoList, pageable,
-                all.getTotalElements()));
+            all.getTotalElements()));
 
     }
 
     @Transactional
-    public ResponseDto<?> create(CreatePostServiceDto serviceDto, List<String> imageList, Long challengeId, HttpServletRequest request) {
+    public ResponseDto<?> create(CreatePostServiceDto serviceDto, List<String> imageList,
+        Long challengeId, HttpServletRequest request) {
         Member member = validation(request);
 
         Challenge challenge = challengeRepository.findById(challengeId)
-                .orElse(null);
+            .orElse(null);
         if (challenge == null) {
             ResponseDto.fail("챌린지가 존재하지 않습니다.");
         }
@@ -98,7 +95,7 @@ public class PostService {
         Member member = validation(request);
 
         Post post = postRepository.findById(serviceDto.getId())
-                .orElse(null);
+            .orElse(null);
 
         if (post == null) {
             return ResponseDto.fail(ErrorCode.NOT_FOUND_POST.getDetail());
@@ -118,7 +115,7 @@ public class PostService {
     public ResponseDto<?> delete(HttpServletRequest request, Long postId) {
         Member member = validation(request);
         Post post = postRepository.findById(postId)
-                .orElse(null);
+            .orElse(null);
 
         if (post == null) {
             return ResponseDto.fail(ErrorCode.NOT_FOUND_POST.getDetail());
