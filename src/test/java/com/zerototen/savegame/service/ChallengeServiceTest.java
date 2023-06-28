@@ -63,8 +63,10 @@ class ChallengeServiceTest {
         given(challengeRepository.save(any(Challenge.class)))
             .willReturn(challenge);
 
-        ArgumentCaptor<Challenge> challengeArgumentCaptor = ArgumentCaptor.forClass(Challenge.class);
-        ArgumentCaptor<ChallengeMember> challengeMemberArgumentCaptor = ArgumentCaptor.forClass(ChallengeMember.class);
+        ArgumentCaptor<Challenge> challengeArgumentCaptor = ArgumentCaptor.forClass(
+            Challenge.class);
+        ArgumentCaptor<ChallengeMember> challengeMemberArgumentCaptor = ArgumentCaptor.forClass(
+            ChallengeMember.class);
 
         //when
         ResponseDto<?> responseDto = challengeService.create(request, serviceDto);
@@ -78,7 +80,8 @@ class ChallengeServiceTest {
         assertEquals(serviceDto.getContent(), challengeArgumentCaptor.getValue().getContent());
         assertEquals(serviceDto.getStartDate(), challengeArgumentCaptor.getValue().getStartDate());
         assertEquals(serviceDto.getEndDate(), challengeArgumentCaptor.getValue().getEndDate());
-        assertEquals(serviceDto.getGoalAmount(), challengeArgumentCaptor.getValue().getGoalAmount());
+        assertEquals(serviceDto.getGoalAmount(),
+            challengeArgumentCaptor.getValue().getGoalAmount());
         assertEquals(serviceDto.getCategory(), challengeArgumentCaptor.getValue().getCategory());
         assertEquals(serviceDto.getMaxPeople(), challengeArgumentCaptor.getValue().getMaxPeople());
     }
@@ -102,13 +105,15 @@ class ChallengeServiceTest {
             given(challengeRepository.findById(anyLong()))
                 .willReturn(Optional.of(challenge));
 
-            given(challengeMemberRepository.existsByMemberAndChallenge(any(Member.class), any(Challenge.class)))
+            given(challengeMemberRepository.existsByMemberAndChallenge(any(Member.class),
+                any(Challenge.class)))
                 .willReturn(Boolean.FALSE);
 
             given(challengeMemberRepository.countByChallenge(any(Challenge.class)))
                 .willReturn(challenge.getMaxPeople() - 1);
 
-            ArgumentCaptor<ChallengeMember> argumentCaptor = ArgumentCaptor.forClass(ChallengeMember.class);
+            ArgumentCaptor<ChallengeMember> argumentCaptor = ArgumentCaptor.forClass(
+                ChallengeMember.class);
 
             //when
             ResponseDto<?> responseDto = challengeService.join(request, 1L);
@@ -141,7 +146,8 @@ class ChallengeServiceTest {
                 given(challengeRepository.findById(anyLong()))
                     .willReturn(Optional.of(challenge));
 
-                given(challengeMemberRepository.existsByMemberAndChallenge(any(Member.class), any(Challenge.class)))
+                given(challengeMemberRepository.existsByMemberAndChallenge(any(Member.class),
+                    any(Challenge.class)))
                     .willReturn(Boolean.FALSE);
 
                 given(challengeMemberRepository.countByChallenge(any(Challenge.class)))
@@ -157,13 +163,13 @@ class ChallengeServiceTest {
             }
 
             @Test
-            @DisplayName("이미 종료된 챌린지")
-            void alreadyEndedChallenge() {
+            @DisplayName("이미 시작된 챌린지")
+            void alreadyStartedChallenge() {
                 HttpServletRequest request = mock(HttpServletRequest.class);
                 Member member = getMember();
                 ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
                 Challenge challenge = getChallenge(Category.FOOD, member.getId());
-                challenge.setEndDate(LocalDate.now().minusDays(1));
+                challenge.setStartDate(LocalDate.now());
 
                 willReturn(validateCheckResponse)
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
@@ -171,7 +177,8 @@ class ChallengeServiceTest {
                 given(challengeRepository.findById(anyLong()))
                     .willReturn(Optional.of(challenge));
 
-                given(challengeMemberRepository.existsByMemberAndChallenge(any(Member.class), any(Challenge.class)))
+                given(challengeMemberRepository.existsByMemberAndChallenge(any(Member.class),
+                    any(Challenge.class)))
                     .willReturn(Boolean.FALSE);
 
                 //when
@@ -180,9 +187,78 @@ class ChallengeServiceTest {
                 //then
                 then(challengeMemberRepository).should(never()).save(any());
                 assertFalse(responseDto.isSuccess());
-                assertEquals("이미 종료된 챌린지입니다.", responseDto.getData());
+                assertEquals("이미 시작된 챌린지입니다.", responseDto.getData());
             }
         }
+    }
+
+    @Nested
+    @DisplayName("챌린지 나가기")
+    class testExitChallenge {
+
+        @Test
+        @DisplayName("성공")
+        void success() {
+            //given
+            HttpServletRequest request = mock(HttpServletRequest.class);
+            Member member = getMember();
+            ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
+            Challenge challenge = getChallenge(Category.FOOD, 1L);
+            ChallengeMember challengeMember = getChallengeMember(member, challenge);
+
+            willReturn(validateCheckResponse)
+                .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
+
+            given(challengeRepository.findById(anyLong()))
+                .willReturn(Optional.of(challenge));
+
+            given(challengeMemberRepository.findByMemberAndChallenge(any(Member.class),
+                any(Challenge.class)))
+                .willReturn(Optional.of(challengeMember));
+
+            ArgumentCaptor<ChallengeMember> argumentCaptor = ArgumentCaptor.forClass(
+                ChallengeMember.class);
+
+            //when
+            ResponseDto<?> responseDto = challengeService.exit(request, 1L);
+
+            //then
+            then(challengeMemberRepository).should().delete(argumentCaptor.capture());
+            assertTrue(responseDto.isSuccess());
+            assertEquals("Exit Challenge Success", responseDto.getData());
+        }
+
+        @Test
+        @DisplayName("실패 - 이미 시작된 챌린지")
+        void fail_AlreadyStartedChallenge() {
+            //given
+            HttpServletRequest request = mock(HttpServletRequest.class);
+            Member member = getMember();
+            ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
+            Challenge challenge = getChallenge(Category.FOOD, 1L);
+            challenge.setStartDate(LocalDate.now());
+            challenge.setEndDate(LocalDate.now().plusDays(1));
+            ChallengeMember challengeMember = getChallengeMember(member, challenge);
+
+            willReturn(validateCheckResponse)
+                .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
+
+            given(challengeRepository.findById(anyLong()))
+                .willReturn(Optional.of(challenge));
+
+            given(challengeMemberRepository.findByMemberAndChallenge(any(Member.class),
+                any(Challenge.class)))
+                .willReturn(Optional.of(challengeMember));
+
+            //when
+            ResponseDto<?> responseDto = challengeService.exit(request, 1L);
+
+            //then
+            then(challengeMemberRepository).should(never()).delete(any(ChallengeMember.class));
+            assertFalse(responseDto.isSuccess());
+            assertEquals("이미 시작된 챌린지입니다.", responseDto.getData());
+        }
+
     }
 
     private static Member getMember() {
@@ -195,14 +271,23 @@ class ChallengeServiceTest {
             .build();
     }
 
-    private static Challenge getChallenge(Category category, Long createMemberId) {
+    private static ChallengeMember getChallengeMember(Member member, Challenge challenge) {
+        return ChallengeMember.builder()
+            .id(1L)
+            .member(member)
+            .challenge(challenge)
+            .ongoingYn(true)
+            .build();
+    }
+
+    private static Challenge getChallenge(Category category, Long masterMemberId) {
         return Challenge.builder()
             .id(1L)
-            .masterMemberId(createMemberId)
+            .masterMemberId(masterMemberId)
             .title("title")
             .content("content")
-            .startDate(LocalDate.of(2023, 7, 1))
-            .endDate(LocalDate.of(2023, 8, 1))
+            .startDate(LocalDate.now().plusDays(1))
+            .endDate(LocalDate.now().plusDays(1).plusMonths(1))
             .goalAmount(300000)
             .category(category)
             .maxPeople(10)
@@ -213,8 +298,8 @@ class ChallengeServiceTest {
         return CreateChallengeServiceDto.builder()
             .title("title")
             .content("content")
-            .startDate(LocalDate.of(2023, 7, 1))
-            .endDate(LocalDate.of(2023, 8, 1))
+            .startDate(LocalDate.now().plusDays(1))
+            .endDate(LocalDate.now().plusDays(1).plusMonths(1))
             .goalAmount(300000)
             .category(category)
             .maxPeople(10)
