@@ -8,7 +8,6 @@ import com.zerototen.savegame.domain.dto.request.UpdatePostRequest;
 import com.zerototen.savegame.domain.dto.response.PostResponse;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.service.PostService;
-import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +16,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 
 @Slf4j
 @RequiredArgsConstructor
