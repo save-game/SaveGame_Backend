@@ -34,8 +34,8 @@ public class PostService {
     private final ChallengeRepository challengeRepository;
 
     @Transactional
-    public ResponseDto<Page<PostResponse>> getPostList(HttpServletRequest request, Long challengeId,
-        @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+    public ResponseDto<Page<PostResponse>> getPostList(HttpServletRequest request,
+        Long challengeId, Pageable pageable) {
         validation(request);
 
         Page<Post> posts = postRepository.findByChallengeIdOrderByIdDesc(challengeId, pageable);
