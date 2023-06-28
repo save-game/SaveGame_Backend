@@ -18,12 +18,18 @@ public enum ErrorCode {
     UNAUTHORIZED_TOKEN(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다."),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "토큰이 유효하지 않습니다."),
 
-    // record
+    // 지출
     NOT_FOUND_RECORD(HttpStatus.BAD_REQUEST, "지출 내역을 찾을 수 없습니다"),
+    NOT_FOUND_POST(HttpStatus.BAD_REQUEST, "게시물을 찾을 수 없습니다"),
     NOT_MATCH_MEMBER(HttpStatus.BAD_REQUEST, "해당 내역이 사용자의 내역이 아닙니다"),
     STARTDATE_AFTER_ENDDATE(HttpStatus.BAD_REQUEST, "조회시작일이 조회종료일 이후입니다"),
     CATEGORY_IS_NULL(HttpStatus.BAD_REQUEST, "카테고리가 null 입니다"),
-    INVALID_TOTAL(HttpStatus.BAD_REQUEST, "합계가 0 이하 또는 null 입니다");
+    INVALID_TOTAL(HttpStatus.BAD_REQUEST, "합계가 0 이하 또는 null 입니다"),
+
+    ALREADY_REGISTERED_HEART(HttpStatus.BAD_REQUEST, "이미 좋아요가 등록됐습니다."),
+    NOT_FOUND_HEART(HttpStatus.BAD_REQUEST, "등록된 하트가 없습니다.")
+
+    ;
 
     private final HttpStatus httpStatus;
     private final String detail;
