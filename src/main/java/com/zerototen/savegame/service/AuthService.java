@@ -70,9 +70,9 @@ public class AuthService {
             return ResponseDto.fail(ErrorCode.WRONG_PASSWORD.getDetail());
         }
 
-        if (tokenProvider.isPresentRefreshToken(member) != null) {
-            return ResponseDto.fail("이미 로그인되어 있습니다.");
-        }
+//        if (tokenProvider.isPresentRefreshToken(member) != null) {
+//            return ResponseDto.fail("이미 로그인되어 있습니다.");
+//        }
 
         TokenDto tokenDto = tokenProvider.generateTokenDto(member);
         tokenToHeaders(tokenDto, response);
