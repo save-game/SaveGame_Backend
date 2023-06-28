@@ -71,7 +71,7 @@ public class PostService {
     }
 
     @Transactional
-    public ResponseDto<?> create(CreatePostServiceDto serviceDto, List<String> imageList, Long challengeId, HttpServletRequest request) {
+    public ResponseDto<?> create(CreatePostServiceDto serviceDto, Long challengeId, HttpServletRequest request) {
         Member member = validation(request);
 
         Challenge challenge = challengeRepository.findById(challengeId)
@@ -83,7 +83,7 @@ public class PostService {
         log.info("Create post -> memberId: {}", member.getId());
         Post post = postRepository.save(Post.of(serviceDto, member, challenge));
 
-        for (String image : imageList) {
+        for (String image : serviceDto.getImageUrlList()) {
             Image img = new Image();
             img.setPostImage(image);
             img.setPost(post);
@@ -144,9 +144,7 @@ public class PostService {
             throw new ValidationException("Validation failed.");
         }
 
-        Member member = (Member) responseDto.getData();
-
-        return member;
+        return (Member) responseDto.getData();
     }
 
 }

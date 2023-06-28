@@ -107,7 +107,7 @@ class PostServiceTest {
         ArgumentCaptor<Post> argumentCaptor = ArgumentCaptor.forClass(Post.class);
 
         //when
-        ResponseDto<?> responseDto = postService.create(serviceDto, getStringImage(), challenge.getId(), request);
+        ResponseDto<?> responseDto = postService.create(serviceDto, challenge.getId(), request);
 
         //then
         assertTrue(responseDto.isSuccess());
@@ -180,8 +180,14 @@ class PostServiceTest {
     }
 
     private CreatePostServiceDto getCreateServiceDto() {
+        List<String> imageUrlList = new ArrayList<>();
+        imageUrlList.add("url1");
+        imageUrlList.add("url2");
+
         return CreatePostServiceDto.builder()
                 .content("내용")
+                .imageUrlList(imageUrlList)
+                .challengeId(1L)
                 .build();
     }
 
@@ -190,10 +196,6 @@ class PostServiceTest {
                 .id(1L)
                 .comment("수정완료")
                 .build();
-    }
-
-    private List<String> getStringImage() {
-        return Arrays.asList("1.jpg", "2.jpg", "3.jpg");
     }
 
     private List<Image> getImages() {

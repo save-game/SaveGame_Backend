@@ -8,6 +8,8 @@ import static org.mockito.Mockito.mock;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.entity.Post;
+import com.zerototen.savegame.exception.CustomException;
+import com.zerototen.savegame.exception.ErrorCode;
 import com.zerototen.savegame.repository.HeartRepository;
 import com.zerototen.savegame.repository.PostRepository;
 import com.zerototen.savegame.security.TokenProvider;
@@ -53,7 +55,7 @@ class HeartsServiceTest {
 
         //then
         assertTrue(responseDto.isSuccess());
-        assertEquals("Heart saved!", responseDto.getData());
+        assertEquals("Heart create success", responseDto.getData());
 
     }
 
@@ -73,11 +75,11 @@ class HeartsServiceTest {
             .given(heartRepository).existsByMemberAndPost(member, post);
 
         //when
-        ResponseDto<?> responseDto = heartsService.create(request, post.getId());
+        CustomException exception = assertThrows(CustomException.class,
+            () -> heartsService.create(request, post.getId()));
 
         //then
-        assertTrue(responseDto.isSuccess());
-        assertEquals("Unheart processed!", responseDto.getData());
+        assertEquals(ErrorCode.ALREADY_REGISTERED_HEART, exception.getErrorCode());
     }
 
     @Test
@@ -100,7 +102,7 @@ class HeartsServiceTest {
 
         //then
         assertTrue(responseDto.isSuccess());
-        assertEquals("Unheart processed!", responseDto.getData());
+        assertEquals("Heart delete success", responseDto.getData());
     }
 
     @Test
@@ -119,11 +121,11 @@ class HeartsServiceTest {
             .given(heartRepository).existsByMemberAndPost(member, post);
 
         //when
-        ResponseDto<?> responseDto = heartsService.delete(request, post.getId());
+        CustomException exception = assertThrows(CustomException.class,
+            () -> heartsService.delete(request, post.getId()));
 
         //then
-        assertTrue(responseDto.isSuccess());
-        assertEquals("Heart saved!", responseDto.getData());
+        assertEquals(ErrorCode.NOT_FOUND_HEART, exception.getErrorCode());
     }
 
     private Member getMember() {
