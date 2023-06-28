@@ -3,11 +3,14 @@ package com.zerototen.savegame.service;
 import com.zerototen.savegame.domain.dto.request.UpdateNicknameRequest;
 import com.zerototen.savegame.domain.dto.request.UpdatePasswordRequest;
 import com.zerototen.savegame.domain.dto.request.UpdateProfileImageUrlRequest;
+import com.zerototen.savegame.domain.dto.response.MemberChallengeResponse;
 import com.zerototen.savegame.domain.dto.response.MemberResponse;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Member;
+import com.zerototen.savegame.repository.ChallengeMemberRepository;
 import com.zerototen.savegame.repository.MemberRepository;
 import com.zerototen.savegame.security.TokenProvider;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final ChallengeMemberRepository challengeMemberRepository;
     private final TokenProvider tokenProvider;
 
     // 회원정보 조회
@@ -37,7 +41,8 @@ public class MemberService {
 
     // 비밀번호 수정
     @Transactional
-    public ResponseDto<?> updatePassword(HttpServletRequest request, UpdatePasswordRequest passwordRequest) {
+    public ResponseDto<?> updatePassword(HttpServletRequest request,
+        UpdatePasswordRequest passwordRequest) {
         ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
         if (!responseDto.isSuccess()) {
             return responseDto;
@@ -45,7 +50,8 @@ public class MemberService {
 
         Member member = (Member) responseDto.getData();
 
-        if (!(new BCryptPasswordEncoder().matches(passwordRequest.getOldPassword(), member.getPassword()))) {
+        if (!(new BCryptPasswordEncoder().matches(passwordRequest.getOldPassword(),
+            member.getPassword()))) {
             return ResponseDto.fail("이전 비밀번호가 일치하지 않습니다.");
         }
 
@@ -57,7 +63,8 @@ public class MemberService {
 
     // 닉네임 수정
     @Transactional
-    public ResponseDto<?> updateNickname(HttpServletRequest request, UpdateNicknameRequest nicknameRequest) {
+    public ResponseDto<?> updateNickname(HttpServletRequest request,
+        UpdateNicknameRequest nicknameRequest) {
         ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
         if (!responseDto.isSuccess()) {
             return responseDto;
@@ -90,6 +97,21 @@ public class MemberService {
         memberRepository.save(member);
         log.debug("Update profile image url -> memberId: {}", member.getId());
         return ResponseDto.success("Update Profile Image Success");
+    }
+
+    // 멤버 챌린지 조회
+    public ResponseDto<?> getMemberChallengeList(HttpServletRequest request) {
+        ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
+        if (!responseDto.isSuccess()) {
+            return responseDto;
+        }
+
+        Member member = (Member) responseDto.getData();
+
+        return ResponseDto.success(
+            challengeMemberRepository.findChallengeListByMemberOrderByEndDate(member).stream()
+                .map(MemberChallengeResponse::from).collect(
+                    Collectors.toList()));
     }
 
 }

@@ -50,4 +50,10 @@ public class MemberController {
         return memberService.updateProfileImageUrl(request, imageUrlRequest);
     }
 
+    // 멤버 챌린지 조회
+    @GetMapping("/challenge")
+    public ResponseDto<?> getMemberChallengeList(HttpServletRequest request) {
+        return memberService.getMemberChallengeList(request);
+    }
+
 }
