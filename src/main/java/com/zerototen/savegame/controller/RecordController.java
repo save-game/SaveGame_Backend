@@ -50,7 +50,8 @@ public class RecordController {
 
     @GetMapping("/analysis")
     public ResponseDto<?> getAnalysisInfo(
-        HttpServletRequest request, @RequestParam int year, @RequestParam @Valid @Min(1) @Max(12) int month) {
+        HttpServletRequest request, @RequestParam int year,
+        @RequestParam @Valid @Min(1) @Max(12) int month) {
         return recordService.getAnalysisInfo(request, year, month);
     }
 
@@ -58,7 +59,8 @@ public class RecordController {
     public ResponseDto<?> updateRecord(
         HttpServletRequest request, @PathVariable Long recordId,
         @RequestBody @Valid UpdateRecordRequest updateRecordRequest) {
-        return recordService.update(request, UpdateRecordServiceDto.of(recordId, updateRecordRequest));
+        return recordService.update(request,
+            UpdateRecordServiceDto.of(recordId, updateRecordRequest));
     }
 
     @DeleteMapping("/{recordId}")

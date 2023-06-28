@@ -48,7 +48,7 @@ public class PostService {
         Member member = validation(request);
 
         Challenge challenge = challengeRepository.findById(challengeId)
-                .orElse(null);
+            .orElse(null);
         if (challenge == null) {
             ResponseDto.fail("챌린지가 존재하지 않습니다.");
         }
@@ -71,7 +71,7 @@ public class PostService {
         Member member = validation(request);
 
         Post post = postRepository.findById(serviceDto.getId())
-                .orElse(null);
+            .orElse(null);
 
         if (post == null) {
             return ResponseDto.fail(ErrorCode.NOT_FOUND_POST.getDetail());
@@ -92,7 +92,7 @@ public class PostService {
     public ResponseDto<?> delete(HttpServletRequest request, Long postId) {
         Member member = validation(request);
         Post post = postRepository.findById(postId)
-                .orElse(null);
+            .orElse(null);
 
         if (post == null) {
             return ResponseDto.fail(ErrorCode.NOT_FOUND_POST.getDetail());

@@ -102,7 +102,8 @@ class RecordServiceTest {
                 willReturn(validateCheckResponse)
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-                given(recordRepository.findByMemberAndUseDateDescWithOptional(any(Member.class), any(LocalDate.class),
+                given(recordRepository.findByMemberAndUseDateDescWithOptional(any(Member.class),
+                    any(LocalDate.class),
                     any(LocalDate.class), isNull()))
                     .willReturn(records);
 
@@ -124,7 +125,8 @@ class RecordServiceTest {
                         recordResponses.get(size - i).getCategory());
                     assertEquals("가게" + i, recordResponses.get(size - i).getPaidFor());
                     assertEquals("메모" + i, recordResponses.get(size - i).getMemo());
-                    assertEquals(LocalDate.of(2023, 6, i), recordResponses.get(size - i).getUseDate());
+                    assertEquals(LocalDate.of(2023, 6, i),
+                        recordResponses.get(size - i).getUseDate());
                     assertEquals(PayType.values()[(i - 1) % PAYTYPE_LENGTH].getName(),
                         recordResponses.get(size - i).getPayType());
                 }
@@ -143,7 +145,8 @@ class RecordServiceTest {
                 willReturn(validateCheckResponse)
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-                given(recordRepository.findByMemberAndUseDateDescWithOptional(any(Member.class), any(LocalDate.class),
+                given(recordRepository.findByMemberAndUseDateDescWithOptional(any(Member.class),
+                    any(LocalDate.class),
                     any(LocalDate.class), anyList()))
                     .willReturn(records);
 
@@ -164,7 +167,8 @@ class RecordServiceTest {
                         recordResponses.get(size - i).getCategory());
                     assertEquals("가게" + i, recordResponses.get(size - i).getPaidFor());
                     assertEquals("메모" + i, recordResponses.get(size - i).getMemo());
-                    assertEquals(LocalDate.of(2023, 6, i), recordResponses.get(size - i).getUseDate());
+                    assertEquals(LocalDate.of(2023, 6, i),
+                        recordResponses.get(size - i).getUseDate());
                     assertEquals(PayType.values()[(i - 1) % PAYTYPE_LENGTH].getName(),
                         recordResponses.get(size - i).getPayType());
                 }
@@ -209,7 +213,8 @@ class RecordServiceTest {
             willReturn(validateCheckResponse)
                 .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-            given(recordRepository.findByMemberAndUseDateAndAmountSumDesc(any(Member.class), any(LocalDate.class),
+            given(recordRepository.findByMemberAndUseDateAndAmountSumDesc(any(Member.class),
+                any(LocalDate.class),
                 any(LocalDate.class)))
                 .willReturn(serviceDtos);
 
@@ -219,8 +224,9 @@ class RecordServiceTest {
 
             //then
             assertTrue(responseDto.isSuccess());
-            then(recordRepository).should().findByMemberAndUseDateAndAmountSumDesc(any(Member.class), any(LocalDate.class),
-                any(LocalDate.class));
+            then(recordRepository).should()
+                .findByMemberAndUseDateAndAmountSumDesc(any(Member.class), any(LocalDate.class),
+                    any(LocalDate.class));
             int size = responses.size();
             for (int i = size; i >= 1; i--) {
                 assertEquals(Category.values()[(i - 1) % CATEGORY_LENGTH].getName(),
@@ -246,7 +252,8 @@ class RecordServiceTest {
                 willReturn(validateCheckResponse)
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-                given(recordRepository.findByMemberAndUseDateAndAmountSumDesc(any(Member.class), any(LocalDate.class),
+                given(recordRepository.findByMemberAndUseDateAndAmountSumDesc(any(Member.class),
+                    any(LocalDate.class),
                     any(LocalDate.class)))
                     .willReturn(serviceDtos);
 
@@ -271,7 +278,8 @@ class RecordServiceTest {
                 willReturn(validateCheckResponse)
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-                given(recordRepository.findByMemberAndUseDateAndAmountSumDesc(any(Member.class), any(LocalDate.class),
+                given(recordRepository.findByMemberAndUseDateAndAmountSumDesc(any(Member.class),
+                    any(LocalDate.class),
                     any(LocalDate.class)))
                     .willReturn(serviceDtos);
 
@@ -296,7 +304,8 @@ class RecordServiceTest {
                 willReturn(validateCheckResponse)
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-                given(recordRepository.findByMemberAndUseDateAndAmountSumDesc(any(Member.class), any(LocalDate.class),
+                given(recordRepository.findByMemberAndUseDateAndAmountSumDesc(any(Member.class),
+                    any(LocalDate.class),
                     any(LocalDate.class)))
                     .willReturn(serviceDtos);
 
