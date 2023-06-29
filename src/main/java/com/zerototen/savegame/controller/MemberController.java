@@ -51,7 +51,7 @@ public class MemberController {
     }
 
     // 멤버 챌린지 조회
-    @GetMapping("/challenge")
+    @GetMapping("/challenges")
     public ResponseDto<?> getMemberChallengeList(HttpServletRequest request) {
         return memberService.getMemberChallengeList(request);
     }
