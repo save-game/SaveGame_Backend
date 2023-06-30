@@ -282,14 +282,14 @@ class ChallengeServiceTest {
         void inputOnlyPage() {
             //given
             Pageable pageable = PageRequest.of(0, 3);
-            Page<ChallengeSearchResponse> result = getSearchResult(null, null, null, null,
+            Page<ChallengeSearchResponse> result = getSearchResult(null, null, 0, 10000000,
                 pageable);
             given(challengeRepository.findAllStartDateBeforeNowAndOptional(isNull(), isNull(),
-                isNull(), isNull(), isNull(), any(Pageable.class)))
+                anyInt(), anyInt(), isNull(), any(Pageable.class)))
                 .willReturn(result);
 
             //when
-            ResponseDto<?> responseDto = challengeService.getChallengeList(null, null, null, null,
+            ResponseDto<?> responseDto = challengeService.getChallengeList(null, null, 0, 10000000,
                 null, pageable);
             Page<ChallengeSearchResponse> response = (Page<ChallengeSearchResponse>) responseDto.getData();
             //then
@@ -302,7 +302,7 @@ class ChallengeServiceTest {
                 assertEquals("title" + i, response.getContent().get(size - i).getTitle());
                 assertEquals(i + "content",
                     response.getContent().get(size - i).getChallengeContent());
-                assertEquals(10000, response.getContent().get(size - i).getGoalAmount());
+                assertEquals(5000000, response.getContent().get(size - i).getGoalAmount());
                 assertEquals(LocalDate.now().plusDays(i),
                     response.getContent().get(size - i).getStartDate());
                 assertEquals((i % 10) + 1, response.getContent().get(size - i).getCnt());
@@ -311,52 +311,20 @@ class ChallengeServiceTest {
         }
 
         @Test
-        @DisplayName("Keyword와 SearchType 입력")
-        void inputKeywordAndSearchType() {
+        @DisplayName("빈 Keyword")
+        void keywordIsEmpty() {
             //given
             Pageable pageable = PageRequest.of(0, 3);
-            Page<ChallengeSearchResponse> result = getSearchResult("키워드", SearchType.ALL, null,
-                null,
-                pageable);
+            Page<ChallengeSearchResponse> result = getSearchResult("", SearchType.ALL, 10000,
+                50000, pageable);
             given(challengeRepository.findAllStartDateBeforeNowAndOptional(anyString(),
                 any(SearchType.class),
-                isNull(), isNull(), isNull(), any(Pageable.class)))
-                .willReturn(result);
-
-            //when
-            ResponseDto<?> responseDto = challengeService.getChallengeList("키워드", "ALL", null, null,
-                null, pageable);
-            Page<ChallengeSearchResponse> response = (Page<ChallengeSearchResponse>) responseDto.getData();
-            //then
-            assertTrue(responseDto.isSuccess());
-            assertEquals(pageable.getPageNumber(), response.getPageable().getPageNumber());
-            assertEquals(pageable.getPageSize(), response.getPageable().getPageSize());
-            int size = response.getPageable().getPageSize();
-            for (int i = size; i > 0; i--) {
-                assertEquals(i, response.getContent().get(size - i).getChallengeId());
-                assertEquals("키워드" + i, response.getContent().get(size - i).getTitle());
-                assertEquals(i + "키워드", response.getContent().get(size - i).getChallengeContent());
-                assertEquals(10000, response.getContent().get(size - i).getGoalAmount());
-                assertEquals(LocalDate.now().plusDays(i),
-                    response.getContent().get(size - i).getStartDate());
-                assertEquals((i % 10) + 1, response.getContent().get(size - i).getCnt());
-            }
-        }
-
-        @Test
-        @DisplayName("Min & Max Amount 입력")
-        void inputMinAndMaxAmount() {
-            //given
-            Pageable pageable = PageRequest.of(0, 3);
-            Page<ChallengeSearchResponse> result = getSearchResult(null, null, 10000, 50000,
-                pageable);
-            given(challengeRepository.findAllStartDateBeforeNowAndOptional(isNull(), isNull(),
                 anyInt(), anyInt(), isNull(), any(Pageable.class)))
                 .willReturn(result);
 
             //when
-            ResponseDto<?> responseDto = challengeService.getChallengeList(null, null, 10000, 50000,
-                null, pageable);
+            ResponseDto<?> responseDto = challengeService.getChallengeList("", "ALL", 10000,
+                50000, null, pageable);
             Page<ChallengeSearchResponse> response = (Page<ChallengeSearchResponse>) responseDto.getData();
             //then
             assertTrue(responseDto.isSuccess());
@@ -376,19 +344,22 @@ class ChallengeServiceTest {
         }
 
         @Test
-        @DisplayName("Category 입력")
-        void inputCategory() {
+        @DisplayName("Category 미입력")
+        void inputExceptCategory() {
             //given
             Pageable pageable = PageRequest.of(0, 3);
-            Page<ChallengeSearchResponse> result = getSearchResult(null, null, null, null,
+            Page<ChallengeSearchResponse> result = getSearchResult("키워드", SearchType.ALL, 10000,
+                50000,
                 pageable);
-            given(challengeRepository.findAllStartDateBeforeNowAndOptional(isNull(), isNull(),
-                isNull(), isNull(), any(Category.class), any(Pageable.class)))
+            given(challengeRepository.findAllStartDateBeforeNowAndOptional(anyString(),
+                any(SearchType.class), anyInt(), anyInt(), isNull(),
+                any(Pageable.class)))
                 .willReturn(result);
 
             //when
-            ResponseDto<?> responseDto = challengeService.getChallengeList(null, null, null, null,
-                "ALL", pageable);
+            ResponseDto<?> responseDto = challengeService.getChallengeList("키워드", "ALL", 10000,
+                50000,
+                null, pageable);
             Page<ChallengeSearchResponse> response = (Page<ChallengeSearchResponse>) responseDto.getData();
             //then
             assertTrue(responseDto.isSuccess());
@@ -397,10 +368,10 @@ class ChallengeServiceTest {
             int size = response.getPageable().getPageSize();
             for (int i = size; i > 0; i--) {
                 assertEquals(i, response.getContent().get(size - i).getChallengeId());
-                assertEquals("title" + i, response.getContent().get(size - i).getTitle());
-                assertEquals(i + "content",
+                assertEquals("키워드" + i, response.getContent().get(size - i).getTitle());
+                assertEquals(i + "키워드",
                     response.getContent().get(size - i).getChallengeContent());
-                assertEquals(10000, response.getContent().get(size - i).getGoalAmount());
+                assertEquals(30000, response.getContent().get(size - i).getGoalAmount());
                 assertEquals(LocalDate.now().plusDays(i),
                     response.getContent().get(size - i).getStartDate());
                 assertEquals((i % 10) + 1, response.getContent().get(size - i).getCnt());
@@ -488,15 +459,14 @@ class ChallengeServiceTest {
     }
 
     private static Page<ChallengeSearchResponse> getSearchResult(String keyword,
-        SearchType searchType, Integer minAmount, Integer maxAmount, Pageable pageable) {
+        SearchType searchType, int minAmount, int maxAmount, Pageable pageable) {
 
-        String title = (keyword != null && searchType != null) && !searchType.equals(
-            SearchType.CONTENT) ? keyword : "title";
+        String title =
+            (keyword != null && searchType != null && !keyword.isEmpty())
+                && !searchType.equals(SearchType.CONTENT) ? keyword : "title";
         String challengeContent =
-            (keyword != null && searchType != null) && !searchType.equals(SearchType.TITLE)
-                ? keyword : "content";
-        int goalAmount =
-            (minAmount != null) && (maxAmount != null) ? (minAmount + maxAmount) / 2 : 10000;
+            (keyword != null && searchType != null && !keyword.isEmpty())
+                && !searchType.equals(SearchType.TITLE) ? keyword : "content";
 
         List<ChallengeSearchResponse> searchResultList = new ArrayList<>();
         for (int i = pageable.getPageSize(); i > 0; i--) {
@@ -504,7 +474,7 @@ class ChallengeServiceTest {
                 .challengeId((long) i)
                 .title(title + i)
                 .challengeContent(i + challengeContent)
-                .goalAmount(goalAmount)
+                .goalAmount((minAmount + maxAmount) / 2)
                 .startDate(LocalDate.now().plusDays(i))
                 .cnt((i % 10) + 1)
                 .build();
