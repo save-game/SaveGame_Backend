@@ -41,7 +41,7 @@ public class Challenge extends BaseEntity {
     private String title;
 
     @Column(nullable = false)
-    private String challengeContent;
+    private String content;
 
     @Column(nullable = false)
     private LocalDate startDate;
@@ -61,7 +61,7 @@ public class Challenge extends BaseEntity {
         return Challenge.builder()
             .masterMemberId(memberId)
             .title(serviceDto.getTitle())
-            .challengeContent(serviceDto.getChallengeContent())
+            .content(serviceDto.getContent())
             .startDate(serviceDto.getStartDate())
             .endDate(serviceDto.getEndDate())
             .goalAmount(serviceDto.getGoalAmount())

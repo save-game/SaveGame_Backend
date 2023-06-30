@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 public class CreateChallengeServiceDto {
 
     private String title;
-    private String challengeContent;
+    private String content;
     private LocalDate startDate;
     private LocalDate endDate;
     private int goalAmount;
@@ -27,7 +27,7 @@ public class CreateChallengeServiceDto {
     public static CreateChallengeServiceDto from(CreateChallengeRequest request) {
         return CreateChallengeServiceDto.builder()
             .title(request.getTitle())
-            .challengeContent(request.getChallengeContent())
+            .content(request.getContent())
             .startDate(ConvertUtil.stringToLocalDate(request.getStartDate()))
             .endDate(ConvertUtil.stringToLocalDate(request.getEndDate()))
             .goalAmount(request.getGoalAmount())

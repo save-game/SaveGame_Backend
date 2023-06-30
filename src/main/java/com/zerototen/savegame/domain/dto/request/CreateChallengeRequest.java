@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 public class CreateChallengeRequest {
 
     private String title;
-    private String challengeContent;
+    private String content;
 
     @Pattern(regexp = "\\d{1,2}/\\d{1,2}/\\d{4}", message = "유효하지 않은 날짜 형식입니다")
     private String startDate;
