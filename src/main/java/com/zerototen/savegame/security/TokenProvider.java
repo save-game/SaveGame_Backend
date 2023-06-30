@@ -23,7 +23,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Base64;
 import java.util.Date;
-import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
@@ -122,18 +121,14 @@ public class TokenProvider {
 
     @Transactional(readOnly = true)
     public RefreshToken isPresentRefreshToken(Member member) {
-        Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findByMember(member);
-        return optionalRefreshToken.orElse(null);
+        return refreshTokenRepository.findByMember(member)
+            .orElseThrow(() -> new CustomException(ErrorCode.NOT_EXIST_REFRESH_TOKEN));
     }
 
     @Transactional
-    public boolean deleteRefreshToken(Member member) {
+    public void deleteRefreshToken(Member member) {
         RefreshToken refreshToken = isPresentRefreshToken(member);
-        if (null == refreshToken) {
-            return false;
-        }
         refreshTokenRepository.delete(refreshToken);
-        return true;
     }
 
     @Transactional(readOnly = true)
@@ -211,18 +206,18 @@ public class TokenProvider {
     public Member validateMember(HttpServletRequest request) {
         String refreshTokenOfHeader = request.getHeader("RefreshToken");
         if (!validateToken(refreshTokenOfHeader)) {
-            return null;
+            throw new CustomException(ErrorCode.INVALIDATE_REFRESH_TOKEN);
         }
 
         if (checkBlacklistToken(getAccessToken(request))) {
-            return null;
+            throw new CustomException(ErrorCode.BLACKLIST_ACCESS_TOKEN);
         }
 
         Member member = getMemberFromAuthentication();
         RefreshToken refreshToken = isPresentRefreshToken(member);
 
-        if (refreshToken == null || !refreshToken.getKeyValue().equals(refreshTokenOfHeader)) {
-            return null;
+        if (!refreshToken.getKeyValue().equals(refreshTokenOfHeader)) {
+            throw new CustomException(ErrorCode.MISMATCH_REFRESH_TOKEN);
         }
 
         return member;
@@ -232,7 +227,7 @@ public class TokenProvider {
     public ResponseDto<?> validateCheck(HttpServletRequest request) {
         // RefreshToken 및 Authorization 유효성 검사
         if (null == request.getHeader("RefreshToken") || null == request.getHeader("Authorization")) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED_TOKEN);
+            throw new CustomException(ErrorCode.BLANK_TOKEN_HEADER);
         }
         Member member = validateMember(request);
         // token 정보 유효성 검사

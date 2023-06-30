@@ -15,8 +15,14 @@ public enum ErrorCode {
 
     //로그인 & 로그아웃
     WRONG_PASSWORD(HttpStatus.BAD_REQUEST, "틀린 비밀번호입니다."),
-    UNAUTHORIZED_TOKEN(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다."),
-    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "토큰이 유효하지 않습니다. 다시 로그인해주세요."),
+    BLANK_TOKEN_HEADER(HttpStatus.BAD_REQUEST, "헤더에 토큰이 없습니다."),
+    EXPIRED_TOKEN(HttpStatus.BAD_REQUEST, "토큰이 유효하지 않습니다. 다시 로그인해주세요."),
+    NOT_EXIST_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "DB에 해당 멤버의 리프레시 토큰이 없습니다."),
+    BLACKLIST_ACCESS_TOKEN(HttpStatus.BAD_REQUEST, "블랙리스트에 있는 액세스 토큰입니다."),
+    INVALIDATE_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 리프레시 토큰입니다."),
+    INVALIDATE_ACCESS_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 액세스 토큰입니다."),
+    MISMATCH_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "요청받은 리프레시 토큰이 DB의 리프레시 토큰과 일치하지 않습니다."),
+    NOT_EXPIRED_ACCESS_TOKEN(HttpStatus.BAD_REQUEST, "아직 만료되지 않은 액세스 토큰입니다."),
 
     // 지출
     NOT_FOUND_RECORD(HttpStatus.BAD_REQUEST, "지출 내역을 찾을 수 없습니다"),

@@ -7,6 +7,7 @@ import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.entity.RefreshToken;
 import com.zerototen.savegame.domain.type.Authority;
+import com.zerototen.savegame.exception.CustomException;
 import com.zerototen.savegame.exception.ErrorCode;
 import com.zerototen.savegame.repository.MemberRepository;
 import com.zerototen.savegame.security.TokenProvider;
@@ -96,9 +97,10 @@ public class AuthService {
 
         Member member = (Member) responseDto.getData();
 
-        if (!tokenProvider.deleteRefreshToken(member)) {
-            return ResponseDto.fail("존재하지 않는 Token 입니다.");
-        }
+//        if (!tokenProvider.deleteRefreshToken(member)) {
+//            return ResponseDto.fail("존재하지 않는 Token 입니다.");
+//        }
+        tokenProvider.deleteRefreshToken(member);
 
         tokenProvider.saveBlacklistToken(request);
 
@@ -142,28 +144,26 @@ public class AuthService {
     @Transactional
     public ResponseDto<String> reissue(HttpServletRequest request, HttpServletResponse response) throws ParseException {
         if (tokenProvider.getMemberIdByToken(request.getHeader("Authorization")) != null) {
-            return ResponseDto.fail("아직 유효한 access token 입니다.");
+            throw new CustomException(ErrorCode.NOT_EXPIRED_ACCESS_TOKEN);
         }
         if (!tokenProvider.validateToken(request.getHeader("RefreshToken"))) {
-            return ResponseDto.fail("유효하지 않은 refresh token입니다.");
+            throw new CustomException(ErrorCode.INVALIDATE_REFRESH_TOKEN);
         }
 
         String memberId = tokenProvider.getMemberFromExpiredAccessToken(request);
         if (null == memberId) {
-            return ResponseDto.fail("access token의 값이 유효하지 않습니다.");
+            throw new CustomException(ErrorCode.INVALIDATE_ACCESS_TOKEN);
         }
 
-        Member member = memberRepository.findById(Long.parseLong(memberId)).orElse(null);
-        if (null == member) {
-            return ResponseDto.fail("memberId에 해당하는 멤버가 없습니다.");
-        }
+        Member member = memberRepository.findById(Long.parseLong(memberId))
+            .orElseThrow(() -> new CustomException(ErrorCode.NOT_MATCH_MEMBER));
 
         RefreshToken refreshToken = tokenProvider.isPresentRefreshToken(member);
 
         if (!refreshToken.getKeyValue().equals(request.getHeader("RefreshToken"))) {
             log.info("refreshToken : " + refreshToken.getKeyValue());
             log.info("header rft : " + request.getHeader("RefreshToken"));
-            return ResponseDto.fail("토큰이 일치하지 않습니다.");
+            throw new CustomException(ErrorCode.MISMATCH_REFRESH_TOKEN);
         }
 
         TokenDto tokenDto = tokenProvider.generateTokenDto(member);
@@ -186,9 +186,10 @@ public class AuthService {
             return ResponseDto.fail("이미 탈퇴한 사용자입니다.");
         }
 
-        if (!tokenProvider.deleteRefreshToken(member)) {
-            return ResponseDto.fail("존재하지 않는 Token 입니다.");
-        }
+//        if (!tokenProvider.deleteRefreshToken(member)) {
+//            return ResponseDto.fail("존재하지 않는 Token 입니다.");
+//        }
+        tokenProvider.deleteRefreshToken(member);
 
         memberRepository.delete(member);
 
