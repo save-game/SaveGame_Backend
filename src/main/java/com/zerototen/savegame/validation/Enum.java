@@ -30,6 +30,8 @@ public @interface Enum {
 
     boolean ignoreCase() default false; // 대소문자 무시
 
-    boolean nullable() default false; // ALL 카테고리 허용
+    boolean nullable() default false; // null값 허용
+
+    boolean allowAll() default false; // enum에 ALL 허용, null값 과는 다름
 
 }

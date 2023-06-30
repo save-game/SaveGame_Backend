@@ -41,7 +41,7 @@ public class Challenge extends BaseEntity {
     private String title;
 
     @Column(nullable = false)
-    private String content;
+    private String challengeContent;
 
     @Column(nullable = false)
     private LocalDate startDate;
@@ -51,6 +51,7 @@ public class Challenge extends BaseEntity {
     private int goalAmount;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Category category;
 
     private int maxPeople;
@@ -60,7 +61,7 @@ public class Challenge extends BaseEntity {
         return Challenge.builder()
             .masterMemberId(memberId)
             .title(serviceDto.getTitle())
-            .content(serviceDto.getContent())
+            .challengeContent(serviceDto.getChallengeContent())
             .startDate(serviceDto.getStartDate())
             .endDate(serviceDto.getEndDate())
             .goalAmount(serviceDto.getGoalAmount())

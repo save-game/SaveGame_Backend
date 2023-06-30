@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 public class CreateChallengeRequest {
 
     private String title;
-    private String content;
+    private String challengeContent;
 
     @Pattern(regexp = "\\d{1,2}/\\d{1,2}/\\d{4}", message = "유효하지 않은 날짜 형식입니다")
     private String startDate;
@@ -29,7 +29,7 @@ public class CreateChallengeRequest {
     @Max(10000000)
     private int goalAmount;
 
-    @Enum(enumClass = Category.class, ignoreCase = true, nullable = true)
+    @Enum(enumClass = Category.class, ignoreCase = true, allowAll = true)
     private String category;
 
     @Min(1)
