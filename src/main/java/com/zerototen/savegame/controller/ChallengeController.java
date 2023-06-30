@@ -59,8 +59,8 @@ public class ChallengeController {
     public ResponseDto<?> getChallengeList(@RequestParam(required = false) String keyword,
         @RequestParam(required = false) @Enum(enumClass = SearchType.class, ignoreCase = true,
             allowAll = true, nullable = true) String searchType,
-        @RequestParam(required = false) @Min(0) Integer minAmount,
-        @RequestParam(required = false) @Max(10000000) Integer maxAmount,
+        @RequestParam(required = false, defaultValue = "0") @Min(0) int minAmount,
+        @RequestParam(required = false, defaultValue = "10000000") @Max(10000000) int maxAmount,
         @RequestParam(required = false) @Enum(enumClass = Category.class, ignoreCase = true,
             allowAll = true, nullable = true) String category,
         @RequestParam int page) {

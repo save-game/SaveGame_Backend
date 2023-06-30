@@ -129,8 +129,8 @@ public class ChallengeService {
         return ResponseDto.success("Exit Challenge Success");
     }
 
-    public ResponseDto<?> getChallengeList(String keyword, String searchType, Integer minAmount,
-        Integer maxAmount, String category, final Pageable pageable) {
+    public ResponseDto<?> getChallengeList(String keyword, String searchType, int minAmount,
+        int maxAmount, String category, final Pageable pageable) {
         SearchType enumSearchType =
             searchType == null ? null : SearchType.valueOf(searchType.toUpperCase(Locale.ROOT));
         Category enumCategory =

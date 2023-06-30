@@ -9,6 +9,6 @@ import org.springframework.data.domain.Pageable;
 public interface ChallengeRepositoryCustom {
 
     Page<ChallengeSearchResponse> findAllStartDateBeforeNowAndOptional(String keyword,
-        SearchType searchType, Integer min, Integer max, Category category, Pageable pageable);
+        SearchType searchType, int minAmount, int maxAmount, Category category, Pageable pageable);
 
 }
