@@ -36,7 +36,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
@@ -121,7 +120,6 @@ class PostServiceTest {
         verify(postRepository).save(argumentCaptor.capture());
         Post saved = argumentCaptor.getValue();
         assertEquals(2L, saved.getMember().getId());
-        assertEquals(1L, saved.getChallenge().getId());
         assertEquals("내용", saved.getContent());
     }
 
@@ -194,7 +192,6 @@ class PostServiceTest {
         return CreatePostServiceDto.builder()
                 .content("내용")
                 .imageUrlList(imageUrlList)
-                .challengeId(1L)
                 .build();
     }
 

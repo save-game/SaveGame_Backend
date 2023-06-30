@@ -2,6 +2,7 @@ package com.zerototen.savegame.domain.dto.response;
 
 import com.zerototen.savegame.domain.entity.Image;
 import com.zerototen.savegame.domain.entity.Post;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,6 +21,7 @@ public class PostResponse {
     private String postContent;
     private List<Image> imageList;
     private int heartCnt;
+    private LocalDateTime createdAt;
 
     public static PostResponse from(Post post) {
         return PostResponse.builder()
@@ -29,6 +31,7 @@ public class PostResponse {
             .postContent(post.getContent())
             .imageList(post.getImageList())
             .heartCnt(post.getHeartCnt())
+            .createdAt(post.getCreatedAt())
             .build();
     }
 

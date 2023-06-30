@@ -14,13 +14,11 @@ public class CreatePostServiceDto {
 
     private String content;
     private List<String> imageUrlList;
-    private Long challengeId;
 
     public static CreatePostServiceDto from(CreatePostRequest request) {
         return CreatePostServiceDto.builder()
             .content(request.getContent())
             .imageUrlList(request.getImageUrlList())
-            .challengeId(request.getChallengeId())
             .build();
     }
 
