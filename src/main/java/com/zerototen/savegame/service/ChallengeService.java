@@ -5,13 +5,17 @@ import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Challenge;
 import com.zerototen.savegame.domain.entity.ChallengeMember;
 import com.zerototen.savegame.domain.entity.Member;
+import com.zerototen.savegame.domain.type.Category;
+import com.zerototen.savegame.domain.type.SearchType;
 import com.zerototen.savegame.repository.ChallengeMemberRepository;
 import com.zerototen.savegame.repository.ChallengeRepository;
 import com.zerototen.savegame.security.TokenProvider;
 import java.time.LocalDate;
+import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -123,6 +127,18 @@ public class ChallengeService {
         challengeMemberRepository.delete(challengeMember);
         log.info("Exit Challenge -> {}, memberId: {}", challengeId, member.getId());
         return ResponseDto.success("Exit Challenge Success");
+    }
+
+    public ResponseDto<?> getChallengeList(String keyword, String searchType, Integer minAmount,
+        Integer maxAmount, String category, final Pageable pageable) {
+        SearchType enumSearchType =
+            searchType == null ? null : SearchType.valueOf(searchType.toUpperCase(Locale.ROOT));
+        Category enumCategory =
+            category == null ? null : Category.valueOf(category.toUpperCase(Locale.ROOT));
+
+        return ResponseDto.success(
+            challengeRepository.findAllStartDateBeforeNowAndOptional(keyword, enumSearchType,
+                minAmount, maxAmount, enumCategory, pageable));
     }
 
 }
