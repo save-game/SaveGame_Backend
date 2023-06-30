@@ -15,7 +15,6 @@ public class MemberResponse {
     private Long memberId;
     private String email;
     private String nickname;
-    private String password;
     private String profileImageUrl;
 
     public static MemberResponse from(Member member) {
@@ -23,7 +22,6 @@ public class MemberResponse {
             .memberId(member.getId())
             .email(member.getEmail())
             .nickname(member.getNickname())
-            .password("********")
             .profileImageUrl(member.getProfileImageUrl())
             .build();
     }

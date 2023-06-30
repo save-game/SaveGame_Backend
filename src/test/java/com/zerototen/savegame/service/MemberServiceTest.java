@@ -71,7 +71,6 @@ class MemberServiceTest {
 
             //then
             assertTrue(responseDto.isSuccess());
-            assertEquals("********", response.getPassword());
             assertEquals(member.getEmail(), response.getEmail());
             assertEquals(member.getNickname(), response.getNickname());
             assertEquals(member.getProfileImageUrl(), response.getProfileImageUrl());

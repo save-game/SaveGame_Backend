@@ -19,8 +19,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -44,7 +42,7 @@ public class PostService {
     }
 
     @Transactional
-    public ResponseDto<?> create(CreatePostServiceDto serviceDto, Long challengeId, HttpServletRequest request) {
+    public ResponseDto<String> create(CreatePostServiceDto serviceDto, Long challengeId, HttpServletRequest request) {
         Member member = validation(request);
 
         Challenge challenge = challengeRepository.findById(challengeId)
@@ -63,7 +61,7 @@ public class PostService {
             imageService.save(img);
         }
 
-        return ResponseDto.success(PostResponse.from(post));
+        return ResponseDto.success("Post Create Success");
     }
 
     @Transactional
@@ -89,7 +87,7 @@ public class PostService {
     }
 
     @Transactional
-    public ResponseDto<?> delete(HttpServletRequest request, Long postId) {
+    public ResponseDto<String> delete(HttpServletRequest request, Long postId) {
         Member member = validation(request);
         Post post = postRepository.findById(postId)
             .orElse(null);

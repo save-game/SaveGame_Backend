@@ -17,7 +17,7 @@ public class PostResponse {
     private Long id;
     private Long challengeId;
     private MemberResponse author;
-    private String content;
+    private String postContent;
     private List<Image> imageList;
     private int heartCnt;
 
@@ -26,7 +26,7 @@ public class PostResponse {
             .id(post.getId())
             .challengeId(post.getChallenge().getId())
             .author(MemberResponse.from(post.getMember()))
-            .content(post.getContent())
+            .postContent(post.getContent())
             .imageList(post.getImageList())
             .heartCnt(post.getHeartCnt())
             .build();

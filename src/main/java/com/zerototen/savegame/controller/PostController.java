@@ -26,10 +26,10 @@ public class PostController {
 
     private final PostService postService;
 
-    @GetMapping("/posts")
+    @GetMapping("/posts/challenges/{challengeId}")
     public ResponseDto<Page<PostResponse>> getPostList(
         HttpServletRequest request,
-        @RequestParam Long challengeId,
+        @PathVariable Long challengeId,
         @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return postService.getPostList(request, challengeId, pageable);
     }
