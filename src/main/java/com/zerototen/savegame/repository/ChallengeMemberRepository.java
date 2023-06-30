@@ -8,7 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ChallengeMemberRepository extends JpaRepository<ChallengeMember, Long> {
+public interface ChallengeMemberRepository extends JpaRepository<ChallengeMember, Long>,
+    ChallengeMemberRepositoryCustom {
 
     Optional<ChallengeMember> findByMemberAndChallenge(Member member, Challenge challenge);
 

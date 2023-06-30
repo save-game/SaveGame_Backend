@@ -12,13 +12,19 @@ import static org.mockito.Mockito.mock;
 import com.zerototen.savegame.domain.dto.request.UpdateNicknameRequest;
 import com.zerototen.savegame.domain.dto.request.UpdatePasswordRequest;
 import com.zerototen.savegame.domain.dto.request.UpdateProfileImageUrlRequest;
+import com.zerototen.savegame.domain.dto.response.MemberChallengeResponse;
 import com.zerototen.savegame.domain.dto.response.MemberResponse;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
+import com.zerototen.savegame.domain.entity.Challenge;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.type.Authority;
+import com.zerototen.savegame.repository.ChallengeMemberRepository;
 import com.zerototen.savegame.repository.MemberRepository;
 import com.zerototen.savegame.security.TokenProvider;
 import com.zerototen.savegame.util.PasswordUtil;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +43,9 @@ class MemberServiceTest {
     MemberService memberService;
     @Mock
     MemberRepository memberRepository;
+
+    @Mock
+    ChallengeMemberRepository challengeMemberRepository;
 
     @Mock
     TokenProvider tokenProvider;
@@ -62,7 +71,7 @@ class MemberServiceTest {
 
             //then
             assertTrue(responseDto.isSuccess());
-            assertEquals("*".repeat(8), response.getPassword());
+            assertEquals("********", response.getPassword());
             assertEquals(member.getEmail(), response.getEmail());
             assertEquals(member.getNickname(), response.getNickname());
             assertEquals(member.getProfileImageUrl(), response.getProfileImageUrl());
@@ -79,7 +88,8 @@ class MemberServiceTest {
                 HttpServletRequest request = mock(HttpServletRequest.class);
                 Member member = getMember();
                 ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
-                UpdatePasswordRequest passwordRequest = getUpdatePasswordRequest("password11!!", "password11@@");
+                UpdatePasswordRequest passwordRequest = getUpdatePasswordRequest("password11!!",
+                    "password11@@");
 
                 willReturn(validateCheckResponse)
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
@@ -90,7 +100,8 @@ class MemberServiceTest {
                 //then
                 assertTrue(responseDto.isSuccess());
                 assertEquals("Update Password Success", responseDto.getData());
-                assertTrue(PasswordUtil.checkPassword(passwordRequest.getNewPassword(), member.getPassword()));
+                assertTrue(PasswordUtil.checkPassword(passwordRequest.getNewPassword(),
+                    member.getPassword()));
             }
 
             @Test
@@ -100,7 +111,8 @@ class MemberServiceTest {
                 HttpServletRequest request = mock(HttpServletRequest.class);
                 Member member = getMember();
                 ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
-                UpdatePasswordRequest passwordRequest = getUpdatePasswordRequest("password22!!", "password11@@");
+                UpdatePasswordRequest passwordRequest = getUpdatePasswordRequest("password22!!",
+                    "password11@@");
 
                 willReturn(validateCheckResponse)
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
@@ -189,7 +201,8 @@ class MemberServiceTest {
                     .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
                 //when
-                ResponseDto<?> responseDto = memberService.updateProfileImageUrl(request, imageUrlRequest);
+                ResponseDto<?> responseDto = memberService.updateProfileImageUrl(request,
+                    imageUrlRequest);
 
                 //then
                 assertTrue(responseDto.isSuccess());
@@ -197,6 +210,35 @@ class MemberServiceTest {
                 assertEquals(imageUrlRequest.getProfileImageUrl(), member.getProfileImageUrl());
             }
         }
+    }
+
+    @Test
+    @DisplayName("사용자 챌린지 조회 - 성공")
+    void testGetMemberChallengeList_Success() {
+        // given
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        Member member = getMember();
+        ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
+        List<Challenge> challengeList = getChallengeList(member, 10);
+
+        willReturn(validateCheckResponse)
+            .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
+
+        given(challengeMemberRepository.findChallengeListByMemberOrderByEndDate(member))
+            .willReturn(challengeList);
+
+        // when
+        ResponseDto<?> responseDto = memberService.getMemberChallengeList(request);
+        List<MemberChallengeResponse> result = (List<MemberChallengeResponse>) responseDto.getData();
+
+        // then
+        assertTrue(responseDto.isSuccess());
+        for (int i = 0; i < result.size(); i++) {
+            assertEquals(i + 1, result.get(i).getChallengeId());
+            assertEquals("제목" + i, result.get(i).getTitle());
+            assertEquals(LocalDate.now().plusDays(i), result.get(i).getEndDate());
+        }
+
     }
 
     private static Member getMember() {
@@ -227,6 +269,27 @@ class MemberServiceTest {
         return UpdateProfileImageUrlRequest.builder()
             .profileImageUrl(url)
             .build();
+    }
+
+    private static List<Challenge> getChallengeList(Member member, int size) {
+        ArrayList<Challenge> challengeList = new ArrayList<>();
+        size = Math.min(size, 28);
+        for (int i = 0; i < size; i++) {
+            Challenge challenge = Challenge.builder()
+                .id((long) (i + 1))
+                .masterMemberId(member.getId())
+                .title("제목" + i)
+                .content("내용")
+                .category(null)
+                .maxPeople(10)
+                .startDate(LocalDate.now().minusMonths(1))
+                .endDate(LocalDate.now().plusDays(i))
+                .build();
+
+            challengeList.add(challenge);
+        }
+
+        return challengeList;
     }
 
 }
