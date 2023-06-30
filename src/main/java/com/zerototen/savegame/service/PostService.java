@@ -2,6 +2,7 @@ package com.zerototen.savegame.service;
 
 import com.zerototen.savegame.domain.dto.CreatePostServiceDto;
 import com.zerototen.savegame.domain.dto.UpdatePostServiceDto;
+import com.zerototen.savegame.domain.dto.response.MemberResponse;
 import com.zerototen.savegame.domain.dto.response.PostResponse;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Challenge;
@@ -10,6 +11,7 @@ import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.entity.Post;
 import com.zerototen.savegame.exception.ErrorCode;
 import com.zerototen.savegame.repository.ChallengeRepository;
+import com.zerototen.savegame.repository.HeartRepository;
 import com.zerototen.savegame.repository.PostRepository;
 import com.zerototen.savegame.security.TokenProvider;
 import javax.servlet.http.HttpServletRequest;
@@ -30,15 +32,31 @@ public class PostService {
     private final TokenProvider tokenProvider;
     private final ImageService imageService;
     private final ChallengeRepository challengeRepository;
+    private final HeartRepository heartRepository;
 
     @Transactional
     public ResponseDto<Page<PostResponse>> getPostList(HttpServletRequest request,
         Long challengeId, Pageable pageable) {
-        validation(request);
+        Member member = validation(request);
 
         Page<Post> posts = postRepository.findByChallengeIdOrderByIdDesc(challengeId, pageable);
 
-        return ResponseDto.success(posts.map(PostResponse::from));
+        Page<PostResponse> postResponses = posts.map(p -> from(p, member));
+
+        return ResponseDto.success(postResponses);
+    }
+
+    private PostResponse from(Post post, Member member) {
+        return PostResponse.builder()
+            .id(post.getId())
+            .challengeId(post.getChallenge().getId())
+            .author(MemberResponse.from(post.getMember()))
+            .postContent(post.getContent())
+            .imageList(post.getImageList())
+            .heartCnt(post.getHeartCnt())
+            .hasHeart(heartRepository.existsByMemberAndPost(member, post))
+            .createdAt(post.getCreatedAt())
+            .build();
     }
 
     @Transactional
@@ -83,7 +101,7 @@ public class PostService {
         postRepository.save(post);
 
         log.debug("Update Post -> postId: {}", serviceDto.getId());
-        return ResponseDto.success(PostResponse.from(post));
+        return ResponseDto.success("Post Update Success");
     }
 
     @Transactional
