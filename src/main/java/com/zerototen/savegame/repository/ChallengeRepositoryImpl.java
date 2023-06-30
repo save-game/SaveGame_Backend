@@ -76,8 +76,6 @@ public class ChallengeRepositoryImpl implements ChallengeRepositoryCustom {
         Long totalCount = queryFactory
             .select(challenge.id.count())
             .from(challenge)
-            .leftJoin(challengeMember)
-            .on(challenge.id.eq(challengeMember.challenge.id))
             .where(condition)
             .fetchOne();
 
