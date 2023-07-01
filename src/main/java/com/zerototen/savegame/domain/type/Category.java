@@ -7,6 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum Category {
 
+    ALL("전체"),
     FOOD("식비"),
     TRANSPORTATION("교통"),
     LIVING("생활"),

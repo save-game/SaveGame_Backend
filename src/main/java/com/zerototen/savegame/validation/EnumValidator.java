@@ -18,16 +18,17 @@ public class EnumValidator implements ConstraintValidator<Enum, String> {
         if (enumValues != null) {
             if (value != null) {
                 for (Object enumValue : enumValues) {
-                    if (enumValue.toString().equals("ALL")) {
-                        continue;
-                    }
                     if (value.equals(enumValue.toString())
-                        || (this.annotation.ignoreCase() && value.equalsIgnoreCase(enumValue.toString()))) {
+                        || (this.annotation.ignoreCase() && value.equalsIgnoreCase( // 대소문자 구분 안함
+                        enumValue.toString()))) {
+                        if (enumValue.toString().equals("ALL")) {
+                            return this.annotation.allowAll(); // ALL 허용여부
+                        }
                         return true;
                     }
                 }
             } else {
-                return this.annotation.nullable();
+                return this.annotation.nullable(); // null 허용여부
             }
         }
         return false;

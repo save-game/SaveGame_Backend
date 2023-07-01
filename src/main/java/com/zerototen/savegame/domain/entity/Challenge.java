@@ -51,6 +51,7 @@ public class Challenge extends BaseEntity {
     private int goalAmount;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Category category;
 
     private int maxPeople;

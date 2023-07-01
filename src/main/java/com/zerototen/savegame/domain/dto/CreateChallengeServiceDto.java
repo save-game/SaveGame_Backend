@@ -31,8 +31,7 @@ public class CreateChallengeServiceDto {
             .startDate(ConvertUtil.stringToLocalDate(request.getStartDate()))
             .endDate(ConvertUtil.stringToLocalDate(request.getEndDate()))
             .goalAmount(request.getGoalAmount())
-            .category(request.getCategory() == null ? null
-                : Category.valueOf(request.getCategory().toUpperCase(Locale.ROOT)))
+            .category(Category.valueOf(request.getCategory().toUpperCase(Locale.ROOT)))
             .maxPeople(request.getMaxPeople())
             .build();
     }

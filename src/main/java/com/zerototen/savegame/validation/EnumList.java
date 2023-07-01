@@ -30,4 +30,6 @@ public @interface EnumList {
 
     boolean ignoreCase() default false;
 
+    boolean allowAll() default false; // enum에 ALL 허용, null값 과는 다름
+
 }

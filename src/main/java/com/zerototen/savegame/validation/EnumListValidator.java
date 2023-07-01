@@ -32,10 +32,16 @@ public class EnumListValidator implements ConstraintValidator<EnumList, List<Str
 
     private boolean isEnumValue(String value) {
         Object[] enumValues = enumClass.getEnumConstants();
-        for (Object enumValue : enumValues) {
-            if (value.equals(enumValue.toString())
-                || (this.annotation.ignoreCase() && value.equalsIgnoreCase(enumValue.toString()))) {
-                return true;
+        if (enumValues != null) {
+            for (Object enumValue : enumValues) {
+                if (value.equals(enumValue.toString())
+                    || (this.annotation.ignoreCase() && value.equalsIgnoreCase(
+                    enumValue.toString()))) {
+                    if (enumValue.toString().equals("ALL")) {
+                        return this.annotation.allowAll(); // ALL 허용여부 (입력이 전체가 아니라 카테고리가 ALL)
+                    }
+                    return true;
+                }
             }
         }
         return false;

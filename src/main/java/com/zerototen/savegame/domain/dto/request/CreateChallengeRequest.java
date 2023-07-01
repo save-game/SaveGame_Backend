@@ -29,7 +29,7 @@ public class CreateChallengeRequest {
     @Max(10000000)
     private int goalAmount;
 
-    @Enum(enumClass = Category.class, ignoreCase = true, nullable = true)
+    @Enum(enumClass = Category.class, ignoreCase = true, allowAll = true)
     private String category;
 
     @Min(1)
