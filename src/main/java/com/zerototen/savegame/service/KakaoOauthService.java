@@ -167,13 +167,7 @@ public class KakaoOauthService {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(responseBody);
         Long id = jsonNode.get("id").asLong();
-        log.info("여기!!!!" + jsonNode.asText());
-        log.info("여기!!!!" + jsonNode);
-        log.info("여기!!!!" + jsonNode.get("properties"));
-        log.info("여기!!!!" + jsonNode.get("kakao_account").asText());
-        log.info("여기!!!!" + jsonNode.get("kakao_account"));
-        log.info("여기!!!!" + jsonNode.get("kakao_account").get("email").asText());
-        log.info("여기!!!!" + jsonNode.get("kakao_account").get("email"));
+        log.info("getkakaoMemberInfo: " + jsonNode);
         String nickname = jsonNode.get("properties").get("nickname").asText();
         String email = jsonNode.get("kakao_account").get("email").asText();
         String imgUrl = null;
