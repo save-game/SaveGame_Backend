@@ -15,10 +15,8 @@ import com.zerototen.savegame.domain.dto.request.UpdateProfileImageUrlRequest;
 import com.zerototen.savegame.domain.dto.response.MemberChallengeResponse;
 import com.zerototen.savegame.domain.dto.response.MemberResponse;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
-import com.zerototen.savegame.domain.entity.Challenge;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.type.Authority;
-import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.repository.ChallengeMemberRepository;
 import com.zerototen.savegame.repository.MemberRepository;
 import com.zerototen.savegame.security.TokenProvider;
@@ -35,6 +33,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
@@ -219,24 +221,28 @@ class MemberServiceTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         Member member = getMember();
         ResponseDto<?> validateCheckResponse = ResponseDto.success(member);
-        List<Challenge> challengeList = getChallengeList(member, 10);
+        Pageable pageable = PageRequest.of(0, 3);
+        Page<MemberChallengeResponse> responsePage = getMemberChallengePage(member, pageable);
 
         willReturn(validateCheckResponse)
             .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-        given(challengeMemberRepository.findChallengeListByMemberOrderByEndDate(member))
-            .willReturn(challengeList);
+        given(challengeMemberRepository.findChallengeListByMemberOrderByEndDate(member, pageable))
+            .willReturn(responsePage);
 
         // when
-        ResponseDto<?> responseDto = memberService.getMemberChallengeList(request);
-        List<MemberChallengeResponse> result = (List<MemberChallengeResponse>) responseDto.getData();
+        ResponseDto<?> responseDto = memberService.getMemberChallengeList(request, pageable);
+        Page<MemberChallengeResponse> response = (Page<MemberChallengeResponse>) responseDto.getData();
 
         // then
         assertTrue(responseDto.isSuccess());
-        for (int i = 0; i < result.size(); i++) {
-            assertEquals(i + 1, result.get(i).getChallengeId());
-            assertEquals("제목" + i, result.get(i).getTitle());
-            assertEquals(LocalDate.now().plusDays(i), result.get(i).getEndDate());
+        assertEquals(pageable.getPageNumber(), response.getPageable().getPageNumber());
+        int size = response.getPageable().getPageSize();
+        for (int i = 0; i < size; i++) {
+            assertEquals(i + 1, response.getContent().get(i).getChallengeId());
+            assertEquals("제목" + (i + 1), response.getContent().get(i).getTitle());
+            assertEquals(LocalDate.now().plusDays(i + 1),
+                response.getContent().get(i).getEndDate());
         }
 
     }
@@ -271,25 +277,20 @@ class MemberServiceTest {
             .build();
     }
 
-    private static List<Challenge> getChallengeList(Member member, int size) {
-        ArrayList<Challenge> challengeList = new ArrayList<>();
-        size = Math.min(size, 28);
-        for (int i = 0; i < size; i++) {
-            Challenge challenge = Challenge.builder()
-                .id((long) (i + 1))
-                .masterMemberId(member.getId())
-                .title("제목" + i)
-                .content("내용")
-                .category(Category.ALL)
-                .maxPeople(10)
-                .startDate(LocalDate.now().minusMonths(1))
-                .endDate(LocalDate.now().plusDays(i))
-                .build();
+    private static Page<MemberChallengeResponse> getMemberChallengePage(Member member,
+        Pageable pageable) {
 
-            challengeList.add(challenge);
+        List<MemberChallengeResponse> responseList = new ArrayList<>();
+
+        for (int i = 1; i <= pageable.getPageSize(); i++) {
+            responseList.add(MemberChallengeResponse.builder()
+                .challengeId((long) i)
+                .title("제목" + i)
+                .endDate(LocalDate.now().plusDays(i))
+                .build());
         }
 
-        return challengeList;
+        return new PageImpl<>(responseList, pageable, responseList.size());
     }
 
 }
