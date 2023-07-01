@@ -28,13 +28,10 @@ public class MemberService {
     private final TokenProvider tokenProvider;
 
     // 회원정보 조회
-    public ResponseDto<?> getDetail(HttpServletRequest request) {
-        ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
-        if (!responseDto.isSuccess()) {
-            return responseDto;
-        }
+    public ResponseDto<MemberResponse> getDetail(HttpServletRequest request) {
+        ResponseDto<Member> responseDto = tokenProvider.validateCheck(request);
 
-        Member member = (Member) responseDto.getData();
+        Member member = responseDto.getData();
 
         return ResponseDto.success(MemberResponse.from(member));
     }

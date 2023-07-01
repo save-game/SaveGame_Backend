@@ -109,11 +109,11 @@ public class KakaoOauthService {
 
         String redirectUrl;
         if (mode.equals("login")) {
-//            redirectUrl = "http://localhost:8080/api/auth/kakaologin";
+//            redirectUrl = "http://localhost:8080/auth/kakaologin";
             redirectUrl = "http://13.124.58.137/auth/kakaologin";  // 백엔드 서버
         }
         else {
-//            redirectUrl = "http://localhost:8080/api/auth/kakaologout";
+//            redirectUrl = "http://localhost:8080/auth/kakaologout";
             redirectUrl = "http://13.124.58.137/auth/kakaologout";  // 백엔드 서버
 
         }
@@ -167,6 +167,13 @@ public class KakaoOauthService {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(responseBody);
         Long id = jsonNode.get("id").asLong();
+        log.info("여기!!!!" + jsonNode.asText());
+        log.info("여기!!!!" + jsonNode);
+        log.info("여기!!!!" + jsonNode.get("properties"));
+        log.info("여기!!!!" + jsonNode.get("kakao_account").asText());
+        log.info("여기!!!!" + jsonNode.get("kakao_account"));
+        log.info("여기!!!!" + jsonNode.get("kakao_account").get("email").asText());
+        log.info("여기!!!!" + jsonNode.get("kakao_account").get("email"));
         String nickname = jsonNode.get("properties").get("nickname").asText();
         String email = jsonNode.get("kakao_account").get("email").asText();
         String imgUrl = null;

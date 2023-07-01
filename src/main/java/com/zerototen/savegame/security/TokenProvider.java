@@ -96,9 +96,9 @@ public class TokenProvider {
 
     public Member getMemberFromAuthentication() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || AnonymousAuthenticationToken.class.
-            isAssignableFrom(authentication.getClass())) {
-            return null;
+        if (authentication == null
+            || AnonymousAuthenticationToken.class.isAssignableFrom(authentication.getClass())) {
+            throw new CustomException(ErrorCode.NOT_FOUND_AUTHENTICATION);
         }
         return ((UserDetailsImpl) authentication.getPrincipal()).getMember();
     }
@@ -224,7 +224,7 @@ public class TokenProvider {
     }
 
     @Transactional
-    public ResponseDto<?> validateCheck(HttpServletRequest request) {
+    public ResponseDto<Member> validateCheck(HttpServletRequest request) {
         // RefreshToken 및 Authorization 유효성 검사
         if (null == request.getHeader("RefreshToken") || null == request.getHeader("Authorization")) {
             throw new CustomException(ErrorCode.BLANK_TOKEN_HEADER);
