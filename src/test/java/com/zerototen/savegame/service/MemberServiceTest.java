@@ -18,6 +18,7 @@ import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Challenge;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.type.Authority;
+import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.repository.ChallengeMemberRepository;
 import com.zerototen.savegame.repository.MemberRepository;
 import com.zerototen.savegame.security.TokenProvider;
@@ -279,7 +280,7 @@ class MemberServiceTest {
                 .masterMemberId(member.getId())
                 .title("제목" + i)
                 .content("내용")
-                .category(null)
+                .category(Category.ALL)
                 .maxPeople(10)
                 .startDate(LocalDate.now().minusMonths(1))
                 .endDate(LocalDate.now().plusDays(i))
