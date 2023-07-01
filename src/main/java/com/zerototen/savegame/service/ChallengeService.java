@@ -131,8 +131,7 @@ public class ChallengeService {
 
     public ResponseDto<?> getChallengeList(String keyword, String searchType, int minAmount,
         int maxAmount, String category, final Pageable pageable) {
-        SearchType enumSearchType =
-            searchType == null ? null : SearchType.valueOf(searchType.toUpperCase(Locale.ROOT));
+        SearchType enumSearchType = SearchType.valueOf(searchType.toUpperCase(Locale.ROOT));
         Category enumCategory =
             category == null ? null : Category.valueOf(category.toUpperCase(Locale.ROOT));
 

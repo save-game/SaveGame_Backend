@@ -14,6 +14,7 @@ import javax.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@Validated
 @RequestMapping("/challenges")
 public class ChallengeController {
 
@@ -56,14 +58,15 @@ public class ChallengeController {
     // 챌린지 검색
     // 로그인 안해도 가능
     @GetMapping("/search")
-    public ResponseDto<?> getChallengeList(@RequestParam(required = false) String keyword,
-        @RequestParam(required = false) @Enum(enumClass = SearchType.class, ignoreCase = true,
-            allowAll = true, nullable = true) String searchType,
-        @RequestParam(required = false, defaultValue = "0") @Min(0) int minAmount,
-        @RequestParam(required = false, defaultValue = "10000000") @Max(10000000) int maxAmount,
+    public ResponseDto<?> getChallengeList(
+        @RequestParam(required = false, defaultValue = "") String keyword,
+        @RequestParam(required = false, defaultValue = "ALL") @Valid @Enum(enumClass = SearchType.class,
+            ignoreCase = true, allowAll = true) String searchType,
+        @RequestParam(required = false, defaultValue = "0") @Valid @Min(0) int minAmount,
+        @RequestParam(required = false, defaultValue = "10000000") @Valid @Max(10000000) int maxAmount,
         @RequestParam(required = false) @Enum(enumClass = Category.class, ignoreCase = true,
             allowAll = true, nullable = true) String category,
-        @RequestParam int page) {
+        @RequestParam @Valid @Min(0) int page) {
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         return challengeService.getChallengeList(keyword, searchType, minAmount, maxAmount,
             category, pageable);
