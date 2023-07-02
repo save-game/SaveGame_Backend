@@ -110,12 +110,12 @@ public class KakaoOauthService {
         String redirectUrl;
         if (mode.equals("login")) {
 //            redirectUrl = "http://localhost:8080/auth/kakaologin";
-            redirectUrl = "http://13.124.58.137/auth/kakaologin";  // 백엔드 서버
+//            redirectUrl = "http://13.124.58.137/auth/kakaologin";  // 백엔드 서버
+            redirectUrl = "http://localhost:5173";  // 백엔드 서버
         }
         else {
 //            redirectUrl = "http://localhost:8080/auth/kakaologout";
             redirectUrl = "http://13.124.58.137/auth/kakaologout";  // 백엔드 서버
-
         }
 
         // HTTP Header 생성
