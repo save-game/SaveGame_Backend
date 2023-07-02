@@ -62,7 +62,7 @@ public class KakaoOauthService {
         Member member = registerKakaoUserIfNeeded(kakaoMemberInfo);
 
         // 4. 강제 로그인 처리
-        forceLogin(member, response);
+        forceLogin(member, accessToken, response);
 
         return ResponseDto.success(OauthLoginResponseDto.builder()
             .email(member.getEmail())
@@ -219,10 +219,10 @@ public class KakaoOauthService {
         return memberRepository.save(member);
     }
 
-    private void forceLogin(Member kakaoUser, HttpServletResponse response) {
+    private void forceLogin(Member kakaoUser, String accessToken, HttpServletResponse response) {
         // response header에 token 추가
         TokenDto token = tokenProvider.generateTokenDto(kakaoUser);
-        response.addHeader("Authorization", "Bearer " + token.getAccessToken());
+        response.addHeader("Authorization", accessToken);
         response.addHeader("RefreshToken", token.getRefreshToken());
 
         UserDetails userDetails = new UserDetailsImpl(kakaoUser);
