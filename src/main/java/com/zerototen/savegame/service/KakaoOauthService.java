@@ -75,11 +75,22 @@ public class KakaoOauthService {
 
     // 카카오 로그인 연동 해제
     @Transactional
-    public ResponseDto<?> kakaoLogout(String code) throws JsonProcessingException {
+    public ResponseDto<?> kakaoLogout(String code, HttpServletRequest request) throws JsonProcessingException {
         // 1. 받은 code와 state로 accesstoken 받기
         String accessToken = getAccessToken(code, "logout");
         // 2. 로그인연동 해제
-        return ResponseDto.success(doLogout(accessToken));
+        doLogout(accessToken);
+
+        // 3. 액세스 토큰 블랙리스트 등록 및 리프레시 토큰 삭제
+        ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
+        if (!responseDto.isSuccess()) {
+            return responseDto;
+        }
+        Member member = (Member) responseDto.getData();
+        tokenProvider.deleteRefreshToken(member);
+        tokenProvider.saveBlacklistToken(request);
+
+        return ResponseDto.success("Kakao Logout Sucess");
     }
 
     // 연동 해제 요청 실행
@@ -187,9 +198,10 @@ public class KakaoOauthService {
         Member member = memberRepository.findByEmail(kakaoMemberInfo.getEmail())
             .orElse(null);
 
-        // 해당 이메일로 가입한 정보가 있는 경우 예외 발생
+        // 해당 이메일로 가입한 정보가 있는 해당 멤버 반환
         if (member != null) {
-            throw new CustomException(ErrorCode.ALREADY_REGISTERED_EMAIL);
+//            throw new CustomException(ErrorCode.ALREADY_REGISTERED_EMAIL);
+            return member;
         }
 
         // 해당 이메일로 가입한 정보가 없는 경우 회원등록
