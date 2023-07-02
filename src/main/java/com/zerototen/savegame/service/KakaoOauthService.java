@@ -62,7 +62,7 @@ public class KakaoOauthService {
         Member member = registerKakaoUserIfNeeded(kakaoMemberInfo);
 
         // 4. 강제 로그인 처리
-        forceLogin(member, accessToken, response);
+        forceLogin(member, response);
 
         return ResponseDto.success(OauthLoginResponseDto.builder()
             .email(member.getEmail())
@@ -73,11 +73,10 @@ public class KakaoOauthService {
 
     // 카카오 로그인 연동 해제
     @Transactional
-    public ResponseDto<?> kakaoLogout(HttpServletRequest request) throws JsonProcessingException {
+    public ResponseDto<?> kakaoLogout(String code, HttpServletRequest request) throws JsonProcessingException {
         ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
         // 1. 받은 code와 state로 accesstoken 받기
-//        String accessToken = getAccessToken(code, "logout");
-        String accessToken = request.getHeader("Authorization");
+        String accessToken = getAccessToken(code, "logout");
         // 2. 로그인연동 해제
         doLogout(accessToken);
 
@@ -137,7 +136,7 @@ public class KakaoOauthService {
         body.add("redirect_uri", redirectUrl);
         body.add("code", code);
 
-        // HTTP 요청 보내기
+        // HTTP 요청 보내기(access token 획득)
         HttpEntity<MultiValueMap<String, String>> kakaoTokenRequest =
             new HttpEntity<>(body, headers);
         RestTemplate rt = new RestTemplate();
@@ -217,10 +216,10 @@ public class KakaoOauthService {
         return memberRepository.save(member);
     }
 
-    private void forceLogin(Member kakaoUser, String accessToken, HttpServletResponse response) {
+    private void forceLogin(Member kakaoUser, HttpServletResponse response) {
         // response header에 token 추가
         TokenDto token = tokenProvider.generateTokenDto(kakaoUser);
-        response.addHeader("Authorization", accessToken);
+        response.addHeader("Authorization", "Bearer " + token.getAccessToken());
         response.addHeader("RefreshToken", token.getRefreshToken());
 
         UserDetails userDetails = new UserDetailsImpl(kakaoUser);
