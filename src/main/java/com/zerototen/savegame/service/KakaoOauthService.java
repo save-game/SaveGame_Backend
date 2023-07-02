@@ -11,8 +11,6 @@ import com.zerototen.savegame.domain.dto.kakao.OauthLoginResponseDto;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.type.Authority;
-import com.zerototen.savegame.exception.CustomException;
-import com.zerototen.savegame.exception.ErrorCode;
 import com.zerototen.savegame.repository.MemberRepository;
 import com.zerototen.savegame.security.TokenProvider;
 import javax.servlet.http.HttpServletRequest;
@@ -94,7 +92,7 @@ public class KakaoOauthService {
     }
 
     // 연동 해제 요청 실행
-    private String doLogout(String accessToken) throws JsonProcessingException {
+    private void doLogout(String accessToken) throws JsonProcessingException {
         HttpHeaders logoutHeaders = new HttpHeaders();
         logoutHeaders.add("Content-type", "application/x-www-form-urlencoded");
         logoutHeaders.add("Authorization", "Bearer " + accessToken);
@@ -110,10 +108,10 @@ public class KakaoOauthService {
             logoutRequest,
             String.class
         );
-        String responseBody = logoutResponse.getBody();
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = objectMapper.readTree(responseBody);
-        return jsonNode.get("id").asText();
+//        String responseBody = logoutResponse.getBody();
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        JsonNode jsonNode = objectMapper.readTree(responseBody);
+//        return jsonNode.get("id").asText();
     }
 
     private String getAccessToken(String code, String mode) throws JsonProcessingException {
@@ -122,11 +120,12 @@ public class KakaoOauthService {
         if (mode.equals("login")) {
 //            redirectUrl = "http://localhost:8080/auth/kakaologin";
 //            redirectUrl = "http://13.124.58.137/auth/kakaologin";  // 백엔드 서버
-            redirectUrl = "http://localhost:5173";  // 백엔드 서버
+            redirectUrl = "http://localhost:5173";  // 프론트 서버
         }
         else {
 //            redirectUrl = "http://localhost:8080/auth/kakaologout";
-            redirectUrl = "http://13.124.58.137/auth/kakaologout";  // 백엔드 서버
+//            redirectUrl = "http://13.124.58.137/auth/kakaologout";  // 백엔드 서버
+            redirectUrl = "http://localhost:5173";  // 프론트 서버
         }
 
         // HTTP Header 생성
