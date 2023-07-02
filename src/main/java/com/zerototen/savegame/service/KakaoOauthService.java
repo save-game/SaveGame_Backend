@@ -73,17 +73,15 @@ public class KakaoOauthService {
 
     // 카카오 로그인 연동 해제
     @Transactional
-    public ResponseDto<?> kakaoLogout(String code, HttpServletRequest request) throws JsonProcessingException {
+    public ResponseDto<?> kakaoLogout(HttpServletRequest request) throws JsonProcessingException {
+        ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
         // 1. 받은 code와 state로 accesstoken 받기
-        String accessToken = getAccessToken(code, "logout");
+//        String accessToken = getAccessToken(code, "logout");
+        String accessToken = request.getHeader("Authorization");
         // 2. 로그인연동 해제
         doLogout(accessToken);
 
         // 3. 액세스 토큰 블랙리스트 등록 및 리프레시 토큰 삭제
-        ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
-        if (!responseDto.isSuccess()) {
-            return responseDto;
-        }
         Member member = (Member) responseDto.getData();
         tokenProvider.deleteRefreshToken(member);
         tokenProvider.saveBlacklistToken(request);
