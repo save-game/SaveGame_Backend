@@ -32,7 +32,7 @@ public class ChallengeController {
 
     private final ChallengeService challengeService;
 
-    private static final int PAGE_SIZE = 3; // 페이지 사이즈
+    private static final int PAGE_SIZE = 5; // 페이지 사이즈
 
     // 챌린지 생성
     @PostMapping
@@ -59,17 +59,24 @@ public class ChallengeController {
     // 로그인 안해도 가능
     @GetMapping("/search")
     public ResponseDto<?> getChallengeList(
-        @RequestParam(required = false, defaultValue = "") String keyword,
-        @RequestParam(required = false, defaultValue = "ALL") @Valid @Enum(enumClass = SearchType.class,
+        @RequestParam(defaultValue = "") String keyword,
+        @RequestParam(defaultValue = "ALL") @Valid @Enum(enumClass = SearchType.class,
             ignoreCase = true, allowAll = true) String searchType,
-        @RequestParam(required = false, defaultValue = "0") @Valid @Min(0) int minAmount,
-        @RequestParam(required = false, defaultValue = "10000000") @Valid @Max(10000000) int maxAmount,
+        @RequestParam(defaultValue = "0") @Valid @Min(0) int minAmount,
+        @RequestParam(defaultValue = "10000000") @Valid @Max(10000000) int maxAmount,
         @RequestParam(required = false) @Enum(enumClass = Category.class, ignoreCase = true,
             allowAll = true, nullable = true) String category,
-        @RequestParam @Valid @Min(0) int page) {
+        @RequestParam(defaultValue = "0") @Valid @Min(0) int page) {
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         return challengeService.getChallengeList(keyword, searchType, minAmount, maxAmount,
             category, pageable);
+    }
+
+    // 챌린지 단건 조회
+    // 로그인 안해도 가능
+    @GetMapping("/{challengeId}")
+    public ResponseDto<?> getChallengeStatus(@PathVariable Long challengeId) {
+        return challengeService.getChallengeStatus(challengeId);
     }
 
 }

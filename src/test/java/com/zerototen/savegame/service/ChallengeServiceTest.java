@@ -15,15 +15,22 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 
 import com.zerototen.savegame.domain.dto.CreateChallengeServiceDto;
+import com.zerototen.savegame.domain.dto.response.ChallengeMemberResponse;
+import com.zerototen.savegame.domain.dto.response.ChallengeMemberResultResponse;
+import com.zerototen.savegame.domain.dto.response.ChallengeRecordResponse;
 import com.zerototen.savegame.domain.dto.response.ChallengeSearchResponse;
+import com.zerototen.savegame.domain.dto.response.ChallengeStatusResponse;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Challenge;
 import com.zerototen.savegame.domain.entity.ChallengeMember;
+import com.zerototen.savegame.domain.entity.ChallengeMemberResult;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.type.Category;
 import com.zerototen.savegame.domain.type.SearchType;
 import com.zerototen.savegame.repository.ChallengeMemberRepository;
+import com.zerototen.savegame.repository.ChallengeMemberResultRepository;
 import com.zerototen.savegame.repository.ChallengeRepository;
+import com.zerototen.savegame.repository.RecordRepository;
 import com.zerototen.savegame.security.TokenProvider;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -51,6 +58,12 @@ class ChallengeServiceTest {
 
     @Mock
     private ChallengeMemberRepository challengeMemberRepository;
+
+    @Mock
+    private ChallengeMemberResultRepository challengeMemberResultRepository;
+
+    @Mock
+    private RecordRepository recordRepository;
 
     @Mock
     private TokenProvider tokenProvider;
@@ -100,7 +113,7 @@ class ChallengeServiceTest {
 
     @Nested
     @DisplayName("챌린지 참가")
-    class testJoinChallenge {
+    class TestJoinChallenge {
 
         @Test
         @DisplayName("성공")
@@ -206,7 +219,7 @@ class ChallengeServiceTest {
 
     @Nested
     @DisplayName("챌린지 나가기")
-    class testExitChallenge {
+    class TestExitChallenge {
 
         @Test
         @DisplayName("성공")
@@ -275,7 +288,7 @@ class ChallengeServiceTest {
 
     @Nested
     @DisplayName("챌린지 검색 - 성공")
-    class testChallengeSearchSuccess {
+    class TestChallengeSearchSuccess {
 
         @Test
         @DisplayName("빈 Keyword")
@@ -379,6 +392,174 @@ class ChallengeServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("챌린지 단건 조회")
+    class TestGetChallengeStatus {
+
+        @Nested
+        @DisplayName("성공")
+        class Success {
+
+            @Test
+            @DisplayName("진행 중인 챌린지")
+            void onGoingChallenge() {
+                //given
+                Challenge challenge = getChallenge(Category.ALL, 1L);
+                challenge.setStartDate(LocalDate.now().minusMonths(1));
+                List<ChallengeMember> challengeMemberList = getChallengeMemberList(challenge, 2);
+                List<ChallengeRecordResponse> challengeRecordResponseList1 = getChallengeRecordResponseList(
+                    3);
+                List<ChallengeRecordResponse> challengeRecordResponseList2 = getChallengeRecordResponseList(
+                    3);
+                challengeRecordResponseList2.add(
+                    getChallengeRecordResponse(LocalDate.now(), 10000000));
+
+                given(challengeRepository.findById(anyLong()))
+                    .willReturn(Optional.of(challenge));
+
+                given(challengeMemberRepository.findAllByChallenge(any(Challenge.class)))
+                    .willReturn(challengeMemberList);
+
+                given(recordRepository.findTotalAndUseDateByMemberAndChallengeGroupByUseDate(any(
+                    Member.class), any(Challenge.class)))
+                    .willAnswer(invocation -> { // 멤버 별로 다른 결과 return
+                        Member member = invocation.getArgument(0);
+                        if (member.equals(challengeMemberList.get(0).getMember())) {
+                            return challengeRecordResponseList1;
+                        } else if (member.equals(challengeMemberList.get(1).getMember())) {
+                            return challengeRecordResponseList2;
+                        }
+                        return null;
+                    });
+
+                //when
+                ResponseDto<?> responseDto = challengeService.getChallengeStatus(1L);
+                ChallengeStatusResponse result = (ChallengeStatusResponse) responseDto.getData();
+
+                //then
+                assertTrue(responseDto.isSuccess());
+                assertEquals(challenge.getTitle(), result.getTitle());
+                assertEquals(challenge.getContent(), result.getContent());
+                assertEquals(1, result.getChallengeStatus());
+                assertEquals(challenge.getStartDate(), result.getStartDate());
+                assertEquals(challenge.getEndDate(), result.getEndDate());
+                assertEquals(challenge.getGoalAmount(), result.getGoalAmount());
+                assertEquals(challenge.getCategory(), result.getCategory());
+                List<ChallengeMemberResponse> cmList =
+                    (List<ChallengeMemberResponse>) result.getChallengeMemberList();
+                assertEquals(challengeMemberList.get(0).getMember().getId(),
+                    cmList.get(0).getMemberId());
+                assertEquals(challengeMemberList.get(0).getMember().getNickname(),
+                    cmList.get(0).getNickname());
+                assertEquals(1, cmList.get(0).getStatus());
+                assertEquals(challengeRecordResponseList1, cmList.get(0).getRecordList());
+                assertEquals(challengeMemberList.get(1).getMember().getId(),
+                    cmList.get(1).getMemberId());
+                assertEquals(challengeMemberList.get(1).getMember().getNickname(),
+                    cmList.get(1).getNickname());
+                assertEquals(0, cmList.get(1).getStatus());
+                assertEquals(challengeRecordResponseList2, cmList.get(1).getRecordList());
+            }
+
+            @Test
+            @DisplayName("종료된 챌린지")
+            void finishedChallenge() {
+                //given
+                Challenge challenge = getChallenge(Category.ALL, 1L);
+                challenge.setStartDate(LocalDate.now().minusMonths(1));
+                challenge.setEndDate(LocalDate.now().minusDays(1));
+                List<ChallengeMember> challengeMemberList = getChallengeMemberList(challenge, 2);
+                ChallengeMemberResult challengeMemberResult1 = getChallengeMemberResult(1L,
+                    challenge, challengeMemberList.get(0));
+                ChallengeMemberResult challengeMemberResult2 = getChallengeMemberResult(2L,
+                    challenge, challengeMemberList.get(1));
+                challengeMemberResult2.setTotalAmount(1000000);
+                List<ChallengeMemberResult> challengeMemberResultList = new ArrayList<>();
+                challengeMemberResultList.add(challengeMemberResult1);
+                challengeMemberResultList.add(challengeMemberResult2);
+
+                given(challengeRepository.findById(anyLong()))
+                    .willReturn(Optional.of(challenge));
+
+                given(challengeMemberRepository.findAllByChallenge(any(Challenge.class)))
+                    .willReturn(challengeMemberList);
+
+                given(challengeMemberResultRepository.findAllByChallengeOrderByTotalAmountAsc(
+                    challenge))
+                    .willReturn(challengeMemberResultList);
+
+                //when
+                ResponseDto<?> responseDto = challengeService.getChallengeStatus(1L);
+                ChallengeStatusResponse result = (ChallengeStatusResponse) responseDto.getData();
+
+                //then
+                assertTrue(responseDto.isSuccess());
+                assertEquals(challenge.getTitle(), result.getTitle());
+                assertEquals(challenge.getContent(), result.getContent());
+                assertEquals(0, result.getChallengeStatus());
+                assertEquals(challenge.getStartDate(), result.getStartDate());
+                assertEquals(challenge.getEndDate(), result.getEndDate());
+                assertEquals(challenge.getGoalAmount(), result.getGoalAmount());
+                assertEquals(challenge.getCategory(), result.getCategory());
+                List<ChallengeMemberResultResponse> cmList =
+                    (List<ChallengeMemberResultResponse>) result.getChallengeMemberList();
+                assertEquals(challengeMemberList.get(0).getMember().getId(),
+                    cmList.get(0).getMemberId());
+                assertEquals(challengeMemberList.get(0).getMember().getNickname(),
+                    cmList.get(0).getNickname());
+                assertEquals(1, cmList.get(0).getStatus());
+                assertEquals(challengeMemberResult1.getTotalAmount(),
+                    cmList.get(0).getTotalAmount());
+                assertEquals(challengeMemberList.get(1).getMember().getId(),
+                    cmList.get(1).getMemberId());
+                assertEquals(challengeMemberList.get(1).getMember().getNickname(),
+                    cmList.get(1).getNickname());
+                assertEquals(0, cmList.get(1).getStatus());
+                assertEquals(challengeMemberResult2.getTotalAmount(),
+                    cmList.get(1).getTotalAmount());
+            }
+        }
+
+        @Nested
+        @DisplayName("실패")
+        class Fail {
+
+            @Test
+            @DisplayName("존재하지 않는 챌린지")
+            void notFoundChallenge() {
+                //given
+                given(challengeRepository.findById(anyLong()))
+                    .willReturn(Optional.empty());
+
+                //when
+                ResponseDto<?> responseDto = challengeService.getChallengeStatus(1L);
+
+                //then
+                assertFalse(responseDto.isSuccess());
+                assertEquals("챌린지가 존재하지 않습니다.", responseDto.getData());
+            }
+
+            @Test
+            @DisplayName("완료되지 않은 챌린지 종료 작업")
+            void notCreatedChallengeResult() {
+                //given
+                Challenge challenge = getChallenge(Category.ALL, 1L);
+                challenge.setStartDate(LocalDate.now().minusMonths(1));
+                challenge.setEndDate(LocalDate.now().minusDays(1));
+
+                given(challengeRepository.findById(anyLong()))
+                    .willReturn(Optional.of(challenge));
+
+                //when
+                ResponseDto<?> responseDto = challengeService.getChallengeStatus(1L);
+
+                //then
+                assertFalse(responseDto.isSuccess());
+                assertEquals("챌린지 종료 작업이 완료되지 않았습니다.", responseDto.getData());
+            }
+        }
+    }
+
     private static Member getMember() {
         return Member.builder()
             .id(2L)
@@ -396,6 +577,21 @@ class ChallengeServiceTest {
             .challenge(challenge)
             .ongoingYn(true)
             .build();
+    }
+
+    private static List<ChallengeMember> getChallengeMemberList(Challenge challenge, int size) {
+        size = Math.min(Math.max(1, size), 10);
+
+        List<ChallengeMember> challengeMemberList = new ArrayList<>();
+
+        for (int i = 1; i <= size; i++) {
+            Member member = getMember();
+            member.setId((long) i);
+            ChallengeMember challengeMember = getChallengeMember(member, challenge);
+            challengeMemberList.add(challengeMember);
+        }
+
+        return challengeMemberList;
     }
 
     private static Challenge getChallenge(Category category, Long masterMemberId) {
@@ -448,6 +644,39 @@ class ChallengeServiceTest {
         }
 
         return new PageImpl<>(searchResultList, pageable, searchResultList.size());
+    }
+
+    private static List<ChallengeRecordResponse> getChallengeRecordResponseList(int size) {
+        List<ChallengeRecordResponse> challengeRecordResponseList = new ArrayList<>();
+
+        size = Math.max(Math.min(28, size), 1);
+
+        for (int i = 0; i < size; i++) {
+            ChallengeRecordResponse challengeRecordResponse = ChallengeRecordResponse.builder()
+                .date(LocalDate.now().minusMonths(1).plusDays(i))
+                .amount(1000)
+                .build();
+            challengeRecordResponseList.add(challengeRecordResponse);
+        }
+
+        return challengeRecordResponseList;
+    }
+
+    private static ChallengeRecordResponse getChallengeRecordResponse(LocalDate date, int amount) {
+        return ChallengeRecordResponse.builder()
+            .date(date)
+            .amount(amount)
+            .build();
+    }
+
+    private static ChallengeMemberResult getChallengeMemberResult(Long id, Challenge challenge,
+        ChallengeMember challengeMember) {
+        return ChallengeMemberResult.builder()
+            .id(id)
+            .challenge(challenge)
+            .challengeMember(challengeMember)
+            .totalAmount(10000)
+            .build();
     }
 
 }
