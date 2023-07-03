@@ -122,7 +122,7 @@ public class KakaoOauthService {
         else {
 //            redirectUrl = "http://localhost:8080/auth/kakaologout";
 //            redirectUrl = "http://13.124.58.137/auth/kakaologout";  // 백엔드 서버
-            redirectUrl = "http://localhost:5173";  // 프론트 서버
+            redirectUrl = "http://localhost:5173/mypage";  // 프론트 서버
         }
 
         // HTTP Header 생성
