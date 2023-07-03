@@ -7,21 +7,29 @@ import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.service.MemberService;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RequiredArgsConstructor
 @RestController
+@Validated
 @RequestMapping("/members")
 public class MemberController {
 
     private final MemberService memberService;
+
+    private static final int PAGE_SIZE = 3; // 페이지 사이즈
 
     // 회원정보 조회
     @GetMapping("/detail")
@@ -52,8 +60,10 @@ public class MemberController {
 
     // 멤버 챌린지 조회
     @GetMapping("/challenges")
-    public ResponseDto<?> getMemberChallengeList(HttpServletRequest request) {
-        return memberService.getMemberChallengeList(request);
+    public ResponseDto<?> getMemberChallengeList(HttpServletRequest request,
+        @RequestParam @Valid @Min(0) int page) {
+        Pageable pageable = PageRequest.of(page, PAGE_SIZE);
+        return memberService.getMemberChallengeList(request, pageable);
     }
 
 }

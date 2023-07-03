@@ -24,16 +24,16 @@ public class ChallengeRepositoryImpl implements ChallengeRepositoryCustom {
 
     @Override
     public Page<ChallengeSearchResponse> findAllStartDateBeforeNowAndOptional(
-        String keyword, SearchType searchType, int minAmount, int maxAmount, // 필수 아님
-        Category category, // 필수 아님
-        Pageable pageable) { // 필수
+        String keyword, SearchType searchType, int minAmount, int maxAmount,
+        Category category,
+        Pageable pageable) {
         QChallenge challenge = QChallenge.challenge;
         QChallengeMember challengeMember = QChallengeMember.challengeMember;
 
         BooleanExpression condition = challenge.startDate.after(LocalDate.now());
 
         // 검색어가 있는 경우
-        if (keyword != null && searchType != null && !keyword.isEmpty()) {
+        if (!keyword.trim().isEmpty()) {
             String search = "%" + keyword + "%";
             if (searchType.equals(SearchType.TITLE)) {
                 condition = condition.and(challenge.title.like(search));

@@ -3,17 +3,16 @@ package com.zerototen.savegame.service;
 import com.zerototen.savegame.domain.dto.request.UpdateNicknameRequest;
 import com.zerototen.savegame.domain.dto.request.UpdatePasswordRequest;
 import com.zerototen.savegame.domain.dto.request.UpdateProfileImageUrlRequest;
-import com.zerototen.savegame.domain.dto.response.MemberChallengeResponse;
 import com.zerototen.savegame.domain.dto.response.MemberResponse;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.repository.ChallengeMemberRepository;
 import com.zerototen.savegame.repository.MemberRepository;
 import com.zerototen.savegame.security.TokenProvider;
-import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -97,7 +96,8 @@ public class MemberService {
     }
 
     // 멤버 챌린지 조회
-    public ResponseDto<?> getMemberChallengeList(HttpServletRequest request) {
+    public ResponseDto<?> getMemberChallengeList(HttpServletRequest request,
+        final Pageable pageable) {
         ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
         if (!responseDto.isSuccess()) {
             return responseDto;
@@ -106,9 +106,7 @@ public class MemberService {
         Member member = (Member) responseDto.getData();
 
         return ResponseDto.success(
-            challengeMemberRepository.findChallengeListByMemberOrderByEndDate(member).stream()
-                .map(MemberChallengeResponse::from).collect(
-                    Collectors.toList()));
+            challengeMemberRepository.findChallengeListByMemberOrderByEndDate(member, pageable));
     }
 
 }

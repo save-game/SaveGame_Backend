@@ -1,11 +1,13 @@
 package com.zerototen.savegame.repository;
 
-import com.zerototen.savegame.domain.entity.Challenge;
+import com.zerototen.savegame.domain.dto.response.MemberChallengeResponse;
 import com.zerototen.savegame.domain.entity.Member;
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface ChallengeMemberRepositoryCustom {
 
-    List<Challenge> findChallengeListByMemberOrderByEndDate(Member member);
+    Page<MemberChallengeResponse> findChallengeListByMemberOrderByEndDate(Member member,
+        Pageable pageable);
 
 }

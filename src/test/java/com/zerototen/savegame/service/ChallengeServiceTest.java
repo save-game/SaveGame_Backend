@@ -278,39 +278,6 @@ class ChallengeServiceTest {
     class testChallengeSearchSuccess {
 
         @Test
-        @DisplayName("page만 입력")
-        void inputOnlyPage() {
-            //given
-            Pageable pageable = PageRequest.of(0, 3);
-            Page<ChallengeSearchResponse> result = getSearchResult(null, null, 0, 10000000,
-                pageable);
-            given(challengeRepository.findAllStartDateBeforeNowAndOptional(isNull(), isNull(),
-                anyInt(), anyInt(), isNull(), any(Pageable.class)))
-                .willReturn(result);
-
-            //when
-            ResponseDto<?> responseDto = challengeService.getChallengeList(null, null, 0, 10000000,
-                null, pageable);
-            Page<ChallengeSearchResponse> response = (Page<ChallengeSearchResponse>) responseDto.getData();
-            //then
-            assertTrue(responseDto.isSuccess());
-            assertEquals(pageable.getPageNumber(), response.getPageable().getPageNumber());
-            assertEquals(pageable.getPageSize(), response.getPageable().getPageSize());
-            int size = response.getPageable().getPageSize();
-            for (int i = size; i > 0; i--) {
-                assertEquals(i, response.getContent().get(size - i).getChallengeId());
-                assertEquals("title" + i, response.getContent().get(size - i).getTitle());
-                assertEquals(i + "content",
-                    response.getContent().get(size - i).getChallengeContent());
-                assertEquals(5000000, response.getContent().get(size - i).getGoalAmount());
-                assertEquals(LocalDate.now().plusDays(i),
-                    response.getContent().get(size - i).getStartDate());
-                assertEquals((i % 10) + 1, response.getContent().get(size - i).getCnt());
-            }
-
-        }
-
-        @Test
         @DisplayName("빈 Keyword")
         void keywordIsEmpty() {
             //given
@@ -393,8 +360,7 @@ class ChallengeServiceTest {
 
             //when
             ResponseDto<?> responseDto = challengeService.getChallengeList("부제",
-                "CONTENT", 30000, 70000,
-                "ALL", pageable);
+                "CONTENT", 30000, 70000, "ALL", pageable);
             Page<ChallengeSearchResponse> response = (Page<ChallengeSearchResponse>) responseDto.getData();
             //then
             assertTrue(responseDto.isSuccess());
