@@ -6,9 +6,11 @@ import com.zerototen.savegame.domain.dto.request.UpdateProfileImageUrlRequest;
 import com.zerototen.savegame.domain.dto.response.MemberResponse;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Member;
+import com.zerototen.savegame.domain.type.ChallengeStatus;
 import com.zerototen.savegame.repository.ChallengeMemberRepository;
 import com.zerototen.savegame.repository.MemberRepository;
 import com.zerototen.savegame.security.TokenProvider;
+import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -96,7 +98,7 @@ public class MemberService {
     }
 
     // 멤버 챌린지 조회
-    public ResponseDto<?> getMemberChallengeList(HttpServletRequest request,
+    public ResponseDto<?> getMemberChallengeList(HttpServletRequest request, String status,
         final Pageable pageable) {
         ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
         if (!responseDto.isSuccess()) {
@@ -105,8 +107,11 @@ public class MemberService {
 
         Member member = (Member) responseDto.getData();
 
+        ChallengeStatus challengeStatus = ChallengeStatus.valueOf(status.toUpperCase(Locale.ROOT));
+
         return ResponseDto.success(
-            challengeMemberRepository.findChallengeListByMemberOrderByEndDate(member, pageable));
+            challengeMemberRepository.findChallengeListByMemberOrderByEndDate(member,
+                challengeStatus, pageable));
     }
 
 }
