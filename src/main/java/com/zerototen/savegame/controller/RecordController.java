@@ -35,28 +35,29 @@ public class RecordController {
     private final RecordService recordService;
 
     @PostMapping
-    public ResponseDto<?> createRecord(
+    public ResponseDto<?> create(
         HttpServletRequest request, @RequestBody @Valid CreateRecordRequest createRecordRequest) {
         return recordService.create(request, CreateRecordServiceDto.from(createRecordRequest));
     }
 
     @GetMapping
-    public ResponseDto<?> getInfos(
-        HttpServletRequest request, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate,
+    public ResponseDto<?> getRecordList(
+        HttpServletRequest request, @RequestParam LocalDate startDate,
+        @RequestParam LocalDate endDate,
         @RequestParam(required = false) @Validated @EnumList(enumClass = Category.class, ignoreCase = true)
         List<String> categories) {
-        return recordService.getInfos(request, startDate, endDate, categories);
+        return recordService.getRecordList(request, startDate, endDate, categories);
     }
 
     @GetMapping("/analysis")
-    public ResponseDto<?> getAnalysisInfo(
+    public ResponseDto<?> getRecordAnalysis(
         HttpServletRequest request, @RequestParam int year,
         @RequestParam @Valid @Min(1) @Max(12) int month) {
-        return recordService.getAnalysisInfo(request, year, month);
+        return recordService.getRecordAnalysis(request, year, month);
     }
 
     @PutMapping("/{recordId}")
-    public ResponseDto<?> updateRecord(
+    public ResponseDto<?> update(
         HttpServletRequest request, @PathVariable Long recordId,
         @RequestBody @Valid UpdateRecordRequest updateRecordRequest) {
         return recordService.update(request,
@@ -64,7 +65,7 @@ public class RecordController {
     }
 
     @DeleteMapping("/{recordId}")
-    public ResponseDto<?> deleteRecord(HttpServletRequest request, @PathVariable Long recordId) {
+    public ResponseDto<?> delete(HttpServletRequest request, @PathVariable Long recordId) {
         return recordService.delete(request, recordId);
     }
 

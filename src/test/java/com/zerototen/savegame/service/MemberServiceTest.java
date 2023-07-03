@@ -17,6 +17,7 @@ import com.zerototen.savegame.domain.dto.response.MemberResponse;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.type.Authority;
+import com.zerototen.savegame.domain.type.ChallengeStatus;
 import com.zerototen.savegame.repository.ChallengeMemberRepository;
 import com.zerototen.savegame.repository.MemberRepository;
 import com.zerototen.savegame.security.TokenProvider;
@@ -227,11 +228,13 @@ class MemberServiceTest {
         willReturn(validateCheckResponse)
             .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
-        given(challengeMemberRepository.findChallengeListByMemberOrderByEndDate(member, pageable))
+        given(challengeMemberRepository.findChallengeListByMemberOrderByEndDate(any(Member.class),
+            any(ChallengeStatus.class), any(Pageable.class)))
             .willReturn(responsePage);
 
         // when
-        ResponseDto<?> responseDto = memberService.getMemberChallengeList(request, pageable);
+        ResponseDto<?> responseDto = memberService.getMemberChallengeList(request, "ONGOING",
+            pageable);
         Page<MemberChallengeResponse> response = (Page<MemberChallengeResponse>) responseDto.getData();
 
         // then

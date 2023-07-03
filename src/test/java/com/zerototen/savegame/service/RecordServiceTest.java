@@ -108,7 +108,7 @@ class RecordServiceTest {
                     .willReturn(records);
 
                 //when
-                ResponseDto<?> responseDto = recordService.getInfos(request,
+                ResponseDto<?> responseDto = recordService.getRecordList(request,
                     LocalDate.of(2023, 6, 1), LocalDate.of(2023, 6, 30), null);
                 List<RecordResponse> recordResponses = (List<RecordResponse>) responseDto.getData();
 
@@ -151,7 +151,7 @@ class RecordServiceTest {
                     .willReturn(records);
 
                 //when
-                ResponseDto<?> responseDto = recordService.getInfos(request,
+                ResponseDto<?> responseDto = recordService.getRecordList(request,
                     LocalDate.of(2023, 6, 1), LocalDate.of(2023, 6, 30), categories);
                 List<RecordResponse> recordResponses = (List<RecordResponse>) responseDto.getData();
 
@@ -189,7 +189,8 @@ class RecordServiceTest {
                 .given(tokenProvider).validateCheck(any(HttpServletRequest.class));
 
             //when
-            ResponseDto<?> responseDto = recordService.getInfos(request, startDate, endDate, null);
+            ResponseDto<?> responseDto = recordService.getRecordList(request, startDate, endDate,
+                null);
 
             //then
             assertFalse(responseDto.isSuccess());
@@ -219,7 +220,7 @@ class RecordServiceTest {
                 .willReturn(serviceDtos);
 
             //when
-            ResponseDto<?> responseDto = recordService.getAnalysisInfo(request, 2023, 6);
+            ResponseDto<?> responseDto = recordService.getRecordAnalysis(request, 2023, 6);
             List<RecordAnalysisResponse> responses = (List<RecordAnalysisResponse>) responseDto.getData();
 
             //then
@@ -258,7 +259,7 @@ class RecordServiceTest {
                     .willReturn(serviceDtos);
 
                 //when
-                ResponseDto<?> responseDto = recordService.getAnalysisInfo(request, 2023, 6);
+                ResponseDto<?> responseDto = recordService.getRecordAnalysis(request, 2023, 6);
 
                 //then
                 assertFalse(responseDto.isSuccess());
@@ -284,7 +285,7 @@ class RecordServiceTest {
                     .willReturn(serviceDtos);
 
                 //when
-                ResponseDto<?> responseDto = recordService.getAnalysisInfo(request, 2023, 6);
+                ResponseDto<?> responseDto = recordService.getRecordAnalysis(request, 2023, 6);
 
                 //then
                 assertFalse(responseDto.isSuccess());
@@ -310,7 +311,7 @@ class RecordServiceTest {
                     .willReturn(serviceDtos);
 
                 //when
-                ResponseDto<?> responseDto = recordService.getAnalysisInfo(request, 2023, 6);
+                ResponseDto<?> responseDto = recordService.getRecordAnalysis(request, 2023, 6);
 
                 //then
                 assertFalse(responseDto.isSuccess());

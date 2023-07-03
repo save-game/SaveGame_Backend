@@ -8,6 +8,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,25 +23,23 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChallengeMember {
+@Table(uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"challenge_id", "challenge_member_id"})})// 복합 unique key 지정
+public class ChallengeMemberResult {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "challenge_member_id")
+    @Column(name = "challenge_member_result_id")
     private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "challenge_id", nullable = false)
     private Challenge challenge;
 
-    private boolean ongoingYn;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "challenge_member_id", nullable = false)
+    private ChallengeMember challengeMember;
 
-    public void changeOngoingYn() {
-        this.ongoingYn = !this.ongoingYn;
-    }
+    private long totalAmount;
 
 }

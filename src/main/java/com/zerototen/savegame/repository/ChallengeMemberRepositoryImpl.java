@@ -7,6 +7,8 @@ import com.zerototen.savegame.domain.dto.response.MemberChallengeResponse;
 import com.zerototen.savegame.domain.entity.Member;
 import com.zerototen.savegame.domain.entity.QChallenge;
 import com.zerototen.savegame.domain.entity.QChallengeMember;
+import com.zerototen.savegame.domain.type.ChallengeStatus;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,13 +24,19 @@ public class ChallengeMemberRepositoryImpl implements ChallengeMemberRepositoryC
 
     @Override
     public Page<MemberChallengeResponse> findChallengeListByMemberOrderByEndDate(Member member,
-        Pageable pageable) {
+        ChallengeStatus status, Pageable pageable) {
 
         QChallengeMember challengeMember = QChallengeMember.challengeMember;
 
         QChallenge challenge = challengeMember.challenge;
 
         BooleanExpression condition = challengeMember.member.eq(member);
+
+        if (ChallengeStatus.ONGOING.equals(status)) { // 진행중인 챌린지
+            condition = condition.and(challenge.endDate.goe(LocalDate.now()));
+        } else { // 완료된 챌린지
+            condition = condition.and(challenge.endDate.before(LocalDate.now()));
+        }
 
         List<MemberChallengeResponse> result = queryFactory
             .select(Projections.constructor(MemberChallengeResponse.class,

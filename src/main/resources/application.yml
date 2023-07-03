@@ -27,3 +27,7 @@ jwt:
 
 kakao:
   rest-api-key: ${KAKAO_RESTAPIKEY}
+
+scheduler:
+  challenge:
+    result: 0 0 0 * * *

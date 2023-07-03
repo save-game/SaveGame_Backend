@@ -11,16 +11,15 @@ import com.zerototen.savegame.domain.entity.Record;
 import com.zerototen.savegame.exception.ErrorCode;
 import com.zerototen.savegame.repository.RecordRepository;
 import com.zerototen.savegame.security.TokenProvider;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
+import javax.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -45,8 +44,8 @@ public class RecordService {
     }
 
     // 지출 내역 조회 (가계부 메인)
-    public ResponseDto<?> getInfos(HttpServletRequest request, LocalDate startDate, LocalDate endDate,
-                                   List<String> categories) {
+    public ResponseDto<?> getRecordList(HttpServletRequest request, LocalDate startDate,
+        LocalDate endDate, List<String> categories) {
         ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
         if (!responseDto.isSuccess()) {
             return responseDto;
@@ -58,13 +57,14 @@ public class RecordService {
             return ResponseDto.fail(ErrorCode.STARTDATE_AFTER_ENDDATE.getDetail());
         }
         List<Record> records = recordRepository.findByMemberAndUseDateDescWithOptional(
-                member, startDate, endDate, categories);
+            member, startDate, endDate, categories);
 
-        return ResponseDto.success(records.stream().map(RecordResponse::from).collect(Collectors.toList()));
+        return ResponseDto.success(
+            records.stream().map(RecordResponse::from).collect(Collectors.toList()));
     }
 
     // 지출 내역 분석 (가계부 분석)
-    public ResponseDto<?> getAnalysisInfo(HttpServletRequest request, int year, int month) {
+    public ResponseDto<?> getRecordAnalysis(HttpServletRequest request, int year, int month) {
         ResponseDto<?> responseDto = tokenProvider.validateCheck(request);
         if (!responseDto.isSuccess()) {
             return responseDto;
@@ -75,8 +75,8 @@ public class RecordService {
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
 
-        List<RecordAnalysisServiceDto> serviceDtos = recordRepository.findByMemberAndUseDateAndAmountSumDesc(
-                member, startDate, endDate);
+        List<RecordAnalysisServiceDto> serviceDtos =
+            recordRepository.findByMemberAndUseDateAndAmountSumDesc(member, startDate, endDate);
 
         List<RecordAnalysisResponse> responses = new ArrayList<>();
 

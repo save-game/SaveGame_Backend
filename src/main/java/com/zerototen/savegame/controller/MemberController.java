@@ -4,7 +4,9 @@ import com.zerototen.savegame.domain.dto.request.UpdateNicknameRequest;
 import com.zerototen.savegame.domain.dto.request.UpdatePasswordRequest;
 import com.zerototen.savegame.domain.dto.request.UpdateProfileImageUrlRequest;
 import com.zerototen.savegame.domain.dto.response.ResponseDto;
+import com.zerototen.savegame.domain.type.ChallengeStatus;
 import com.zerototen.savegame.service.MemberService;
+import com.zerototen.savegame.validation.Enum;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -61,9 +63,11 @@ public class MemberController {
     // 멤버 챌린지 조회
     @GetMapping("/challenges")
     public ResponseDto<?> getMemberChallengeList(HttpServletRequest request,
-        @RequestParam @Valid @Min(0) int page) {
+        @RequestParam(defaultValue = "ONGOING") @Valid @Enum(enumClass = ChallengeStatus.class,
+            ignoreCase = true) String status,
+        @RequestParam(defaultValue = "0") @Valid @Min(0) int page) {
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
-        return memberService.getMemberChallengeList(request, pageable);
+        return memberService.getMemberChallengeList(request, status, pageable);
     }
 
 }
