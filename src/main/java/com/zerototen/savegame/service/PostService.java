@@ -66,7 +66,7 @@ public class PostService {
         Challenge challenge = challengeRepository.findById(challengeId)
             .orElse(null);
         if (challenge == null) {
-            ResponseDto.fail("챌린지가 존재하지 않습니다.");
+            return ResponseDto.fail("챌린지가 존재하지 않습니다.");
         }
 
         log.info("Create Post");
