@@ -19,6 +19,7 @@ import com.zerototen.savegame.repository.RecordRepository;
 import com.zerototen.savegame.security.TokenProvider;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
@@ -172,12 +173,13 @@ public class ChallengeService {
 
             for (ChallengeMember challengeMember : challengeMemberList) {
                 List<ChallengeRecordResponse> recordList = new ArrayList<>();
+                long total = 0L;
                 if (!challenge.getStartDate().isAfter(LocalDate.now())) { // 챌린지 시작 후
                     // 챌린지 멤버의 지출 리스트
                     recordList = recordRepository.findTotalAndUseDateByMemberAndChallengeGroupByUseDate(
                         challengeMember.getMember(), challenge);
 
-                    long total = recordList.stream().mapToLong(ChallengeRecordResponse::getAmount)
+                    total = recordList.stream().mapToLong(ChallengeRecordResponse::getAmount)
                         .sum();
                     if (total > challenge.getGoalAmount()) { // 목표금액을 넘긴 경우 onGoingYn false
                         if (challengeMember.isOngoingYn()) {
@@ -193,9 +195,14 @@ public class ChallengeService {
                     .memberId(challengeMember.getMember().getId())
                     .nickname(challengeMember.getMember().getNickname())
                     .status(challengeMember.isOngoingYn() ? 1 : 0)
+                    .totalAmount(total)
                     .recordList(recordList)
                     .build());
             }
+
+            // total을 기준으로 오름차순 정렬
+            challengeMemberResponseList.sort(Comparator.comparingLong(
+                ChallengeMemberResponse::getTotalAmount));
 
             return ResponseDto.success(ChallengeStatusResponse.builder()
                 .title(challenge.getTitle())
@@ -228,6 +235,10 @@ public class ChallengeService {
                     .totalAmount(total)
                     .build());
             }
+
+            // total을 기준으로 오름차순 정렬
+            challengeMemberResultResponseList.sort(Comparator.comparingLong(
+                ChallengeMemberResultResponse::getTotalAmount));
 
             return ResponseDto.success(ChallengeStatusResponse.builder()
                 .title(challenge.getTitle())

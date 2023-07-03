@@ -15,6 +15,7 @@ public class ChallengeMemberResponse {
     private Long memberId;
     private String nickname;
     private int status;
+    private long totalAmount;
     private List<ChallengeRecordResponse> recordList;
 
 }
