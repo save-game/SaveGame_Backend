@@ -23,13 +23,8 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(
-    uniqueConstraints = {
-        @UniqueConstraint(
-            columnNames = { "challenge_id", "challenge_member_id" } // 복합 unique key 지정
-        )
-    }
-)
+@Table(uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"challenge_id", "challenge_member_id"})})// 복합 unique key 지정
 public class ChallengeMemberResult {
 
     @Id
