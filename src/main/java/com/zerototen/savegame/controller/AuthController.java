@@ -59,7 +59,7 @@ public class AuthController {
     }
 
     // 카카오 로그아웃 (연동해제)
-    @GetMapping("/auth/kakaologout")
+    @PostMapping("/auth/kakaologout")
     public ResponseDto<?> kakaoLogout(@RequestParam("code") String code, HttpServletRequest request) throws JsonProcessingException {
         return kakaoOauthService.kakaoLogout(code, request);
     }
