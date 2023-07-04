@@ -13,6 +13,7 @@ public class ChallengeMemberResultResponse {
 
     private Long memberId;
     private String nickname;
+    private String profileImageUrl;
     private int status;
     private long totalAmount;
 
