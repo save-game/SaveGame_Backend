@@ -173,11 +173,12 @@ public class ChallengeService {
 
             for (ChallengeMember challengeMember : challengeMemberList) {
                 List<ChallengeRecordResponse> recordList = new ArrayList<>();
+                Member member = challengeMember.getMember();
                 long total = 0L;
                 if (!challenge.getStartDate().isAfter(LocalDate.now())) { // 챌린지 시작 후
                     // 챌린지 멤버의 지출 리스트
                     recordList = recordRepository.findTotalAndUseDateByMemberAndChallengeGroupByUseDate(
-                        challengeMember.getMember(), challenge);
+                        member, challenge);
 
                     total = recordList.stream().mapToLong(ChallengeRecordResponse::getAmount)
                         .sum();
@@ -192,8 +193,9 @@ public class ChallengeService {
                     }
                 }
                 challengeMemberResponseList.add(ChallengeMemberResponse.builder()
-                    .memberId(challengeMember.getMember().getId())
-                    .nickname(challengeMember.getMember().getNickname())
+                    .memberId(member.getId())
+                    .nickname(member.getNickname())
+                    .profileImageUrl(member.getProfileImageUrl())
                     .status(challengeMember.isOngoingYn() ? 1 : 0)
                     .totalAmount(total)
                     .recordList(recordList)
@@ -231,6 +233,7 @@ public class ChallengeService {
                 challengeMemberResultResponseList.add(ChallengeMemberResultResponse.builder()
                     .memberId(member.getId())
                     .nickname(member.getNickname())
+                    .profileImageUrl(member.getProfileImageUrl())
                     .status(total > challenge.getGoalAmount() ? 0 : 1)
                     .totalAmount(total)
                     .build());
