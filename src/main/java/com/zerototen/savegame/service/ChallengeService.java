@@ -214,6 +214,7 @@ public class ChallengeService {
                 .endDate(challenge.getEndDate())
                 .goalAmount(challenge.getGoalAmount())
                 .category(challenge.getCategory())
+                .maxPeople(challenge.getMaxPeople())
                 .challengeMemberList(challengeMemberResponseList)
                 .build());
 
@@ -251,6 +252,7 @@ public class ChallengeService {
                 .endDate(challenge.getEndDate())
                 .goalAmount(challenge.getGoalAmount())
                 .category(challenge.getCategory())
+                .maxPeople(challenge.getMaxPeople())
                 .challengeMemberList(challengeMemberResultResponseList)
                 .build());
         }
