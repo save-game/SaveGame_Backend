@@ -21,6 +21,7 @@ public class ChallengeStatusResponse {
     private LocalDate endDate;
     private int goalAmount;
     private Category category;
+    private int maxPeople;
     private List<?> challengeMemberList;
 
 }
